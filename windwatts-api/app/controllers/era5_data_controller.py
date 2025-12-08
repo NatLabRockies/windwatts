@@ -37,37 +37,30 @@ if not _skip_data_init:
         local_config_path="./app/config/windwatts_data_config.json")  # replace with YOUR local config path
     athena_config = config_manager.get_config()
 
-# Initialize DataFetchers
-# s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
-athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, source_key='era5')
-athena_data_fetcher_ensemble = AthenaDataFetcher(athena_config=athena_config, source_key='ensemble')
-s3_data_fetcher_era5 = S3DataFetcher(bucket_name="windwatts-era5", prefix="era5_timeseries", grid="era5", s3_key_template="era5")
-# db_manager = DatabaseManager()
-# db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
+    # Initialize DataFetchers
+    # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
+    athena_data_fetcher_era5 = AthenaDataFetcher(athena_config=athena_config, source_key='era5')
+    athena_data_fetcher_ensemble = AthenaDataFetcher(athena_config=athena_config, source_key='ensemble')
+    s3_data_fetcher_era5 = S3DataFetcher(bucket_name="windwatts-era5", prefix="era5_timeseries", grid="era5", s3_key_template="era5")
+    # db_manager = DatabaseManager()
+    # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
-# # Initialize DataFetcherRouter and register fetchers
-data_fetcher_router = DataFetcherRouter()
-# data_fetcher_router.register_fetcher("database", db_data_fetcher)
-data_fetcher_router.register_fetcher("s3_era5", s3_data_fetcher_era5)
-data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
-data_fetcher_router.register_fetcher("athena_ensemble", athena_data_fetcher_ensemble)
-
-# # Multiple average types for wind speed and production for era5 and ensemble model
-# era5_wind_speed_avg_types = ["global", "yearly"]
-# era5_production_avg_types = ["summary", "yearly", "all"]
-
-# era5_bc_wind_speed_avg_types = ["global"]
-# era5_bc_production_avg_types = ["global"]
+    # # Initialize DataFetcherRouter and register fetchers
+    data_fetcher_router = DataFetcherRouter()
+    # data_fetcher_router.register_fetcher("database", db_data_fetcher)
+    data_fetcher_router.register_fetcher("s3_era5", s3_data_fetcher_era5)
+    data_fetcher_router.register_fetcher("athena_era5", athena_data_fetcher_era5)
+    data_fetcher_router.register_fetcher("athena_ensemble", athena_data_fetcher_ensemble)
 
 # Centralized valid avg types dictionary
 VALID_AVG_TYPES = {
     "athena_era5": {
-        "wind_speed": ["global", "yearly", "none"],
-        "production": ["global", "summary", "yearly", "all", "none"],
+        "wind_speed": ["all", "annual", "none"],
+        "production": ["all", "summary", "annual", "combined", "none"],
     },
     "athena_ensemble": {
-        "wind_speed": ["global", "none"],
-        "production": ["global", "none"],
+        "wind_speed": ["all", "none"],
+        "production": ["all", "none"],
     },
 }
 # YEARS list for the sample data download feature
@@ -220,18 +213,19 @@ def get_windspeed(
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
     ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
+    period: str = Query("all", description="Time period for wind speed calculation."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if ensemble:
-            return _get_windspeed_core(lat, lng, height, "global", source="athena_ensemble")
+            return _get_windspeed_core(lat, lng, height, period, source="athena_ensemble")
         else:
-            return _get_windspeed_core(lat, lng, height, "global", source)
+            return _get_windspeed_core(lat, lng, height, period, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
 @router.get(
-        "/available-powercurves",
+        "/powercurves",
         summary="Fetch all available power curves",
         response_model=AvailablePowerCurvesResponse,
         responses={
@@ -270,8 +264,8 @@ def _get_energy_production_core(
     lat: float,
     lng: float,
     height: int,
-    selected_powercurve: str,
-    time_period: str,
+    powercurve: str,
+    period: str,
     source: str
 ):
     """
@@ -280,7 +274,8 @@ def _get_energy_production_core(
         lat (float): Latitude of the location.
         lng (float): Longitude of the location.
         height (int): Height in meters.
-        time_period (str, optional): Time period to retrieve. Must be one of: global, yearly, monthly, all.
+        power_curve(str): Selected powercurve/turbine.
+        period (str, optional): Time period to retrieve. Must be one of: global, yearly, monthly, all.
         source (str): Source of the data. Must be one of: athena, s3, database.
     Returns:
         A JSON object containing average windspeeds and energy production at specified time period or global energy production when time period is not specified.
@@ -288,9 +283,9 @@ def _get_energy_production_core(
     lat = validate_lat(lat)
     lng = validate_lng(lng)
     height = validate_height(height)
-    selected_powercurve = validate_selected_powercurve(selected_powercurve)
+    selected_powercurve = validate_selected_powercurve(powercurve)
     source = validate_source(source)
-    time_period = validate_production_avg_type(time_period, source)
+    period = validate_production_avg_type(period, source)
     params = {
         "lat": lat,
         "lng": lng,
@@ -301,19 +296,19 @@ def _get_energy_production_core(
     if df is None:
         raise HTTPException(status_code=404, detail="Data not found")
     
-    if time_period == 'global':
+    if period == 'all':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         return {"energy_production": summary_avg_energy_production['Average year']['kWh produced']}
     
-    elif time_period == 'summary':
+    elif period == 'summary':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         return {"summary_avg_energy_production": summary_avg_energy_production}
     
-    elif time_period == 'yearly':
+    elif period == 'annual':
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
         return {"yearly_avg_energy_production": yearly_avg_energy_production}
     
-    elif time_period == 'all':
+    elif period == 'combined':
         summary_avg_energy_production = power_curve_manager.fetch_avg_energy_production_summary(df, height, selected_powercurve)
         yearly_avg_energy_production = power_curve_manager.fetch_yearly_avg_energy_production(df, height, selected_powercurve)
         return {
@@ -323,7 +318,7 @@ def _get_energy_production_core(
         }
 
 @router.get(
-        "/energy-production/{time_period}",
+        "/production/{period}",
         summary="Get yearly and monthly energy production estimate and average windspeed for a location at a height with a selected power curve",
         response_model=EnergyProductionResponse,
         responses={
@@ -335,24 +330,24 @@ def _get_energy_production_core(
         }
     )
 def energy_production_with_period(
-    time_period: str = Path(..., description="Time period for production estimate."),
+    period: str = Path(..., description="Time period for production estimate."),
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    selected_powercurve: str = Query(..., description="Selected power curve name."),
+    powercurve: str = Query(..., description="Selected power curve name."),
     ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if ensemble:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source="athena_ensemble")
+            return _get_energy_production_core(lat, lng, height, powercurve, period, source="athena_ensemble")
         else:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
+            return _get_energy_production_core(lat, lng, height, powercurve, period, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
 @router.get(
-    "/energy-production",
+    "/production",
     summary="Get global energy production estimate for a location at a height with a selected power curve",
     response_model=EnergyProductionResponse,
     responses={
@@ -367,16 +362,16 @@ def energy_production(
     lat: float = Query(..., description="Latitude of the location."),
     lng: float = Query(..., description="Longitude of the location."),
     height: int = Query(..., description="Height in meters."),
-    selected_powercurve: str = Query(..., description="Selected power curve name."),
-    time_period: str = Query(..., description="Time period for production estimate."),
+    powercurve: str = Query(..., description="Selected power curve name."),
+    period: str = Query("all", description="Time period for production estimate."),
     ensemble: bool = Query(False, description="If true, use ensemble model (athena_ensemble)."),
     source: str = Query(DEFAULT_SOURCE, description="Source of the data.")
 ):
     try:
         if ensemble:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period="global", source="athena_ensemble")
+            return _get_energy_production_core(lat, lng, height, powercurve, period, source="athena_ensemble")
         else:
-            return _get_energy_production_core(lat, lng, height, selected_powercurve, time_period, source)
+            return _get_energy_production_core(lat, lng, height, powercurve, period, source)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error.")
 
@@ -402,10 +397,10 @@ def _download_csv_core(
 
     
 @router.get(
-    "/download-csv",
-    summary="Download csv file for windspeed for a specific location for certain year(s) with 1 neighbor"
+    "/timeseries",
+    summary="Download csv file for windspeed timeseries for a specific location for certain year(s) with 1 neighbor"
 )
-def download_csv(
+def download_timeseries_csv(
     gridIndex: str = Query(..., description="Grid index with respect to user selected coordinate"),
     years: List[int] = Query(SAMPLE_YEARS["s3_era5"], description="years of which the data to download"),
     source: str = Query("s3_era5", description="Source of the data.")
@@ -428,10 +423,10 @@ def download_csv(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post(
-    "/download-csv-batch",
+    "/timeseries/batch",
     summary="Download multiple CSVs (one per neighbor) as a streamed ZIP",
 )
-def download_csv_batch(
+def download_timeseries_csv_batch(
     payload: NearestLocationsResponse,
     years: List[int] = Query(SAMPLE_YEARS["s3_era5"], description="years of which the data to download"),
     source: str = Query("s3_era5", description="Source of the data."),
@@ -461,8 +456,8 @@ def download_csv_batch(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.get(
-    "/nearest-locations",
-    summary="Find nearest grid locations",
+    "/grid-points",
+    summary="Find nearest grid points",
     response_model=NearestLocationsResponse,
     responses={
         200: {"description": "Nearest locations retrieved successfully"},
@@ -470,16 +465,16 @@ def download_csv_batch(
         500: {"description": "Internal server error"},
     },
 )
-def nearest_locations(
+def grid_points(
     lat: float = Query(..., description="Latitude of the target location."),
     lng: float = Query(..., description="Longitude of the target location."),
-    n_neighbors: int = Query(1, description="Number of nearest grid points."),
+    limit: int = Query(1, description="Number of nearest grid points."),
     source: str = Query(DEFAULT_SOURCE, description=f"Source of the data"),
 ):
     try:
         lat = validate_lat(lat)
         lng = validate_lng(lng)
-        n_neighbors = validate_n_neighbor(n_neighbors)
+        limit = validate_n_neighbor(limit)
         source = validate_source(source)
 
         grid_lookup_map = {
@@ -494,7 +489,7 @@ def nearest_locations(
             )
 
         # Call find_nearest_locations on the Athena fetcher
-        result = fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=n_neighbors)
+        result = fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=limit)
         
         locations = [
             {

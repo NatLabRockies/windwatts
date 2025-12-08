@@ -56,7 +56,7 @@ export const useEnsembleTilesData = () => {
           hubHeight,
           powerCurve,
           dataModel,
-          time_period: "global",
+          time_period: "all",
           ensemble,
         }),
       ]);

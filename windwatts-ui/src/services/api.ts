@@ -47,10 +47,10 @@ export const getEnergyProduction = async ({
   hubHeight,
   powerCurve,
   dataModel,
-  time_period = "all",
+  time_period = "combined",
   ensemble,
 }: EnergyProductionRequest) => {
-  const url = `/api/${dataModel}/energy-production?lat=${lat}&lng=${lng}&height=${hubHeight}&selected_powercurve=${powerCurve}&time_period=${time_period}${ensemble ? "&ensemble=true" : ""}`;
+  const url = `/api/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&powercurve=${powerCurve}&period=${time_period}${ensemble ? "&ensemble=true" : ""}`;
   const options = {
     method: "GET",
     headers: {
@@ -74,7 +74,7 @@ export const getEnergyProduction = async ({
 // };
 
 export const getAvailablePowerCurves = async () => {
-  const url = `/api/era5/available-powercurves`; // if fetching from era5, replace the wtk with era5
+  const url = `/api/era5/powercurves`; // if fetching from era5, replace the wtk with era5
   const options = {
     method: "GET",
     headers: {
@@ -90,7 +90,7 @@ export const getNearestGridLocation = async ({
   n_neighbors = 1,
   dataModel
 }: NearestGridLocationRequest) => {
-  const url = `/api/${dataModel}/nearest-locations?lat=${lat}&lng=${lng}&n_neighbors=${n_neighbors}`;
+  const url = `/api/${dataModel}/grid-points?lat=${lat}&lng=${lng}&limit=${n_neighbors}`;
   const options = {
     method: "GET",
     headers: {
@@ -105,7 +105,7 @@ export const getCSVFile = async ({
   dataModel
 }: WindCSVFileRequest) => {
   
-  const url = `/api/${dataModel}/download-csv?gridIndex=${gridIndex}`;
+  const url = `/api/${dataModel}/timeseries?gridIndex=${gridIndex}`;
   
   const options = {
     method: "GET",
@@ -121,7 +121,7 @@ export const getBatchCSVFiles = async ({
   gridLocations,
   dataModel,
 }: WindCSVFilesRequest) => {
-  const url = `/api/${dataModel}/download-csv-batch`;
+  const url = `/api/${dataModel}/timeseries/batch`;
 
   const options = {
     method: "POST",

@@ -56,9 +56,9 @@ class AthenaDataFetcher(AbstractDataFetcher):
 
         if avg_type == 'none':
             return self.client.fetch_df(lat=lat, long=lng, height=height)
-        elif avg_type == 'global':
+        elif avg_type == 'all':
             return self.client.fetch_global_avg_at_height(lat=lat, long=lng, height=height)
-        elif avg_type == 'yearly':
+        elif avg_type == 'annual':
             return self.client.fetch_yearly_avg_at_height(lat=lat, long=lng, height=height)
         elif avg_type == 'monthly':
             return self.client.fetch_monthly_avg_at_height(lat=lat, long=lng, height=height)
