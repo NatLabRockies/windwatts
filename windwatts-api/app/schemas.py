@@ -165,3 +165,31 @@ class NearestLocationsResponse(BaseModel):
             }
         }
     }
+
+class TimeseriesBatchRequest(BaseModel):
+    locations: List[GridLocation] = Field(
+        ..., 
+        min_length=1,
+        description="List of grid locations to download timeseries data for"
+    )
+    years: Optional[List[int]] = Field(
+        None,
+        description="Years to download (defaults to sample years if not provided)"
+    )
+    source: str = Field(
+        "s3",
+        description="Data source: athena or s3 (typically s3 for timeseries downloads)"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "locations": [
+                    {"index": "031233", "latitude": 43.653, "longitude": -79.47437700534891},
+                    {"index": "031234", "latitude": 43.653, "longitude": -79.22437433155213}
+                ],
+                "years": [2020, 2021, 2022],
+                "source": "s3"
+            }
+        }
+    }
