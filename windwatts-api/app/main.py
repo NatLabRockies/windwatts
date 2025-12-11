@@ -25,6 +25,18 @@ app = FastAPI(
         - Base path: `/api`
         - Contact: windwatts@nrel.gov
 
+        ## API Versions
+
+        **v1 (Recommended)**: Unified endpoints with model as path parameter
+        - `/v1/{model}/windspeed` - Wind speed data
+        - `/v1/{model}/production` - Energy production estimates
+        - `/v1/{model}/timeseries` - Raw timeseries downloads
+        - Supports models: `era5`, `wtk`, `ensemble`
+
+        **Legacy**: Model-specific endpoints (deprecated)
+        - `/wtk/*` - WTK-specific endpoints
+        - `/era5/*` - ERA5-specific endpoints
+
         Use the endpoints below to retrieve wind resource and production estimates.
         """
     ).strip(),
