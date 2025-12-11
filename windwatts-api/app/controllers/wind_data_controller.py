@@ -107,7 +107,7 @@ def get_windspeed(
     try:
         # Use default source if not provided
         if source is None:
-            source = MODEL_CONFIG[model]["default_source"]
+            source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
         
         return get_windspeed_core(model, lat, lng, height, period, source, data_fetcher_router)
     except HTTPException:
@@ -153,7 +153,7 @@ def get_production(
     try:
         # Use default source if not provided
         if source is None:
-            source = MODEL_CONFIG[model]["default_source"]
+            source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
         
         return get_production_core(model, lat, lng, height, powercurve, period, source, data_fetcher_router)
     except HTTPException:
