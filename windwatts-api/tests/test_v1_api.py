@@ -7,7 +7,6 @@ from app.main import app
 
 client = TestClient(app)
 
-
 class TestV1WindspeedEndpoints:
     """Test windspeed endpoints for all models."""
     
