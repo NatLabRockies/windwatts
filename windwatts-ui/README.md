@@ -1,7 +1,8 @@
+# WindWatts UI (Frontend)
 
-# WindWatts Frontend App
+This directory contains the React frontend for WindWatts, built with Vite and Material UI.
 
-This project is a React application built with Vite, using Yarn as the package manager and Material-UI for the UI components.
+For development instructions, setup guides, and architecture details, please see the **[Frontend Documentation](../docs/04-frontend.md)**.
 
 ## Prerequisites
 
