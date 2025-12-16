@@ -22,7 +22,8 @@ from app.schemas import (
     AvailablePowerCurvesResponse,
     EnergyProductionResponse,
     NearestLocationsResponse,
-    TimeseriesBatchRequest
+    TimeseriesBatchRequest,
+    ModelInfoResponse
 )
 
 router = APIRouter()
@@ -266,6 +267,7 @@ def get_grid_points(
 @router.get(
     "/{model}/info",
     summary="Get metadata information about a data model",
+    response_model=ModelInfoResponse,
     responses={
         200: {"description": "Model information retrieved successfully"},
         400: {"description": "Invalid model"},
