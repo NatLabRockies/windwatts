@@ -56,6 +56,6 @@ MODEL_CONFIG = {
         "grid_info": { "min_lat":23.402, "min_long":-137.725, 
                       "max_lat":51.403, "max_long":-44.224,
                       "spatial_resolution" : "31 km", "temporal_resolution": "1 hour"},
-        "references" : ["Manuscript in preparation (publication pending) - National Laboratory of the Rockies"]
+        "references" : ["Manuscript in preparation (publication pending), please contact windwatts@nrel.gov for any questions."]
     }
 }
