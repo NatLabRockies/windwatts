@@ -17,7 +17,7 @@ This sets up both the API and the UI with a local database.
 ```shell
 git clone https://github.com/NREL/dw-tap-api.git
 cd dw-tap-api/
-git checkout develop # Ensure you are on the main development branch
+git checkout develop # Ensure you are on the 'develop' branch (the main development branch)
 ```
 
 ### 2. Configure Environment
