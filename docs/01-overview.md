@@ -3,23 +3,23 @@
 ## Architecture
 
 ```mermaid
-C4Context
+c4context
       title System Context Diagram for WindWatts
 
-      Person(user, "User", "A user wanting to access wind data")
-      System_Boundary(windwatts, "WindWatts System") {
-        Container(ui, "Frontend UI", "React, Vite", "Provides the web interface for users")
-        Container(api, "Backend API", "FastAPI, Python", "Handles API requests and business logic")
-        ContainerDb(db, "Database", "PostgreSQL", "Stores application data")
-        Container(dw_tap, "Core Library", "Python", "Scientific data processing logic")
+      person(user, "User", "A user wanting to access wind data")
+      system_boundary(windwatts, "WindWatts System") {
+        container(ui, "Frontend UI", "React, Vite", "Provides the web interface for users")
+        container(api, "Backend API", "FastAPI, Python", "Handles API requests and business logic")
+        containerDb(db, "Database", "PostgreSQL", "Stores application data")
+        container(dw_tap, "Core Library", "Python", "Scientific data processing logic")
       }
-      System_Ext(aws, "AWS Services", "S3, Athena, Glue", "Stores and queries large-scale wind data")
+      system_ext(aws, "AWS Services", "S3, Athena, Glue", "Stores and queries large-scale wind data")
 
-      Rel(user, ui, "Uses", "HTTPS")
-      Rel(ui, api, "Makes API calls to", "JSON/HTTPS")
-      Rel(api, db, "Reads/Writes", "SQL/TCP")
-      Rel(api, dw_tap, "Imports", "Python Module")
-      Rel(api, aws, "Queries", "Boto3/HTTPS")
+      rel(user, ui, "Uses", "HTTPS")
+      rel(ui, api, "Makes API calls to", "JSON/HTTPS")
+      rel(api, db, "Reads/Writes", "SQL/TCP")
+      rel(api, dw_tap, "Imports", "Python Module")
+      rel(api, aws, "Queries", "Boto3/HTTPS")
 ```
 
 WindWatts is a monorepo consisting of:
