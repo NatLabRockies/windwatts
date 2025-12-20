@@ -89,9 +89,9 @@ if not _skip_data_init:
 )
 def get_windspeed(
     model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
-    lat: float = Query(..., description="Latitude of the location (-90 to 90)"),
-    lng: float = Query(..., description="Longitude of the location (-180 to 180)"),
-    height: int = Query(..., description="Height in meters (1-300)"),
+    lat: float = Query(..., description="Latitude of the location"),
+    lng: float = Query(..., description="Longitude of the location"),
+    height: int = Query(..., description="Height in meters"),
     period: str = Query("all", description="Time period: all, annual, monthly, hourly (varies by model)"),
     source: Optional[str] = Query(None, description="Data source: athena or s3. Defaults to model's default source (athena).")
 ):
@@ -99,9 +99,9 @@ def get_windspeed(
     Retrieve wind speed data for a specific location and height.
     
     - **model**: Data model (era5, wtk, ensemble)
-    - **lat**: Latitude (-90 to 90)
-    - **lng**: Longitude (-180 to 180)
-    - **height**: Height in meters (1-300)
+    - **lat**: Latitude (varies by model, refer info endpoint for coordinate bounds)
+    - **lng**: Longitude (varies by model, refer info endpoint for coordinate bounds)
+    - **height**: Height in meters (varies by model, refer info endpoint for the available heights)
     - **period**: Time aggregation period (default: all)
     - **source**: Optional data source override
     """
@@ -133,9 +133,9 @@ def get_windspeed(
 )
 def get_production(
     model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
-    lat: float = Query(..., description="Latitude of the location (-90 to 90)"),
-    lng: float = Query(..., description="Longitude of the location (-180 to 180)"),
-    height: int = Query(..., description="Height in meters (1-300)"),
+    lat: float = Query(..., description="Latitude of the location"),
+    lng: float = Query(..., description="Longitude of the location"),
+    height: int = Query(..., description="Height in meters"),
     powercurve: str = Query(..., description="Power curve identifier (e.g., nrel-reference-100kW)"),
     period: str = Query("all", description="Time period: all, summary, annual, monthly (varies by model)"),
     source: Optional[str] = Query(None, description="Data source: athena or s3. Defaults to model's default source (athena).")
@@ -144,9 +144,9 @@ def get_production(
     Retrieve energy production estimates for a specific location, height, and power curve.
     
     - **model**: Data model (era5, wtk, ensemble)
-    - **lat**: Latitude (-90 to 90)
-    - **lng**: Longitude (-180 to 180)
-    - **height**: Height in meters (1-300)
+    - **lat**: Latitude (varies by model, refer info endpoint for coordinate bounds)
+    - **lng**: Longitude (varies by model, refer info endpoint for coordinate bounds)
+    - **height**: Height in meters (varies by model, refer info endpoint for the available heights)
     - **powercurve**: Power curve to use for calculations
     - **period**: Time aggregation period (default: all)
     - **source**: Optional data source override
@@ -215,8 +215,8 @@ def get_powercurves():
 )
 def get_grid_points(
     model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
-    lat: float = Query(..., description="Latitude of the target location (-90 to 90)"),
-    lng: float = Query(..., description="Longitude of the target location (-180 to 180)"),
+    lat: float = Query(..., description="Latitude of the target location"),
+    lng: float = Query(..., description="Longitude of the target location"),
     limit: int = Query(1, description="Number of nearest grid points to return (1-4)"),
     source: Optional[str] = Query(None, description="Data source. Defaults to model's default source.")
 ):
@@ -226,8 +226,8 @@ def get_grid_points(
     Returns grid indices and their coordinates for the closest data points in the model's grid.
     
     - **model**: Data model (era5, wtk, ensemble)
-    - **lat**: Latitude of target location (-90 to 90)
-    - **lng**: Longitude of target location (-180 to 180)
+    - **lat**: (varies by model, refer info endpoint for coordinate bounds)
+    - **lng**: (varies by model, refer info endpoint for coordinate bounds)
     - **limit**: Number of nearest points to return (1-4)
     - **source**: Optional data source override
     """
@@ -281,11 +281,11 @@ def get_model_info(
     Retrieve metadata and configuration information about a specific data model.
     
     Returns information about:
-    - Available data sources
     - Supported time periods
     - Available years for timeseries downloads
-    - Ensemble support
-    - Grid lookup capabilities
+    - Available heights
+    - Grid information (model’s geographic coverage and spatial-temporal resolution)
+    - Links & References
     
     - **model**: Data model (era5, wtk, ensemble)
     """
@@ -374,7 +374,7 @@ def download_timeseries_batch(
     
     - **model**: Data model (era5, wtk)
     - **payload**: Request body containing:
-      - **locations**: List of grid locations with indices
+      - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: List of years to include (optional, defaults to sample years)
       - **source**: Data source (optional, defaults to s3)
     """
