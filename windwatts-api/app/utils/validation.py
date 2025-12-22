@@ -41,17 +41,21 @@ def validate_period_type(model: str, period_type: str, data_type: str) -> str:
     return period_type
 
 
-def validate_lat(lat: float) -> float:
+def validate_lat(model: str, lat: float) -> float:
     """Validate latitude parameter"""
-    if not (-90 <= lat <= 90):
-        raise HTTPException(status_code=400, detail="Latitude must be between -90 and 90.")
+    min_lat = MODEL_CONFIG[model]["grid_info"].get("min_lat")
+    max_lat = MODEL_CONFIG[model]["grid_info"].get("max_lat")
+    if not (min_lat <= lat <= max_lat):
+        raise HTTPException(status_code=400, detail=f"Latitude for {model} must be between {min_lat} and {max_lat}.")
     return lat
 
 
-def validate_lng(lng: float) -> float:
+def validate_lng(model: str, lng: float) -> float:
     """Validate longitude parameter"""
-    if not (-180 <= lng <= 180):
-        raise HTTPException(status_code=400, detail="Longitude must be between -180 and 180.")
+    min_lng = MODEL_CONFIG[model]["grid_info"].get("min_long")
+    max_lng = MODEL_CONFIG[model]["grid_info"].get("max_long")
+    if not (min_lng <= lng <= max_lng):
+        raise HTTPException(status_code=400, detail=f"Longitude for {model} must be between {min_lng} and {max_lng}.")
     return lng
 
 

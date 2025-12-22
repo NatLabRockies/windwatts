@@ -46,8 +46,8 @@ def get_windspeed_core(
     Returns:
         Wind speed data from the data source.
     """
-    lat = validate_lat(lat)
-    lng = validate_lng(lng)
+    lat = validate_lat(model, lat)
+    lng = validate_lng(model, lng)
     model = validate_model(model)
     height = validate_height(model, height)
     source = validate_source(model, source)
@@ -93,8 +93,8 @@ def get_production_core(
     Returns:
         A dictionary containing energy production data.
     """
-    lat = validate_lat(lat)
-    lng = validate_lng(lng)
+    lat = validate_lat(model, lat)
+    lng = validate_lng(model, lng)
     model = validate_model(model)
     height = validate_height(model, height)
     powercurve = validate_powercurve(powercurve)
