@@ -18,12 +18,12 @@ To get a local copy up and running, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/NREL/dw-tap-api.git
+    git clone https://github.com/NREL/windwatts.git
     ```
 
 2. Navigate to the project directory:
     ```bash
-    cd frontend
+    cd windwatts-ui
     ```
 
 3. Install the dependencies:
@@ -33,7 +33,7 @@ To get a local copy up and running, follow these steps:
 
 ### Configure Environment Files
 
-Create two environment files, `.env.development` and `.env.production`, in the root of the project directory (./frontend/). These files will contain the necessary environment variables for the development and production environments.
+Create two environment files, `.env.development` and `.env.production`, in the root of the project directory (./windwatts-ui/). These files will contain the necessary environment variables for the development and production environments.
 
 #### .env.development
 ```shell
@@ -44,7 +44,7 @@ VITE_MAP_ID=YOUR_MAP_ID
 
 #### .env.production
 ```shell
-VITE_API_BASE_URL=https://dw-tap.nrel.gov/
+VITE_API_BASE_URL=https://windwatts.nrel.gov/
 VITE_MAP_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
 VITE_MAP_ID=YOUR_MAP_ID
 ```

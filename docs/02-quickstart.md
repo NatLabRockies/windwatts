@@ -15,8 +15,8 @@ This sets up both the API and the UI with a local database.
 ### 1. Clone the Repository
 
 ```shell
-git clone https://github.com/NREL/dw-tap-api.git
-cd dw-tap-api/
+git clone https://github.com/NREL/windwatts.git
+cd windwatts/
 git checkout develop # Ensure you are on the 'develop' branch (the main development branch)
 ```
 
