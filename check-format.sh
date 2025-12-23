@@ -1,10 +1,29 @@
 #!/bin/bash
-set -e
 
-cd windwatts-ui
+# Navigate to UI directory
+cd windwatts-ui || exit 1
 
 echo "Running ESLint..."
-yarn lint --fix
+if ! yarn lint; then
+    echo "" >&2
+    echo "--------------------------------------------------------" >&2
+    echo "❌ ESLint check failed!" >&2
+    echo "   Please run linting locally before committing:" >&2
+    echo "   cd windwatts-ui && yarn lint" >&2
+    echo "--------------------------------------------------------" >&2
+    exit 1
+fi
 
 echo "Running Prettier check..."
-yarn format -w
+if ! yarn check-format; then
+    echo "" >&2
+    echo "--------------------------------------------------------" >&2
+    echo "❌ Prettier check failed!" >&2
+    echo "   Please run formatting locally before committing:" >&2
+    echo "   cd windwatts-ui && yarn format" >&2
+    echo "--------------------------------------------------------" >&2
+    exit 1
+fi
+
+echo "✅ Lint and Format checks passed."
+exit 0
