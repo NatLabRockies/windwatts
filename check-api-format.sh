@@ -3,13 +3,19 @@
 # Navigate to API directory
 cd windwatts-api || exit 1
 
-# Try to activate venv if it exists to ensure we use the project's tools
+# Try to activate venv
 if [ -f ".venv/bin/activate" ]; then
     source .venv/bin/activate
 fi
 
+# Capture arguments (files)
+FILES="$@"
+if [ -z "$FILES" ]; then
+    FILES="."
+fi
+
 echo "Running Python Lint checks (Ruff)..."
-if ! ruff check .; then
+if ! ruff check $FILES; then
     echo "" >&2
     echo "--------------------------------------------------------" >&2
     echo "❌ Python linting failed!" >&2
@@ -20,7 +26,7 @@ if ! ruff check .; then
 fi
 
 echo "Running Python Format checks (Ruff)..."
-if ! ruff format --check .; then
+if ! ruff format --check $FILES; then
     echo "" >&2
     echo "--------------------------------------------------------" >&2
     echo "❌ Python formatting failed!" >&2
@@ -32,4 +38,3 @@ fi
 
 echo "✅ Python Lint and Format checks passed."
 exit 0
-
