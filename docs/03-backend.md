@@ -38,11 +38,6 @@ pip install windwatts_data-1.0.4-py3-none-any.whl
 uvicorn app.main:app --reload
 ```
 
-Or using the wrapper:
-```bash
-python api.py -d
-```
-
 ### Database
 
 **Local Development**:

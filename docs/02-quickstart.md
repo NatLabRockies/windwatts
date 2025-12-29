@@ -86,9 +86,10 @@ docker compose down --volumes --remove-orphans
 If you prefer running services directly:
 
 ```shell
-conda env create
-conda activate windwatts
-python api.py --development
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
 See [Backend Documentation](03-backend.md) and [Frontend Documentation](04-frontend.md) for more details on native development.
