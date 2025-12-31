@@ -67,16 +67,10 @@ app.include_router(wind_data_router, prefix="/v1", tags=["v1-wind-data"])
 # Legacy routes - Deprecated
 # TODO: Remove these routes
 app.include_router(
-    wtk_data_router, 
-    prefix="/wtk", 
-    tags=["wtk-data (deprecated)"],
-    deprecated=True
+    wtk_data_router, prefix="/wtk", tags=["wtk-data (deprecated)"], deprecated=True
 )
 app.include_router(
-    era5_data_router, 
-    prefix="/era5", 
-    tags=["era5-data (deprecated)"],
-    deprecated=True
+    era5_data_router, prefix="/era5", tags=["era5-data (deprecated)"], deprecated=True
 )
 
 
