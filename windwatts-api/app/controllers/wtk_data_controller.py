@@ -39,20 +39,20 @@ if not _skip_data_init:
     )  # replace with YOUR local config path
     athena_config = config_manager.get_config()
 
-# Initialize DataFetchers
-s3_data_fetcher_wtk = S3DataFetcher(
-    bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
-)
-athena_data_fetcher_wtk = AthenaDataFetcher(
-    athena_config=athena_config, source_key="wtk"
-)
-# db_manager = DatabaseManager()
-# db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
+    # Initialize DataFetchers
+    s3_data_fetcher_wtk = S3DataFetcher(
+        bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
+    )
+    athena_data_fetcher_wtk = AthenaDataFetcher(
+        athena_config=athena_config, source_key="wtk"
+    )
+    # db_manager = DatabaseManager()
+    # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)
 
-# Register fetchers
-# data_fetcher_router.register_fetcher("database", db_data_fetcher)
-data_fetcher_router.register_fetcher("s3_wtk", s3_data_fetcher_wtk)
-data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
+    # Register fetchers
+    # data_fetcher_router.register_fetcher("database", db_data_fetcher)
+    data_fetcher_router.register_fetcher("s3_wtk", s3_data_fetcher_wtk)
+    data_fetcher_router.register_fetcher("athena_wtk", athena_data_fetcher_wtk)
 
 VALID_AVG_TYPES = {
     "athena_wtk": {
