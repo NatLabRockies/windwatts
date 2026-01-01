@@ -226,7 +226,7 @@ def get_windspeed_with_avg_type(
             return _get_windspeed_core(lat, lng, height, avg_type, source)
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -261,7 +261,7 @@ def get_windspeed(
             return _get_windspeed_core(lat, lng, height, period, source)
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -302,7 +302,7 @@ def fetch_available_powercurves():
         return {"available_power_curves": ordered_curves}
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -450,7 +450,7 @@ def energy_production(
             )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -496,7 +496,7 @@ def download_timeseries_csv(
             iter([csv_io.getvalue()]), media_type="text/csv; charset=utf-8"
         )
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -536,7 +536,7 @@ def download_timeseries_csv_batch(
             chunker(spooled), media_type="application/zip", headers=headers
         )
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

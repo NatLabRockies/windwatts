@@ -123,7 +123,7 @@ def get_windspeed(
     try:
         # Catch invalid model before core function call
         model = validate_model(model)
-        
+
         # Use default source if not provided
         if source is None:
             source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
@@ -182,7 +182,7 @@ def get_production(
     try:
         # Catch invalid model before core function call
         model = validate_model(model)
-        
+
         # Use default source if not provided
         if source is None:
             source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
