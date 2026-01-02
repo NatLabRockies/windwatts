@@ -227,19 +227,6 @@ def pytest_configure(config):
     _boto3_patch = patch("boto3.client", side_effect=mock_boto3_client)
     _boto3_patch.start()
 
-    # Patch athena_data_fetcher.fetch_data to support "global" as alias for "all"
-    from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
-
-    _original_fetch_data = AthenaDataFetcher.fetch_data
-
-    def patched_fetch_data(self, lat, lng, height, period="all"):
-        """Wrapper that treats 'global' as an alias for 'all'"""
-        if period == "global":
-            period = "all"
-        return _original_fetch_data(self, lat, lng, height, period)
-
-    AthenaDataFetcher.fetch_data = patched_fetch_data
-
 
 def pytest_unconfigure(config):
     """

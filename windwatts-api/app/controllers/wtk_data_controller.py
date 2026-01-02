@@ -56,8 +56,8 @@ if not _skip_data_init:
 
 VALID_AVG_TYPES = {
     "athena_wtk": {
-        "wind_speed": ["global", "yearly", "monthly", "hourly", "none"],
-        "production": ["global", "summary", "yearly", "monthly", "all", "none"],
+        "wind_speed": ["all", "yearly", "monthly", "hourly", "none"],
+        "production": ["all", "summary", "yearly", "monthly", "none"],
     }
 }
 
@@ -222,7 +222,7 @@ def get_windspeed(
     source: str = Query(DEFAULT_SOURCE, description="Source of the data."),
 ):
     try:
-        return _get_windspeed_core(lat, lng, height, "global", source)
+        return _get_windspeed_core(lat, lng, height, "all", source)
     except HTTPException:
         raise
     except Exception:
