@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "vitest",
+    "test": "vitest run",
     "format": "prettier --write --ignore-path .gitignore \"**/*.+(js|jsx|ts|tsx|json)\"",
     "check-format": "prettier --check --ignore-path .gitignore \"**/*.+(js|jsx|ts|tsx|json)\"",
     "preview": "vite preview"
