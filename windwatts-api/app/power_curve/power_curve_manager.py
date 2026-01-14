@@ -5,7 +5,7 @@ import calendar
 import numpy as np
 from scipy.interpolate import CubicSpline
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 
 
 class DatasetSchema(Enum):
@@ -296,33 +296,55 @@ class PowerCurveManager:
             - WTK 1224 Timeseries with 'mohr' (month*100+hour)
         Adds time attributes and return df
         """
-        if all(c in work.columns for c in ["year", "month", "hour"]):
+        has_year = "year" in work.columns
+        has_month = "month" in work.columns
+        has_hour = "hour" in work.columns
+
+        if has_year and has_month and has_hour:
             return work
 
-        # ERA5 timeseries
+        # 1. Checking for "time" column
         if "time" in work.columns:
             time = pd.to_datetime(work["time"], errors="coerce", utc=False)
-
-            work["year"] = time.dt.year.astype(int)
-            work["month"] = time.dt.month.astype(int)
-            work["hour"] = time.dt.hour.astype(int)
-
+            if not has_year:
+                work["year"] = time.dt.year.astype(int)
+            if not has_month:
+                work["month"] = time.dt.month.astype(int)
+            if not has_hour:
+                work["hour"] = time.dt.hour.astype(int)
+            
+            # Optionally checking for day
+            if "day" not in work.columns:
+                work["day"] = time.dt.day.astype(int)
+    
             work["time"] = time
 
             return work
 
-        # WTK 1224 Timeseries
-        if "mohr" in work.columns:
+        # 2. Checking for mohr column
+        elif "mohr" in work.columns:
             mohr = pd.to_numeric(work["mohr"], errors="coerce")
-            work["month"] = (mohr // 100).astype(int)
-            work["hour"] = (mohr % 100).astype(int)
+            if not has_month:
+                work["month"] = (mohr // 100).astype(int)
+            if not has_hour:
+                work["hour"] = (mohr % 100).astype(int)
+            if not has_year:
+                raise ValueError("Cannot extract 'year' from 'mohr' column." \
+                "Year must be present from the data returned from Athena source or" \
+                "provided through another time column.")
+            
             # year is already there as WTK uses athena as source not direct S3
             return work
+        
+        else:
+            raise ValueError("No recognized time column found. "\
+            "Dataset must contain either 'time' (datetime) or 'mohr' (month-hour encoding) column "\
+            "for timeseries normalization.")
 
     def compute_energy_production_df(
         self,
         df: pd.DataFrame,
-        heights: List[int],
+        heights: Union[int,List[int]],
         selected_power_curve: str,
         relevant_columns_only: bool = True,
     ) -> pd.DataFrame:
@@ -331,7 +353,7 @@ class PowerCurveManager:
 
         Args:
             df (pd.DataFrame): Dataframe containing wind speed data.
-            heights (List[int]): Heights in meters for which to estimate power production.
+            heights (int or List[int]): Heights in meters for which to estimate power production.
             selected_power_curve (str): Name of the selected power curve.
             relevant_columns_only (bool): If True, returns only relevant columns.
 
@@ -344,8 +366,11 @@ class PowerCurveManager:
         if df is None or df.empty:
             return df
 
+        if isinstance(heights, int):
+            heights = [heights]
+        
         if not heights:
-            raise ValueError("List of height cannot be empty.")
+            raise ValueError("heights parameter cannot be empty. Provide at least one height value.")
 
         ws_cols = [f"windspeed_{height}m" for height in heights]
 
@@ -359,15 +384,18 @@ class PowerCurveManager:
         if schema == DatasetSchema.TIMESERIES:
             work = df.copy()
             work = self._normalize_timeseries_time_fields(work)
+
             for ws_col in ws_cols:
                 work[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(work, ws_col)
+
             if relevant_columns_only:
-                cols = (
-                    ["year", "month", "hour"]
-                    + ws_cols
-                    + [f"{ws_col}_kw" for ws_col in ws_cols]
-                )
+                cols = []
+                for temporal_col in ["time", "year", "month", "day", "hour", "mohr"]:
+                    if temporal_col in work.columns:
+                        cols.append(temporal_col)
+                cols += ws_cols + [f"{ws_col}_kw" for ws_col in ws_cols]
                 return work[cols]
+            
             return work
 
         elif schema == DatasetSchema.QUANTILES_WITH_YEAR:
@@ -376,28 +404,19 @@ class PowerCurveManager:
             for year, group in df.groupby("year"):
                 # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
                 group = group.sort_values("probability").reset_index(drop=True)
-
-                # Process first ws_col to get base structure
-                first_ws_col = ws_cols[0]
-                result_df = self._quantiles_to_kw_midpoints(
-                    group[["probability", first_ws_col]].copy(),
-                    first_ws_col,
-                    power_curve,
-                    use_swi=use_swi_eff,
-                )
-                result_df["year"] = year
+                col_dfs = []
 
                 # Process remaining ws_cols
-                for ws_col in ws_cols[1:]:
+                for ws_col in ws_cols:
                     mid_df = self._quantiles_to_kw_midpoints(
                         group[["probability", ws_col]].copy(),
                         ws_col,
                         power_curve,
                         use_swi=use_swi_eff,
                     )
-                    result_df[ws_col] = mid_df[ws_col].values
-                    result_df[f"{ws_col}_kw"] = mid_df[f"{ws_col}_kw"].values
-
+                    col_dfs.append(mid_df)
+                result_df = pd.concat(col_dfs, axis=1)
+                result_df["year"] = year
                 records.append(result_df)
 
             out = pd.concat(records, ignore_index=True) if records else pd.DataFrame()
@@ -414,24 +433,18 @@ class PowerCurveManager:
         else:  # DatasetSchema.QUANTILES_GLOBAL
             use_swi_eff = self._use_swi_for(schema)
             group = df.sort_values("probability").reset_index(drop=True)
+            col_dfs = []
 
-            first_ws_col = ws_cols[0]
-            out = self._quantiles_to_kw_midpoints(
-                group[["probability", first_ws_col]].copy(),
-                first_ws_col,
-                power_curve,
-                use_swi=use_swi_eff,
-            )
-
-            for ws_col in ws_cols[1:]:
+            for ws_col in ws_cols:
                 mid_df = self._quantiles_to_kw_midpoints(
                     group[["probability", ws_col]].copy(),
                     ws_col,
                     power_curve,
                     use_swi=use_swi_eff,
                 )
-                out[ws_col] = mid_df[ws_col].values
-                out[f"{ws_col}_kw"] = mid_df[f"{ws_col}_kw"].values
+                col_dfs.append(mid_df)
+            
+            out = pd.concat(col_dfs, axis=1) if col_dfs else pd.DataFrame()
 
             if not relevant_columns_only:
                 return out
@@ -458,7 +471,7 @@ class PowerCurveManager:
             For global quantiles (no year), returns a single pseudo-row with year=None.
             pd.Dataframe
         """
-        prod_df = self.compute_energy_production_df(df, [height], selected_power_curve)
+        prod_df = self.compute_energy_production_df(df, height, selected_power_curve)
         ws_column = f"windspeed_{height}m"
         kw_column = f"windspeed_{height}m_kw"
 
@@ -628,14 +641,13 @@ class PowerCurveManager:
             raise ValueError(
                 "Monthly averages are only supported for time-series (TIMESERIES) inputs."
             )
-        prod_df = self.compute_energy_production_df(df, [height], selected_power_curve)
+        prod_df = self.compute_energy_production_df(df, height, selected_power_curve)
 
         ws_column = f"windspeed_{height}m"
         kw_column = f"windspeed_{height}m_kw"
 
         work = prod_df.drop(
-            columns=["mohr", "year", "hour"]
-            + [col for col in prod_df.columns if "winddirection" in col],
+            columns=[col for col in prod_df.columns if "winddirection" in col],
             errors="ignore",
         )
 
