@@ -332,8 +332,6 @@ class PowerCurveManager:
                 raise ValueError("Cannot extract 'year' from 'mohr' column." \
                 "Year must be present from the data returned from Athena source or" \
                 "provided through another time column.")
-            
-            # year is already there as WTK uses athena as source not direct S3
             return work
         
         else:
