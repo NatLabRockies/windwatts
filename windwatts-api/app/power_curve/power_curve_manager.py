@@ -25,7 +25,7 @@ class PowerCurveManager:
     def _use_swi_for(self, schema: str) -> bool:
         """Get SWI preference from TEMPORAL_SCHEMAS config."""
         config = self._get_temporal_schema_config(schema)
-        return config.get("use_swi", False)
+        return config["processing"].get("use_swi", False)
 
     def _get_schema_from_model(self, model_name: str) -> str:
         """Get DatasetSchema for a given model from MODEL_CONFIG"""
@@ -34,10 +34,11 @@ class PowerCurveManager:
                 f"Invalid model name: {model_name}. Must be one of the {list(MODEL_CONFIG.keys())}"
             )
         schema = MODEL_CONFIG[model_name].get("schema")
-        try:
-            return schema
-        except ValueError:
-            raise ValueError(f"Unknown schema type in MODEL_CONFIG: {schema}")
+        if not schema:
+            raise ValueError(
+                f"No schema found for model '{model_name}' in MODEL_CONFIG"
+            )
+        return schema
 
     def _get_temporal_schema_config(self, schema: str) -> dict:
         """Get TEMPORAL_SCHEMAS config for the given schema name."""
@@ -237,7 +238,7 @@ class PowerCurveManager:
         mid_df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(mid_df, ws_col)
         return mid_df
 
-    def _normalize_timeseries_time_fields(self, work: pd.DataFrame) -> pd.DataFrame:
+    def _add_temporal_dimensions(self, df: pd.DataFrame, schema: str) -> pd.DataFrame:
         """
         Ensure TIMESERIES inputs have year/month/hour columns.
         Supports:
@@ -245,50 +246,47 @@ class PowerCurveManager:
             - WTK 1224 Timeseries with 'mohr' (month*100+hour)
         Adds time attributes and return df
         """
-        has_year = "year" in work.columns
-        has_month = "month" in work.columns
-        has_hour = "hour" in work.columns
-        has_day = "day" in work.columns
+        temporal_dimensions = self._get_temporal_schema_config(schema)[
+            "column_config"
+        ].get("temporal_dimensions", [])
 
-        if has_year and has_month and has_hour and has_day:
-            return work
+        if not temporal_dimensions:
+            return df
 
+        if all(temp_col in df.columns.str.lower() for temp_col in temporal_dimensions):
+            return df
+
+        result = df.copy()
         # 1. Checking for "time" column
-        if "time" in work.columns:
-            time = pd.to_datetime(work["time"], errors="coerce", utc=False)
-            if not has_year:
-                work["year"] = time.dt.year.astype(int)
-            if not has_month:
-                work["month"] = time.dt.month.astype(int)
-            if not has_hour:
-                work["hour"] = time.dt.hour.astype(int)
-            if not has_day:
-                work["day"] = time.dt.day.astype(int)
+        if "time" in result.columns:
+            time = pd.to_datetime(result["time"], errors="coerce", utc=False)
+            if "year" in temporal_dimensions:
+                result["year"] = time.dt.year.astype(int)
+            if "month" in temporal_dimensions:
+                result["month"] = time.dt.month.astype(int)
+            if "hour" in temporal_dimensions:
+                result["hour"] = time.dt.hour.astype(int)
+            if "day" in temporal_dimensions:
+                result["day"] = time.dt.day.astype(int)
 
-            work["time"] = time
+            result["time"] = time
 
-            return work
+            return result
 
         # 2. Checking for mohr column
-        elif "mohr" in work.columns:
-            mohr = pd.to_numeric(work["mohr"], errors="coerce")
-            if not has_month:
-                work["month"] = (mohr // 100).astype(int)
-            if not has_hour:
-                work["hour"] = (mohr % 100).astype(int)
-            if not has_year:
-                raise ValueError(
-                    "Cannot extract 'year' from 'mohr' column."
-                    "Year must be present from the data returned from Athena source or"
-                    "provided through another time column."
-                )
-            return work
+        elif "mohr" in result.columns:
+            mohr = pd.to_numeric(result["mohr"], errors="coerce")
+            if "month" in temporal_dimensions:
+                result["month"] = (mohr // 100).astype(int)
+            if "hour" in temporal_dimensions:
+                result["hour"] = (mohr % 100).astype(int)
+            return result
 
         else:
             raise ValueError(
                 "No recognized time column found. "
                 "Dataset must contain either 'time' (datetime) or 'mohr' (month-hour encoding) column "
-                "for timeseries normalization."
+                "for adding temporal dimensions"
             )
 
     def _validate_data_with_temporal_schema(self, df: pd.DataFrame, schema: str):
@@ -296,12 +294,13 @@ class PowerCurveManager:
         temporal_schema_config = self._get_temporal_schema_config(schema=schema)
 
         column_config = temporal_schema_config.get("column_config", {})
-        validation_rules = temporal_schema_config.get("validation", {})
 
         df_cols = set(df.columns.str.lower())
 
         # validate required columns
-        required_cols = validation_rules.get("required_columns", [])
+        required_cols = column_config.get("temporal_columns", []) + column_config.get(
+            "probability_columns", []
+        )
         missing_cols = [col for col in required_cols if col.lower() not in df_cols]
         if missing_cols:
             raise ValueError(
@@ -309,7 +308,7 @@ class PowerCurveManager:
             )
 
         # validate for no temporal columns
-        if column_config.get("no_temporal_dims", False):
+        if not column_config.get("temporal_columns", []):
             temporal_cols = [
                 col
                 for col in ["year", "month", "day", "hour", "time", "mohr"]
@@ -322,30 +321,23 @@ class PowerCurveManager:
                     f"Found: {temporal_cols}"
                 )
 
-        # validate for no year column
-        if validation_rules.get("no_year_column", False):
-            if "year" in df_cols:
-                raise ValueError(
-                    f"Schema '{schema}' validation failed: "
-                    f"Schema should NOT have 'year' column."
-                )
-
     def _is_timeseries_schema(self, schema: str) -> bool:
-        """Check if schema is timeseries by looking for time_column in config."""
+        """Check if schema is timeseries by looking for time column in config."""
         config = self._get_temporal_schema_config(schema)
-        return "time_column" in config.get("column_config", {})
+        if "time" in config["column_config"].get(
+            "temporal_columns", []
+        ) or "mohr" in config["column_config"].get("temporal_columns", []):
+            return True
 
     def _is_quantile_schema(self, schema: str) -> bool:
-        """Check if schema is quantile by looking for probability_column in config."""
+        """Check if schema is quantile by looking for probability column in config."""
         config = self._get_temporal_schema_config(schema)
-        return "probability_column" in config.get("column_config", {})
+        return "probability" in config["column_config"].get("probability_columns", [])
 
     def _has_year_dimension(self, schema: str) -> bool:
-        """Check if schema has year dimension by checking config flags."""
+        """Check if schema has year dimension by checking temporal columns in config."""
         config = self._get_temporal_schema_config(schema)
-        no_temporal = config.get("column_config", {}).get("no_temporal_dims", False)
-        no_year = config.get("validation", {}).get("no_year_column", False)
-        return not (no_year or no_temporal)
+        return "year" in config.get("column_config", {}).get("temporal_columns", [])
 
     def compute_energy_production_df(
         self,
@@ -354,7 +346,7 @@ class PowerCurveManager:
         selected_power_curve: str,
         model_name: str,
         relevant_columns_only: bool = True,
-    ) -> pd.DataFrame:
+    ) -> tuple[pd.DataFrame, str]:
         """
         Computes energy production dataframe using the selected power curve.
 
@@ -393,37 +385,45 @@ class PowerCurveManager:
         # run validation for the schema w.r.t to the temporal schema config
         self._validate_data_with_temporal_schema(df, schema)
 
+        # Add temporal dimensions
+        df_with_temporal = self._add_temporal_dimensions(df, schema)
+
         power_curve = self.get_curve(selected_power_curve)
 
+        # Timeseries processing
         if self._is_timeseries_schema(schema):
-            normalized_df = self._normalize_timeseries_time_fields(df)
-            work = normalized_df.copy()
+            # Add kW columns for each height
+            result = df_with_temporal.copy()
             for ws_col in ws_cols:
-                work[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(work, ws_col)
+                result[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(result, ws_col)
 
             if relevant_columns_only:
+                # Build column list: temporal columns + windspeed + power
                 cols = []
                 for temporal_col in ["time", "year", "month", "day", "hour", "mohr"]:
-                    if temporal_col in work.columns:
+                    if temporal_col in result.columns:
                         cols.append(temporal_col)
-                cols += ws_cols + [f"{ws_col}_kw" for ws_col in ws_cols]
-                return work[cols], schema
+                cols.extend(ws_cols)
+                cols.extend([f"{ws_col}_kw" for ws_col in ws_cols])
+                return result[cols], schema
 
-            return work, schema
-
+            return result, schema
+        # Quantile Processing
         elif self._is_quantile_schema(schema):
             use_swi_eff = self._use_swi_for(schema)
-
+            # Quantile with year dimension
             if self._has_year_dimension(schema):
                 records = []
-                for year, group in df.groupby("year"):
+                for year, group in df_with_temporal.groupby("year"):
                     # sorting by probability is important since the records might be shuffled by "groupby" and we are using midpoint method.
-                    group = group.sort_values("probability").reset_index(drop=True)
+                    group_sorted = group.sort_values("probability").reset_index(
+                        drop=True
+                    )
                     col_dfs = []
 
                     for ws_col in ws_cols:
                         mid_df = self._quantiles_to_kw_midpoints(
-                            group[["probability", ws_col]].copy(),
+                            group_sorted[["probability", ws_col]].copy(),
                             ws_col,
                             power_curve,
                             use_swi=use_swi_eff,
@@ -433,42 +433,44 @@ class PowerCurveManager:
                     result_df["year"] = year
                     records.append(result_df)
 
-                out = (
+                result = (
                     pd.concat(records, ignore_index=True) if records else pd.DataFrame()
                 )
 
-                if not relevant_columns_only:
-                    return out, schema
+                if relevant_columns_only:
+                    cols = ["year"]
+                    for h in heights:
+                        ws_col = f"windspeed_{h}m"
+                        cols.extend([ws_col, f"{ws_col}_kw"])
+                    return result[cols], schema
 
-                cols = ["year"]
-                for h in heights:
-                    ws_col = f"windspeed_{h}m"
-                    cols += [ws_col, f"{ws_col}_kw"]
-                return out[cols], schema
+                return result, schema
 
             else:  # Quantile without year (atemporal)
-                group = df.sort_values("probability").reset_index(drop=True)
+                group_sorted = df_with_temporal.sort_values("probability").reset_index(
+                    drop=True
+                )
                 col_dfs = []
 
                 for ws_col in ws_cols:
                     mid_df = self._quantiles_to_kw_midpoints(
-                        group[["probability", ws_col]].copy(),
+                        group_sorted[["probability", ws_col]].copy(),
                         ws_col,
                         power_curve,
                         use_swi=use_swi_eff,
                     )
                     col_dfs.append(mid_df)
 
-                out = pd.concat(col_dfs, axis=1) if col_dfs else pd.DataFrame()
+                result = pd.concat(col_dfs, axis=1) if col_dfs else pd.DataFrame()
 
-                if not relevant_columns_only:
-                    return out, schema
+                if relevant_columns_only:
+                    cols = []
+                    for h in heights:
+                        ws_col = f"windspeed_{h}m"
+                        cols.extend([ws_col, f"{ws_col}_kw"])
+                    return result[cols], schema
 
-                cols = []
-                for h in heights:
-                    ws_col = f"windspeed_{h}m"
-                    cols += [ws_col, f"{ws_col}_kw"]
-                return out[cols], schema
+                return result, schema
         else:
             raise ValueError(f"Unknown schema type: {schema}")
 
@@ -503,17 +505,21 @@ class PowerCurveManager:
                 errors="ignore",
             )
             schema_config = self._get_temporal_schema_config(schema)
-            time_col = schema_config.get("column_config", {}).get("time_column")
+            encoding = schema_config.get("column_config", {}).get("encoding", None)
 
             for year, group in work.groupby("year"):
                 avg_ws = group[ws_column].mean()
-                if time_col == "mohr":
+                if encoding == "mohr_encoded":
                     # sum of instantaneous power over typical month × 30 days
                     kwh = group[kw_column].sum() * 30
                 # time_col == "time"
-                else:
+                elif encoding == "datetime_full":
                     # Full hourly: just sum
                     kwh = group[kw_column].sum()
+                else:
+                    raise ValueError(
+                        f"Invalid encoding '{encoding}' found for schema '{schema}'."
+                    )
 
                 res_list.append(
                     {
@@ -692,14 +698,18 @@ class PowerCurveManager:
             raise ValueError("No valid years found in timeseries data.")
 
         schema_config = self._get_temporal_schema_config(schema)
-        time_col = schema_config.get("column_config", {}).get("time_column")
+        encoding = schema_config.get("column_config", {}).get("encoding", None)
 
-        if time_col == "mohr":
+        if encoding == "mohr_encoded":
             # Aggregated: scale by 30 and average across years
             res["kwh_total"] *= 30 / n_years
-        else:  # time_col == "time"
+        elif encoding == "datetime_full":
             # Full hourly: average across years
             res["kwh_total"] /= n_years
+        else:
+            raise ValueError(
+                f"Invalid encoding '{encoding}' found for schema '{schema}'."
+            )
 
         res.rename(
             columns={"avg_ws": "Average wind speed (m/s)", "kwh_total": "kWh produced"},

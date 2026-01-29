@@ -198,7 +198,8 @@ def get_production(
         )
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

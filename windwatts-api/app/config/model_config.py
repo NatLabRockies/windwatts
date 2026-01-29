@@ -9,42 +9,63 @@ data sources, valid parameters, and model-specific settings.
 TEMPORAL_SCHEMAS = {
     "full_hourly": {
         "description": "Full 8760-hour timeseries with datetime index",
-        "column_config": {"time_column": "time"},
-        "validation": {"required_columns": ["time"]},
-        "use_swi": False,
-        "period_type": {"timeseries_export": ["hourly", "monthly"]},
+        "column_config": {
+            "temporal_columns": ["time"],
+            "probability_columns": [],
+            "temporal_dimensions": ["year", "month", "day", "hour"],
+            "encoding": "datetime_full",
+        },
+        "processing": {"use_swi": False},
+        "period_type": {
+            "windspeed": [],
+            "production": [],
+            "timeseries_export": ["hourly", "monthly"],
+        },
     },
     "aggregated_mohr": {
         "description": "Hourly-aggregated (12*24) with month-hour encoding",
-        "column_config": {"time_column": "mohr"},
-        "validation": {
-            "required_columns": ["mohr", "year"],
+        "column_config": {
+            "temporal_columns": ["mohr", "year"],
+            "probability_columns": [],
+            "temporal_dimensions": ["month", "hour", "year"],
+            "encoding": "mohr_encoded",
         },
-        "use_swi": False,
+        "processing": {"use_swi": False},
         "period_type": {
             "windspeed": ["all", "annual", "monthly", "hourly"],
             "production": ["all", "summary", "annual", "monthly", "full"],
+            "timeseries_export": [],
         },
     },
     "quantile_yearly": {
         "description": "Quantile distributions per year",
-        "column_config": {"probability_column": "probability"},
-        "validation": {"required_columns": ["probability", "year"]},
-        "use_swi": True,
+        "column_config": {
+            "temporal_columns": ["year"],
+            "probability_columns": ["probability"],
+            "temporal_dimensions": ["year"],
+            "encoding": None,
+        },
+        "processing": {"use_swi": True},
         "period_type": {
             "windspeed": ["all", "annual"],
             "production": ["all", "summary", "annual", "full"],
+            "timeseries_export": [],
         },
     },
     "quantile_atemporal": {
         "description": "Global quantiles without temporal dimension",
         "column_config": {
-            "probability_column": "probability",
-            "no_temporal_dims": True,
+            "temporal_columns": [],
+            "probability_columns": ["probability"],
+            "temporal_dimensions": [],
+            "encoding": None,
         },
-        "validation": {"required_columns": ["probability"], "no_year_column": True},
-        "use_swi": False,
-        "period_type": {"windspeed": ["all"], "production": ["all"]},
+        "processing": {"use_swi": False},
+        "period_type": {
+            "windspeed": ["all"],
+            "production": ["all"],
+            "timeseries_export": [],
+        },
     },
 }
 
