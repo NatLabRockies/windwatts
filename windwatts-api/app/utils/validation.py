@@ -80,7 +80,7 @@ def validate_powercurve(powercurve: str) -> str:
     """Validate power curve name"""
     # Import here to avoid circular dependency
     from app.power_curve.global_power_curve_manager import power_curve_manager
-    
+
     if not re.match(r"^[\w\-.]+$", powercurve):
         raise HTTPException(status_code=400, detail="Invalid power curve name.")
     if powercurve not in power_curve_manager.power_curves:
@@ -112,7 +112,6 @@ def validate_limit(limit: int) -> int:
 
 def validate_data_with_temporal_schema(df, schema: str):
     """Validate the dataframe with repect to temporal schema config."""
-    print(df)
     temporal_schema_config = TEMPORAL_SCHEMAS.get(schema, {})
 
     column_config = temporal_schema_config.get("column_config", {})

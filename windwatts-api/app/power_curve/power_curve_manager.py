@@ -265,15 +265,10 @@ class PowerCurveManager:
         # 1. Checking for "time" column
         if encoding == "datetime_full":
             time = pd.to_datetime(result["time"], errors="coerce", utc=False)
-            if "year" in temporal_dimensions:
-                result["year"] = time.dt.year.astype(int)
-            if "month" in temporal_dimensions:
-                result["month"] = time.dt.month.astype(int)
-            if "hour" in temporal_dimensions:
-                result["hour"] = time.dt.hour.astype(int)
-            if "day" in temporal_dimensions:
-                result["day"] = time.dt.day.astype(int)
-
+            result["year"] = time.dt.year.astype(int)
+            result["month"] = time.dt.month.astype(int)
+            result["hour"] = time.dt.hour.astype(int)
+            result["day"] = time.dt.day.astype(int)
             result["time"] = time
 
             return result
@@ -281,10 +276,9 @@ class PowerCurveManager:
         # 2. Checking for mohr column
         elif encoding == "mohr_encoded":
             mohr = pd.to_numeric(result["mohr"], errors="coerce")
-            if "month" in temporal_dimensions:
-                result["month"] = (mohr // 100).astype(int)
-            if "hour" in temporal_dimensions:
-                result["hour"] = (mohr % 100).astype(int)
+            result["month"] = (mohr // 100).astype(int)
+            result["hour"] = (mohr % 100).astype(int)
+
             return result
 
         else:
