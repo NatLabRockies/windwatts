@@ -6,7 +6,6 @@ import re
 from fastapi import HTTPException
 
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
-from app.power_curve.global_power_curve_manager import power_curve_manager
 
 
 def validate_model(model: str) -> str:
@@ -79,6 +78,9 @@ def validate_height(model: str, height: int) -> int:
 
 def validate_powercurve(powercurve: str) -> str:
     """Validate power curve name"""
+    # Import here to avoid circular dependency
+    from app.power_curve.global_power_curve_manager import power_curve_manager
+    
     if not re.match(r"^[\w\-.]+$", powercurve):
         raise HTTPException(status_code=400, detail="Invalid power curve name.")
     if powercurve not in power_curve_manager.power_curves:
@@ -106,3 +108,35 @@ def validate_limit(limit: int) -> int:
             detail="Invalid limit. Currently supporting up to 4 nearest grid points",
         )
     return limit
+
+
+def validate_data_with_temporal_schema(df, schema: str):
+    """Validate the dataframe with repect to temporal schema config."""
+    print(df)
+    temporal_schema_config = TEMPORAL_SCHEMAS.get(schema, {})
+
+    column_config = temporal_schema_config.get("column_config", {})
+
+    df_cols = set(df.columns.str.lower())
+
+    # validate required columns
+    required_cols = column_config.get("temporal_columns", []) + column_config.get(
+        "probability_columns", []
+    )
+    missing_cols = [col for col in required_cols if col.lower() not in df_cols]
+    if missing_cols:
+        raise ValueError(f"Missing columns: {missing_cols} for the schema {schema}.")
+
+    # validate for no temporal columns
+    if not column_config.get("temporal_columns", []):
+        temporal_cols = [
+            col
+            for col in ["year", "month", "day", "hour", "time", "mohr"]
+            if col in df_cols
+        ]
+        if temporal_cols:
+            raise ValueError(
+                f"Schema '{schema}' validation failed: "
+                f"Schema is atemporal and should NOT have temporal columns. "
+                f"Found: {temporal_cols}"
+            )

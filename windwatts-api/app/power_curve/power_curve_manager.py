@@ -5,7 +5,8 @@ import calendar
 import numpy as np
 from scipy.interpolate import CubicSpline
 from typing import List, Union
-from ..config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+from app.utils.validation import validate_data_with_temporal_schema
 
 
 class PowerCurveManager:
@@ -246,9 +247,13 @@ class PowerCurveManager:
             - WTK 1224 Timeseries with 'mohr' (month*100+hour)
         Adds time attributes and return df
         """
-        temporal_dimensions = self._get_temporal_schema_config(schema)[
-            "column_config"
-        ].get("temporal_dimensions", [])
+        schema_config = self._get_temporal_schema_config(schema)
+
+        temporal_dimensions = schema_config["column_config"].get(
+            "temporal_dimensions", []
+        )
+
+        encoding = schema_config["column_config"].get("encoding", None)
 
         if not temporal_dimensions:
             return df
@@ -258,7 +263,7 @@ class PowerCurveManager:
 
         result = df.copy()
         # 1. Checking for "time" column
-        if "time" in result.columns:
+        if encoding == "datetime_full":
             time = pd.to_datetime(result["time"], errors="coerce", utc=False)
             if "year" in temporal_dimensions:
                 result["year"] = time.dt.year.astype(int)
@@ -274,7 +279,7 @@ class PowerCurveManager:
             return result
 
         # 2. Checking for mohr column
-        elif "mohr" in result.columns:
+        elif encoding == "mohr_encoded":
             mohr = pd.to_numeric(result["mohr"], errors="coerce")
             if "month" in temporal_dimensions:
                 result["month"] = (mohr // 100).astype(int)
@@ -284,42 +289,8 @@ class PowerCurveManager:
 
         else:
             raise ValueError(
-                "No recognized time column found. "
-                "Dataset must contain either 'time' (datetime) or 'mohr' (month-hour encoding) column "
-                "for adding temporal dimensions"
+                f"""Invalid encoding found. Schema {schema} doesn't support encoding {encoding}."""
             )
-
-    def _validate_data_with_temporal_schema(self, df: pd.DataFrame, schema: str):
-        """Validate the dataframe with repect to temporal schema config."""
-        temporal_schema_config = self._get_temporal_schema_config(schema=schema)
-
-        column_config = temporal_schema_config.get("column_config", {})
-
-        df_cols = set(df.columns.str.lower())
-
-        # validate required columns
-        required_cols = column_config.get("temporal_columns", []) + column_config.get(
-            "probability_columns", []
-        )
-        missing_cols = [col for col in required_cols if col.lower() not in df_cols]
-        if missing_cols:
-            raise ValueError(
-                f"Missing columns: {missing_cols} for the schema {schema}."
-            )
-
-        # validate for no temporal columns
-        if not column_config.get("temporal_columns", []):
-            temporal_cols = [
-                col
-                for col in ["year", "month", "day", "hour", "time", "mohr"]
-                if col in df_cols
-            ]
-            if temporal_cols:
-                raise ValueError(
-                    f"Schema '{schema}' validation failed: "
-                    f"Schema is atemporal and should NOT have temporal columns. "
-                    f"Found: {temporal_cols}"
-                )
 
     def _is_timeseries_schema(self, schema: str) -> bool:
         """Check if schema is timeseries by looking for time column in config."""
@@ -383,7 +354,7 @@ class PowerCurveManager:
         # get the schema from config
         schema = self._get_schema_from_model(model_name)
         # run validation for the schema w.r.t to the temporal schema config
-        self._validate_data_with_temporal_schema(df, schema)
+        validate_data_with_temporal_schema(df, schema)
 
         # Add temporal dimensions
         df_with_temporal = self._add_temporal_dimensions(df, schema)

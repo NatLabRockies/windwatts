@@ -19,7 +19,7 @@ TEMPORAL_SCHEMAS = {
         "period_type": {
             "windspeed": [],
             "production": [],
-            "timeseries_export": ["hourly", "monthly"],
+            "timeseries": ["hourly", "monthly"],
         },
     },
     "aggregated_mohr": {
@@ -34,7 +34,7 @@ TEMPORAL_SCHEMAS = {
         "period_type": {
             "windspeed": ["all", "annual", "monthly", "hourly"],
             "production": ["all", "summary", "annual", "monthly", "full"],
-            "timeseries_export": [],
+            "timeseries": [],
         },
     },
     "quantile_yearly": {
@@ -43,13 +43,13 @@ TEMPORAL_SCHEMAS = {
             "temporal_columns": ["year"],
             "probability_columns": ["probability"],
             "temporal_dimensions": ["year"],
-            "encoding": None,
+            "encoding": "yearly_quantile",
         },
         "processing": {"use_swi": True},
         "period_type": {
             "windspeed": ["all", "annual"],
             "production": ["all", "summary", "annual", "full"],
-            "timeseries_export": [],
+            "timeseries": [],
         },
     },
     "quantile_atemporal": {
@@ -58,13 +58,13 @@ TEMPORAL_SCHEMAS = {
             "temporal_columns": [],
             "probability_columns": ["probability"],
             "temporal_dimensions": [],
-            "encoding": None,
+            "encoding": "atemporal_quantile",
         },
         "processing": {"use_swi": False},
         "period_type": {
             "windspeed": ["all"],
             "production": ["all"],
-            "timeseries_export": [],
+            "timeseries": [],
         },
     },
 }
