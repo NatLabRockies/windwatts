@@ -128,25 +128,6 @@ def pytest_configure(config):
 
         mock_client.query_athena = mock_query_athena
 
-        # Mock fetch_df for raw data fetches (used by production endpoints)
-        def mock_fetch_df(lat, long, height, *args, **kwargs):
-            # Return DataFrame with windspeed column named according to height
-            # Also includes timestamp, year, month, hour, mohr for power curve calculations
-            timestamps = pd.date_range("2020-01-01", periods=5, freq="h")
-            return pd.DataFrame(
-                {
-                    f"windspeed_{height}m": [8.5, 8.7, 8.3, 8.6, 8.4],
-                    "timestamp": timestamps,
-                    "year": timestamps.year,
-                    "month": timestamps.month,
-                    "hour": timestamps.hour,
-                    "mohr": timestamps.month * 100
-                    + timestamps.hour,  # month-hour combined
-                }
-            )
-
-        mock_client.fetch_df = MagicMock(side_effect=mock_fetch_df)
-
         # Mock find_n_nearest_locations for grid-points endpoint
         def mock_find_n_nearest(lat, lon, limit=1):
             # Mock locations data - returns tuples of (index, lat, lon)
@@ -192,17 +173,55 @@ def pytest_configure(config):
 
         return mock_client
 
-    # Patch the windwatts_data client classes
-    wtk_patch = patch(
-        "windwatts_data.WindwattsWTKClient", return_value=create_mock_windwatts_client()
-    )
-    era5_patch = patch(
-        "windwatts_data.WindwattsERA5Client",
-        return_value=create_mock_windwatts_client(),
-    )
+    # Create separate mock clients for different data sources
+    wtk_mock = create_mock_windwatts_client()
+    era5_mock = create_mock_windwatts_client()
+    ensemble_mock = create_mock_windwatts_client()
+
+    # WTK returns timeseries data with timestamp/year/month/hour
+    def mock_fetch_df_wtk(lat, long, height, *args, **kwargs):
+        timestamps = pd.date_range("2020-01-01", periods=5, freq="h")
+        return pd.DataFrame(
+            {
+                f"windspeed_{height}m": [8.5, 8.7, 8.3, 8.6, 8.4],
+                "timestamp": timestamps,
+                "year": timestamps.year,
+                "month": timestamps.month,
+                "hour": timestamps.hour,
+                "mohr": timestamps.month * 100 + timestamps.hour,
+            }
+        )
+
+    wtk_mock.fetch_df = MagicMock(side_effect=mock_fetch_df_wtk)
+
+    # ERA5 returns quantile data with probability column and year
+    def mock_fetch_df_era5(lat, long, height, *args, **kwargs):
+        return pd.DataFrame(
+            {
+                f"windspeed_{height}m": [6.2, 7.1, 7.8, 8.5, 9.2, 10.1],
+                "probability": [0.1, 0.25, 0.5, 0.75, 0.9, 0.95],
+                "year": [2020, 2020, 2020, 2020, 2020, 2020],
+            }
+        )
+
+    era5_mock.fetch_df = MagicMock(side_effect=mock_fetch_df_era5)
+
+    # Ensemble returns quantile data without year (atemporal)
+    def mock_fetch_df_ensemble(lat, long, height, *args, **kwargs):
+        return pd.DataFrame(
+            {
+                f"windspeed_{height}m": [6.5, 7.3, 8.0, 8.7, 9.4, 10.2],
+                "probability": [0.1, 0.25, 0.5, 0.75, 0.9, 0.95],
+            }
+        )
+
+    ensemble_mock.fetch_df = MagicMock(side_effect=mock_fetch_df_ensemble)
+
+    # Patch the windwatts_data client classes with appropriate mocks
+    wtk_patch = patch("windwatts_data.WindwattsWTKClient", return_value=wtk_mock)
+    era5_patch = patch("windwatts_data.WindwattsERA5Client", return_value=era5_mock)
     ensemble_patch = patch(
-        "windwatts_data.WindwattsEnsembleClient",
-        return_value=create_mock_windwatts_client(),
+        "windwatts_data.WindwattsEnsembleClient", return_value=ensemble_mock
     )
 
     _windwatts_patches = [wtk_patch, era5_patch, ensemble_patch]

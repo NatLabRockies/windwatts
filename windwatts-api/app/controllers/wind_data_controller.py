@@ -7,7 +7,7 @@ import re
 import os
 
 from app.config_manager import ConfigManager
-from app.config.model_config import MODEL_CONFIG
+from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
@@ -48,30 +48,35 @@ if not _skip_data_init:
     athena_config = config_manager.get_config()
 
     # Initialize Athena data fetchers
-    athena_data_fetchers["era5"] = AthenaDataFetcher(
+    athena_data_fetchers["era5-quantiles"] = AthenaDataFetcher(
         athena_config=athena_config, source_key="era5"
     )
-    athena_data_fetchers["ensemble"] = AthenaDataFetcher(
+    athena_data_fetchers["ensemble-quantiles"] = AthenaDataFetcher(
         athena_config=athena_config, source_key="ensemble"
     )
-    athena_data_fetchers["wtk"] = AthenaDataFetcher(
+    athena_data_fetchers["wtk-timeseries"] = AthenaDataFetcher(
         athena_config=athena_config, source_key="wtk"
     )
 
     # Initialize S3 data fetchers
-    s3_data_fetchers["era5"] = S3DataFetcher(
+    s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
         bucket_name="windwatts-era5",
         prefix="era5_timeseries",
         grid="era5",
         s3_key_template="era5",
     )
-    s3_data_fetchers["wtk"] = S3DataFetcher(
+    s3_data_fetchers["wtk-timeseries"] = S3DataFetcher(
         bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
     )
 
     # Register fetchers with DataFetcherRouter
     # Register with simple names: athena, s3 (not athena_era5, s3_era5)
-    for model_key in ["era5", "ensemble", "wtk"]:
+    for model_key in [
+        "era5-quantiles",
+        "ensemble-quantiles",
+        "wtk-timeseries",
+        "era5-timeseries",
+    ]:
         if model_key in athena_data_fetchers:
             data_fetcher_router.register_fetcher(
                 f"athena_{model_key}", athena_data_fetchers[model_key]
@@ -126,7 +131,7 @@ def get_windspeed(
 
         # Use default source if not provided
         if source is None:
-            source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
+            source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_windspeed_core(
             model, lat, lng, height, period, source, data_fetcher_router
@@ -186,14 +191,15 @@ def get_production(
 
         # Use default source if not provided
         if source is None:
-            source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
+            source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_production_core(
             model, lat, lng, height, powercurve, period, source, data_fetcher_router
         )
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -252,9 +258,6 @@ def get_grid_points(
     lat: float = Query(..., description="Latitude of the target location"),
     lng: float = Query(..., description="Longitude of the target location"),
     limit: int = Query(1, description="Number of nearest grid points to return (1-4)"),
-    source: Optional[str] = Query(
-        None, description="Data source. Defaults to model's default source."
-    ),
 ):
     """
     Find the nearest grid points to a given coordinate.
@@ -265,7 +268,6 @@ def get_grid_points(
     - **lat**: (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: (varies by model, refer info endpoint for coordinate bounds)
     - **limit**: Number of nearest points to return (1-4)
-    - **source**: Optional data source override
     """
     try:
         model = validate_model(model)
@@ -324,12 +326,13 @@ def get_model_info(
     try:
         model = validate_model(model)
         config = MODEL_CONFIG[model]
-
+        schema = config["schema"]
+        temporal_config = TEMPORAL_SCHEMAS[schema]
         return {
             "model": model,
             # "available_sources": config["sources"],
             # "default_source": config["default_source"],
-            "supported_periods": config["period_type"],
+            "supported_periods": temporal_config["period_type"],
             "available_years": config.get("years", {}).get("full", []),
             "available_heights": config.get("heights", []),
             "grid_info": config.get("grid_info", {}),
