@@ -2,8 +2,8 @@ import {
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
   NearestGridLocationRequest,
-  WindCSVFileRequest,
-  WindCSVFilesRequest,
+  CSVExportRequest,
+  CSVBatchExportRequest,
 } from "../types";
 
 export const fetchWrapper = async (url: string, options: RequestInit) => {
@@ -44,11 +44,11 @@ export const getEnergyProduction = async ({
   lat,
   lng,
   hubHeight,
-  powerCurve,
+  powerCurve: turbine,
   dataModel,
   period = "all",
 }: EnergyProductionRequest) => {
-  const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&powercurve=${powerCurve}&period=${period}`;
+  const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&turbine=${turbine}&period=${period}`;
   const options = {
     method: "GET",
     headers: {
@@ -100,39 +100,100 @@ export const getNearestGridLocation = async ({
   return fetchWrapper(url, options);
 };
 
-// V1 API: Single timeseries CSV download (default source is s3)
-export const getCSVFile = async ({
-  gridIndex,
-  dataModel,
-}: WindCSVFileRequest) => {
-  const url = `/api/v1/${dataModel}/timeseries?gridIndex=${gridIndex}`;
-
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-
-  return fetchBlobWrapper(url, options);
+// V1 API: Single timeseries CSV download
+// by period of hourly or monthly
+// with option to include energy
+export const getExportCSV = async (
+  {
+    gridIndex,
+    dataModel,
+    period = "hourly",
+    turbine,
+  }: CSVExportRequest,
+  includeEnergy: boolean
+) => {
+  if (includeEnergy) {
+    if (!turbine) {
+      throw new Error("Turbine must be specified for energy export");
+    }
+    // Energy export
+    const params = new URLSearchParams({
+      gridIndex: gridIndex,
+      period: period,
+      turbine: turbine,
+    });
+    const url = `/api/v1/${dataModel}/timeseries/energy?${params.toString()}`;
+    const options = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return fetchBlobWrapper(url, options);
+  } else {
+    // Timeseries export
+    const params = new URLSearchParams({
+      gridIndex: gridIndex,
+      period: period,
+    });
+    const url = `/api/v1/${dataModel}/timeseries?${params.toString()}`;
+    const options = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return fetchBlobWrapper(url, options);
+  }
 };
 
-// V1 API: Batch timeseries CSV download as ZIP
-export const getBatchCSVFiles = async ({
-  gridLocations,
-  dataModel,
-}: WindCSVFilesRequest) => {
-  const url = `/api/v1/${dataModel}/timeseries/batch`;
-
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+// V1 API: Batch CSV download as ZIP
+export const getBatchExportCSV = async (
+  {
+    gridLocations,
+    dataModel,
+    period = "hourly",
+    turbine,
+  }: CSVBatchExportRequest,
+  includeEnergy: boolean
+) => {
+  if (includeEnergy) {
+    if (!turbine) {
+      throw new Error("Turbine must be specified for energy export");
+    }
+    // Batch energy export
+    const params = new URLSearchParams({
+      period: period,
+      turbine: turbine,
+    });
+    const url = `/api/v1/${dataModel}/timeseries/energy/batch?${params.toString()}`;
+    const body = {
       locations: gridLocations,
-    }),
-  };
-
-  return fetchBlobWrapper(url, options);
+    };
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    };
+    return fetchBlobWrapper(url, options);
+  } else {
+    // Batch timeseries export
+    const params = new URLSearchParams({
+      period: period,
+    });
+    const url = `/api/v1/${dataModel}/timeseries/batch?${params.toString()}`;
+    const body = {
+      locations: gridLocations,
+    };
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    };
+    return fetchBlobWrapper(url, options);
+  }
 };
