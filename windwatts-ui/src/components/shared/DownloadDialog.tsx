@@ -10,10 +10,19 @@ import {
   CircularProgress,
   Alert,
   Skeleton,
+  FormControlLabel,
+  RadioGroup,
+  Radio,
+  Checkbox,
+  Card,
+  CardContent,
 } from "@mui/material";
 import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
-import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
+import {
+  useDownloadCSVFile,
+  useNearestGridLocation,
+} from "../../hooks";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { formatCoordinate } from "../../utils";
 
@@ -23,7 +32,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
   const [n_neighbors, setN_neighbors] = useState(1); // single nearest neighbor
   void setN_neighbors; // avoid unused variable warning
 
-  const { canDownload, isDownloading, downloadFile, downloadBatchFiles } =
+  const { canDownload, isDownloading, downloadFile, downloadBatchFiles, turbine, includeEnergy, setIncludeEnergy, period, setPeriod } =
     useDownloadCSVFile();
   const {
     gridLocations,
@@ -47,7 +56,10 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
     (n_neighbors > 1 && gridLocations.length >= n_neighbors);
 
   const canConfirm =
-    !isProcessing && !hasError && !!gridLocations && hasEnoughNeighbors;
+    !isProcessing &&
+    !hasError &&
+    !!gridLocations &&
+    hasEnoughNeighbors;
 
   const handleConfirm = async () => {
     setDownloadError(null);
@@ -62,7 +74,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
         const result = await downloadFile(
           nearestGridLocation.latitude,
           nearestGridLocation.longitude,
-          nearestGridLocation.index
+          nearestGridLocation.index,
         );
 
         if (!result.success) {
@@ -83,6 +95,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           );
           return;
         }
+
         const result = await downloadBatchFiles(selection);
         if (!result.success) {
           const errorMessage =
@@ -128,7 +141,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
       fullWidth
     >
       <DialogTitle id="download-dialog-title">
-        Download Hourly Wind Data
+        Export Wind Data
         {isProcessing && <CircularProgress size={20} sx={{ ml: 2 }} />}
       </DialogTitle>
       <DialogContent>
@@ -268,6 +281,106 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
             </Alert>
           )}
         </DialogContentText>
+
+        {/* Download Options */}
+        {canDownload && !isLoadingGridLocation && (
+          <Box sx={{mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+            {/* Time Period Selection Card */}
+            <Card variant="outlined">
+              <CardContent>
+                <RadioGroup
+                  row
+                  value={period}
+                  onChange={(e) =>
+                    setPeriod(e.target.value as "hourly" | "monthly")
+                  }
+                  sx={{ gap: 2, mb: -1 }}
+                >
+                  <FormControlLabel
+                    value="hourly"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Hourly Data
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          Full resolution (~8,760 records/year)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <FormControlLabel
+                    value="monthly"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Monthly Data
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          Aggregated (~12 records/year)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </RadioGroup>
+              </CardContent>
+            </Card>
+
+            {/* Include Energy Option Card */}
+            <Card
+              variant="outlined"
+              sx={{
+                bgcolor: includeEnergy ? "action.hover" : "transparent",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <CardContent>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={includeEnergy}
+                      onChange={(e) => setIncludeEnergy(e.target.checked)}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Box sx={{ ml: 1 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          color: includeEnergy ? "primary.main" : "text.primary",
+                        }}
+                      >
+                        Include Energy Results
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "text.secondary",
+                          display: "block",
+                          mt: 0.5,
+                        }}
+                      >
+                        Add calculated energy output columns using {turbine}{" "}
+                        power curve
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ width: "100%", alignItems: "flex-start", mb: -1 }}
+                />
+              </CardContent>
+            </Card>
+          </Box>
+        )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button
@@ -284,12 +397,12 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           sx={{ textTransform: "none" }}
         >
           {isDownloading
-            ? "Downloading..."
+            ? "Exporting..."
             : isLoadingGridLocation
               ? "Loading..."
               : hasError
                 ? "Retry"
-                : "Download"}
+                : "Export Data"}
         </Button>
       </DialogActions>
     </Dialog>
