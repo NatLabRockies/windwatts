@@ -19,10 +19,7 @@ import {
 } from "@mui/material";
 import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
-import {
-  useDownloadCSVFile,
-  useNearestGridLocation,
-} from "../../hooks";
+import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { formatCoordinate } from "../../utils";
 
@@ -32,8 +29,17 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
   const [n_neighbors, setN_neighbors] = useState(1); // single nearest neighbor
   void setN_neighbors; // avoid unused variable warning
 
-  const { canDownload, isDownloading, downloadFile, downloadBatchFiles, turbine, includeEnergy, setIncludeEnergy, period, setPeriod } =
-    useDownloadCSVFile();
+  const {
+    canDownload,
+    isDownloading,
+    downloadFile,
+    downloadBatchFiles,
+    turbine,
+    includeEnergy,
+    setIncludeEnergy,
+    period,
+    setPeriod,
+  } = useDownloadCSVFile();
   const {
     gridLocations,
     isLoading: isLoadingGridLocation,
@@ -56,10 +62,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
     (n_neighbors > 1 && gridLocations.length >= n_neighbors);
 
   const canConfirm =
-    !isProcessing &&
-    !hasError &&
-    !!gridLocations &&
-    hasEnoughNeighbors;
+    !isProcessing && !hasError && !!gridLocations && hasEnoughNeighbors;
 
   const handleConfirm = async () => {
     setDownloadError(null);
@@ -74,7 +77,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
         const result = await downloadFile(
           nearestGridLocation.latitude,
           nearestGridLocation.longitude,
-          nearestGridLocation.index,
+          nearestGridLocation.index
         );
 
         if (!result.success) {
@@ -284,7 +287,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
 
         {/* Download Options */}
         {canDownload && !isLoadingGridLocation && (
-          <Box sx={{mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
             {/* Time Period Selection Card */}
             <Card variant="outlined">
               <CardContent>
@@ -357,7 +360,9 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
                         variant="subtitle2"
                         sx={{
                           fontWeight: 600,
-                          color: includeEnergy ? "primary.main" : "text.primary",
+                          color: includeEnergy
+                            ? "primary.main"
+                            : "text.primary",
                         }}
                       >
                         Include Energy Results

@@ -104,12 +104,7 @@ export const getNearestGridLocation = async ({
 // by period of hourly or monthly
 // with option to include energy
 export const getExportCSV = async (
-  {
-    gridIndex,
-    dataModel,
-    period = "hourly",
-    turbine,
-  }: CSVExportRequest,
+  { gridIndex, dataModel, period = "hourly", turbine }: CSVExportRequest,
   includeEnergy: boolean
 ) => {
   if (includeEnergy) {

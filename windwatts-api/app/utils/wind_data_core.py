@@ -154,7 +154,9 @@ def get_production_core(
 
         response_dict = {
             "summary_avg_energy_production": summary_avg_energy_production,
-            "energy_production": summary_avg_energy_production["Average year"]["kWh produced"],
+            "energy_production": summary_avg_energy_production["Average year"][
+                "kWh produced"
+            ],
         }
 
         if "annual" in valid_periods:

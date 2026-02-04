@@ -312,11 +312,11 @@ class PowerCurveManager:
                 work["month"] = time.dt.month.astype(int)
             if not has_hour:
                 work["hour"] = time.dt.hour.astype(int)
-            
+
             # Optionally checking for day
             if "day" not in work.columns:
                 work["day"] = time.dt.day.astype(int)
-    
+
             work["time"] = time
 
             return work
@@ -329,22 +329,26 @@ class PowerCurveManager:
             if not has_hour:
                 work["hour"] = (mohr % 100).astype(int)
             if not has_year:
-                raise ValueError("Cannot extract 'year' from 'mohr' column." \
-                "Year must be present from the data returned from Athena source or" \
-                "provided through another time column.")
-            
+                raise ValueError(
+                    "Cannot extract 'year' from 'mohr' column."
+                    "Year must be present from the data returned from Athena source or"
+                    "provided through another time column."
+                )
+
             # year is already there as WTK uses athena as source not direct S3
             return work
-        
+
         else:
-            raise ValueError("No recognized time column found. "\
-            "Dataset must contain either 'time' (datetime) or 'mohr' (month-hour encoding) column "\
-            "for timeseries normalization.")
+            raise ValueError(
+                "No recognized time column found. "
+                "Dataset must contain either 'time' (datetime) or 'mohr' (month-hour encoding) column "
+                "for timeseries normalization."
+            )
 
     def compute_energy_production_df(
         self,
         df: pd.DataFrame,
-        heights: Union[int,List[int]],
+        heights: Union[int, List[int]],
         selected_power_curve: str,
         relevant_columns_only: bool = True,
     ) -> pd.DataFrame:
@@ -368,9 +372,11 @@ class PowerCurveManager:
 
         if isinstance(heights, int):
             heights = [heights]
-        
+
         if not heights:
-            raise ValueError("heights parameter cannot be empty. Provide at least one height value.")
+            raise ValueError(
+                "heights parameter cannot be empty. Provide at least one height value."
+            )
 
         ws_cols = [f"windspeed_{height}m" for height in heights]
 
@@ -395,7 +401,7 @@ class PowerCurveManager:
                         cols.append(temporal_col)
                 cols += ws_cols + [f"{ws_col}_kw" for ws_col in ws_cols]
                 return work[cols]
-            
+
             return work
 
         elif schema == DatasetSchema.QUANTILES_WITH_YEAR:
@@ -443,7 +449,7 @@ class PowerCurveManager:
                     use_swi=use_swi_eff,
                 )
                 col_dfs.append(mid_df)
-            
+
             out = pd.concat(col_dfs, axis=1) if col_dfs else pd.DataFrame()
 
             if not relevant_columns_only:

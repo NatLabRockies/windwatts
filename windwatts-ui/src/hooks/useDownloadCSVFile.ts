@@ -13,7 +13,8 @@ export const useDownloadCSVFile = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [includeEnergy, setIncludeEnergy] = useState(false);
   const [period, setPeriod] = useState<"hourly" | "monthly">("hourly");
-  const { currentPosition, preferredModel, powerCurve } = useContext(SettingsContext);
+  const { currentPosition, preferredModel, powerCurve } =
+    useContext(SettingsContext);
   const dataModel = preferredModel === "ensemble" ? "era5" : preferredModel;
   const { lat, lng } = currentPosition || {};
 
@@ -24,17 +25,20 @@ export const useDownloadCSVFile = () => {
   const downloadFile = async (
     gridLat: number,
     gridLng: number,
-    gridIndex: string,
+    gridIndex: string
   ) => {
     try {
       setIsDownloading(true);
 
-      const response = await getExportCSV({
-        gridIndex: gridIndex,
-        dataModel: dataModel!,
-        period: period,
-        turbine: includeEnergy ? turbine : undefined,
-      }, includeEnergy);
+      const response = await getExportCSV(
+        {
+          gridIndex: gridIndex,
+          dataModel: dataModel!,
+          period: period,
+          turbine: includeEnergy ? turbine : undefined,
+        },
+        includeEnergy
+      );
 
       await downloadWindDataCSV(response, gridLat, gridLng);
       return { success: true };
@@ -46,18 +50,19 @@ export const useDownloadCSVFile = () => {
     }
   };
 
-  const downloadBatchFiles = async (
-    gridLocations: GridLocation[],
-  ) => {
+  const downloadBatchFiles = async (gridLocations: GridLocation[]) => {
     try {
       setIsDownloading(true);
 
-      const response = await getBatchExportCSV({
-        gridLocations: gridLocations,
-        dataModel: dataModel!,
-        period: period,
-        turbine: includeEnergy ? turbine : undefined,
-      }, includeEnergy);
+      const response = await getBatchExportCSV(
+        {
+          gridLocations: gridLocations,
+          dataModel: dataModel!,
+          period: period,
+          turbine: includeEnergy ? turbine : undefined,
+        },
+        includeEnergy
+      );
 
       await downloadWindDataZIP(response, lat!, lng!);
       return { success: true };
