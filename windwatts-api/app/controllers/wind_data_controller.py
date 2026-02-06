@@ -428,7 +428,7 @@ def download_timeseries_batch(
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: List of years to include (optional, defaults to sample years)
-      - **year_range**: Range of years for download. Format: YYYY-YYYY.
+      - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
       - **year_set**: Full or Sample dataset to download (optional)
       - **source**: Data source (optional, defaults to s3)
       - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
@@ -498,6 +498,8 @@ def download_energy_timeseries(
 
     - **model**: Data model (era5, wtk)
     - **gridIndex**: Grid index from grid-points endpoint
+    - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+    - **year_set**: Full or Sample dataset to download (optional)
     - **years**: List of years to include (optional)
     - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     - **source**: Data source (defaults to S3)
