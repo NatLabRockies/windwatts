@@ -139,3 +139,18 @@ def validate_data_with_temporal_schema(df, schema: str):
                 f"Schema is atemporal and should NOT have temporal columns. "
                 f"Found: {temporal_cols}"
             )
+
+def validate_year_range(year_range: str) -> bool:
+    """
+    Validates if a string is in YYYY-YYYY format and logic is sound.
+    """
+    if not re.match(r"^\d{4}-\d{4}$", year_range):
+        raise ValueError("year range must be given in format YYYY-YYYY.")
+    
+    start_year, end_year = map(int, year_range.split('-'))
+
+    if start_year > end_year:
+        raise ValueError(f"Invalid range: Start year ({start_year}) cannot be greater than end year ({end_year}).")
+    
+    return start_year, end_year
+

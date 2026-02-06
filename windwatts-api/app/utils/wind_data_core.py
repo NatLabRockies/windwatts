@@ -5,11 +5,12 @@ Provides the core business logic for fetching wind speed, energy production,
 and timeseries data from various data sources.
 """
 
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from io import StringIO
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+import pandas as pd
 
 from app.utils.validation import (
     validate_lat,
@@ -20,6 +21,7 @@ from app.utils.validation import (
     validate_period_type,
     validate_powercurve,
     validate_year,
+    validate_year_range
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
@@ -183,9 +185,12 @@ def get_production_core(
 def get_timeseries_core(
     model: str,
     gridIndices: List[str],
-    years: List[int],
+    period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
+    years: Optional[List[int]] = None,
+    year_range: Optional[str] = None,
+    year_set: Optional[str] = None,
     return_dataframe: bool = False,
 ):
     """
@@ -194,9 +199,12 @@ def get_timeseries_core(
     Args:
         model (str): Data model (era5, wtk, ensemble).
         gridIndices (List[str]): List of grid indices to retrieve.
-        years (List[int]): List of years to retrieve, default to sample years.
+        period (str): Time period - "hourly" for raw data, "monthly" for yyyy-mm aggregation
         source (str): Source of the data.
         data_fetcher_router: Router instance for fetching data.
+        years (List[int]): List of years to retrieve, default to sample years.
+        year_range (str): Range of years for download. Format: YYYY-YYYY.
+        year_set (str): Full or Sample dataset to download.
         return_dataframe: If True, return DataFrame instead of CSV string
 
     Returns:
@@ -204,11 +212,21 @@ def get_timeseries_core(
     """
     model = validate_model(model)
     source = validate_source(model, source)
+    period = validate_period_type(model, period, "timeseries")
 
-    if years is None:
-        years = MODEL_CONFIG[model]["years"].get("sample", [])
+    if year_range:
+        start_year, end_year = validate_year_range(year_range)
+        resolved_years = list(range(start_year, end_year + 1))
+    elif year_set:
+        resolved_years = MODEL_CONFIG[model]["years"].get(year_set, [])
+        if not resolved_years:
+            raise ValueError(f"Invalid year_set: {year_set}. Valid year sets: ['sample', 'full']")
+    elif years:
+        resolved_years = years
+    else:
+        resolved_years = MODEL_CONFIG[model]["years"].get("sample", [])
 
-    years = [validate_year(year, model) for year in years]
+    years = [validate_year(year, model) for year in resolved_years]
 
     params = {"gridIndices": gridIndices, "years": years}
 
@@ -219,6 +237,24 @@ def get_timeseries_core(
         raise HTTPException(
             status_code=404, detail="No data found for the specified parameters"
         )
+    
+    windspeed_cols = [col for col in df.columns if col.startswith('windspeed')]
+    time = pd.to_datetime(df["time"], errors="coerce", utc=False)
+    df["time"] = time
+
+    if period == "monthly":
+        df["year"] = time.dt.year.astype(int)
+        df["month"] = time.dt.month.astype(int)
+        df["year_month"] = (
+            df["year"].astype(str) + '-' +
+            df["month"].astype(str).str.zfill(2)
+        )
+
+        agg_dict = {col: 'mean' for col in windspeed_cols}
+
+        df = df.groupby('year_month').agg(agg_dict).reset_index()
+
+    df[windspeed_cols] = df[windspeed_cols].round(2)
 
     if return_dataframe:
         return df
@@ -226,4 +262,63 @@ def get_timeseries_core(
     # Convert DataFrame to CSV string
     csv_io = StringIO()
     df.to_csv(csv_io, index=False)
+    return csv_io.getvalue()
+
+def get_timeseries_energy_core(
+    model: str,
+    gridIndices: List[str],
+    powercurve: str,
+    period: str,
+    source: str,
+    data_fetcher_router: DataFetcherRouter,
+    years: Optional[List[int]] = None,
+    year_range: Optional[str] = None,
+    year_set: Optional[str] = None,
+    return_dataframe: bool = False,   
+):
+    powercurve = validate_powercurve(powercurve)
+    heights = MODEL_CONFIG[model].get("heights")
+
+    df = get_timeseries_core(model, gridIndices, "hourly", source, data_fetcher_router, years, year_range, year_set, return_dataframe=True)
+    df_with_energy, _ = power_curve_manager.compute_energy_production_df(
+        df, heights, powercurve, model, relevant_columns_only=False
+    )
+    df_with_energy = df_with_energy.rename(columns= lambda x: x.replace("_kw", "_kwh") if x.startswith('windspeed') and x.endswith('_kw') else x)
+
+    if period == "hourly":
+        # to maintain col orders
+        cols = ["time"]
+        for h in heights:
+            ws_col = f"windspeed_{h}m"
+            cols.append(ws_col)
+            kw_col = f"{ws_col}_kwh"
+            cols.append(kw_col)
+        result_df = df_with_energy[cols]
+
+    elif period == "monthly":
+        df_with_energy["year_month"] = (
+            df_with_energy["year"].astype(str) + "-" +
+            df_with_energy["month"].astype(str).str.zfill(2)
+        )
+        agg_dict = {}
+        for h in heights:
+            ws_col = f"windspeed_{h}m"
+            kw_col = f"{ws_col}_kwh"
+            agg_dict[ws_col] = 'mean'
+            agg_dict[kw_col] = 'sum'
+
+        result_df = df_with_energy.groupby("year_month").agg(agg_dict).reset_index()
+
+    else:
+        raise ValueError(f"Invalid period: {period}.")
+    
+    cols_to_round = [col for col in result_df.columns if col.startswith('windspeed')]
+
+    result_df[cols_to_round] = result_df[cols_to_round].round(2)
+    
+    if return_dataframe:
+        return result_df
+    
+    csv_io = StringIO()
+    result_df.to_csv(csv_io, index=False)
     return csv_io.getvalue()

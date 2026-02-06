@@ -130,7 +130,7 @@ MODEL_CONFIG = {
         "source": "s3",
         "schema": "full_hourly",
         "years": {"full": list(range(2013, 2024)), "sample": [2020, 2021, 2022, 2023]},
-        "heights": [30, 40, 50, 60, 80, 100],
+        "heights": [10, 30, 40, 50, 60, 80, 100],
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
