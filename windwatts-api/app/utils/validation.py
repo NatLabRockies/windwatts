@@ -140,17 +140,48 @@ def validate_data_with_temporal_schema(df, schema: str):
                 f"Found: {temporal_cols}"
             )
 
-def validate_year_range(year_range: str) -> bool:
+def validate_year_range(year_range: str, model: str) -> tuple[int, int]:
     """
     Validates if a string is in YYYY-YYYY format and logic is sound.
     """
     if not re.match(r"^\d{4}-\d{4}$", year_range):
-        raise ValueError("year range must be given in format YYYY-YYYY.")
+        raise HTTPException(status_code=400, detail="year range must be given in format YYYY-YYYY.")
     
     start_year, end_year = map(int, year_range.split('-'))
 
     if start_year > end_year:
-        raise ValueError(f"Invalid range: Start year ({start_year}) cannot be greater than end year ({end_year}).")
+        raise HTTPException(status_code=400, detail=f"Invalid range: Start year ({start_year}) cannot be greater than end year ({end_year}).")
+        
+    valid_years = set(MODEL_CONFIG[model]["years"].get("full", []))
+    if start_year < min(valid_years) or end_year > max(valid_years):
+        valid_range = f"{min(valid_years)}-{max(valid_years)}"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid range for {model}: {start_year}-{end_year}. Currently supporting years {valid_range}",
+        )
     
     return start_year, end_year
 
+def validate_year_set(year_set: str) -> str:
+    """
+    Validate year set for timeseries data download
+    """
+    if year_set not in ["sample", "full"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid year_set: {year_set}. Valid year sets: ['sample', 'full']"
+            )
+    return year_set
+
+def validate_years(years: list[int], model: str) -> list[int]:
+    """Validate list of years"""
+    valid_years = set(MODEL_CONFIG[model]["years"].get("full", []))
+    invalid_years = [year for year in years if year not in valid_years]
+    
+    if invalid_years:
+        year_range = f"{min(valid_years)}-{max(valid_years)}"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid years for {model}: {invalid_years}. Currently supporting years {year_range}",
+        )
+    return years

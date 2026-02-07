@@ -21,7 +21,9 @@ from app.utils.validation import (
     validate_period_type,
     validate_powercurve,
     validate_year,
-    validate_year_range
+    validate_year_range,
+    validate_year_set,
+    validate_years
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
@@ -215,20 +217,17 @@ def get_timeseries_core(
     period = validate_period_type(model, period, "timeseries")
 
     if year_range:
-        start_year, end_year = validate_year_range(year_range)
+        start_year, end_year = validate_year_range(year_range, model)
         resolved_years = list(range(start_year, end_year + 1))
     elif year_set:
+        year_set = validate_year_set(year_set)
         resolved_years = MODEL_CONFIG[model]["years"].get(year_set, [])
-        if not resolved_years:
-            raise ValueError(f"Invalid year_set: {year_set}. Valid year sets: ['sample', 'full']")
     elif years:
-        resolved_years = years
+        resolved_years = validate_years(years, model)
     else:
         resolved_years = MODEL_CONFIG[model]["years"].get("sample", [])
 
-    years = [validate_year(year, model) for year in resolved_years]
-
-    params = {"gridIndices": gridIndices, "years": years}
+    params = {"gridIndices": gridIndices, "years": resolved_years}
 
     key = f"{source}_{model}"
     df = data_fetcher_router.fetch_data(params, key=key)
@@ -283,7 +282,6 @@ def get_timeseries_energy_core(
     df_with_energy, _ = power_curve_manager.compute_energy_production_df(
         df, heights, powercurve, model, relevant_columns_only=False
     )
-    df_with_energy = df_with_energy.rename(columns= lambda x: x.replace("_kw", "_kwh") if x.startswith('windspeed') and x.endswith('_kw') else x)
 
     if period == "hourly":
         # to maintain col orders
@@ -291,11 +289,11 @@ def get_timeseries_energy_core(
         for h in heights:
             ws_col = f"windspeed_{h}m"
             cols.append(ws_col)
-            kw_col = f"{ws_col}_kwh"
-            cols.append(kw_col)
+            energy_col = f"energy_{h}m_kwh"
+            cols.append(energy_col)
         result_df = df_with_energy[cols]
 
-    elif period == "monthly":
+    if period == "monthly":
         df_with_energy["year_month"] = (
             df_with_energy["year"].astype(str) + "-" +
             df_with_energy["month"].astype(str).str.zfill(2)
@@ -303,16 +301,13 @@ def get_timeseries_energy_core(
         agg_dict = {}
         for h in heights:
             ws_col = f"windspeed_{h}m"
-            kw_col = f"{ws_col}_kwh"
+            energy_col = f"energy_{h}m_kwh"
             agg_dict[ws_col] = 'mean'
-            agg_dict[kw_col] = 'sum'
+            agg_dict[energy_col] = 'sum'
 
         result_df = df_with_energy.groupby("year_month").agg(agg_dict).reset_index()
-
-    else:
-        raise ValueError(f"Invalid period: {period}.")
     
-    cols_to_round = [col for col in result_df.columns if col.startswith('windspeed')]
+    cols_to_round = [col for col in result_df.columns if col.startswith('windspeed') or col.startswith('energy')]
 
     result_df[cols_to_round] = result_df[cols_to_round].round(2)
     
