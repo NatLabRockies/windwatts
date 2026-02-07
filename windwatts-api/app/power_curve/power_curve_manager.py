@@ -236,7 +236,8 @@ class PowerCurveManager:
 
         # Convert to kW
         mid_df = pd.DataFrame({ws_col: midpoints})
-        mid_df[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(mid_df, ws_col)
+        energy_col = ws_col.replace("windspeed_", "energy_") + "_kwh"
+        mid_df[energy_col] = power_curve.windspeed_to_kw(mid_df, ws_col)
         return mid_df
 
     def _add_temporal_dimensions(self, df: pd.DataFrame, schema: str) -> pd.DataFrame:
@@ -340,6 +341,7 @@ class PowerCurveManager:
             )
 
         ws_cols = [f"windspeed_{height}m" for height in heights]
+        energy_cols = [ws_col.replace("windspeed_", "energy_") + "_kwh" for ws_col in ws_cols]
 
         for ws_col in ws_cols:
             if ws_col not in df.columns:
@@ -360,7 +362,8 @@ class PowerCurveManager:
             # Add kW columns for each height
             result = df_with_temporal.copy()
             for ws_col in ws_cols:
-                result[f"{ws_col}_kw"] = power_curve.windspeed_to_kw(result, ws_col)
+                energy_col = ws_col.replace("windspeed_", "energy_") + "_kwh"
+                result[energy_col] = power_curve.windspeed_to_kw(result, ws_col)
 
             if relevant_columns_only:
                 # Build column list: temporal columns + windspeed + power
@@ -369,7 +372,7 @@ class PowerCurveManager:
                     if temporal_col in result.columns:
                         cols.append(temporal_col)
                 cols.extend(ws_cols)
-                cols.extend([f"{ws_col}_kw" for ws_col in ws_cols])
+                cols.extend(energy_cols)
                 return result[cols], schema
 
             return result, schema
@@ -404,9 +407,8 @@ class PowerCurveManager:
 
                 if relevant_columns_only:
                     cols = ["year"]
-                    for h in heights:
-                        ws_col = f"windspeed_{h}m"
-                        cols.extend([ws_col, f"{ws_col}_kw"])
+                    cols.extend(ws_cols)
+                    cols.extend(energy_cols)
                     return result[cols], schema
 
                 return result, schema
@@ -430,9 +432,8 @@ class PowerCurveManager:
 
                 if relevant_columns_only:
                     cols = []
-                    for h in heights:
-                        ws_col = f"windspeed_{h}m"
-                        cols.extend([ws_col, f"{ws_col}_kw"])
+                    cols.extend(ws_cols)
+                    cols.extend(energy_cols)
                     return result[cols], schema
 
                 return result, schema
@@ -459,7 +460,7 @@ class PowerCurveManager:
             df, height, selected_power_curve, model_name=model_name
         )
         ws_column = f"windspeed_{height}m"
-        kw_column = f"windspeed_{height}m_kw"
+        kw_column = f"energy_{height}m_kwh"
 
         res_list = []
         if self._is_timeseries_schema(schema):
@@ -646,7 +647,7 @@ class PowerCurveManager:
             )
 
         ws_column = f"windspeed_{height}m"
-        kw_column = f"windspeed_{height}m_kw"
+        kw_column = f"energy_{height}m_kwh"
 
         work = prod_df.drop(
             columns=[col for col in prod_df.columns if "winddirection" in col],

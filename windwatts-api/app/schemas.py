@@ -266,9 +266,19 @@ class TimeseriesBatchRequest(BaseModel):
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
     )
+    year_range: Optional[str] = Field(
+        None, description="Range of years for download. Format: YYYY-YYYY."
+    )
+    year_set: Optional[str] = Field(
+        None, description="Full or Sample dataset to download."
+    )
     source: str = Field(
         "s3",
         description="Data source: athena or s3 (typically s3 for timeseries downloads)",
+    )
+    period: str = Field(
+        "hourly",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
     )
 
     model_config = {
@@ -288,6 +298,9 @@ class TimeseriesBatchRequest(BaseModel):
                 ],
                 "years": [2020, 2021, 2022],
                 "source": "s3",
+                "period": "hourly",
+                "year_range": "2013-2015",
+                "year_set": "sample"
             }
         }
     }
