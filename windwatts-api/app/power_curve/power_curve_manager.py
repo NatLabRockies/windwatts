@@ -341,7 +341,9 @@ class PowerCurveManager:
             )
 
         ws_cols = [f"windspeed_{height}m" for height in heights]
-        energy_cols = [ws_col.replace("windspeed_", "energy_") + "_kwh" for ws_col in ws_cols]
+        energy_cols = [
+            ws_col.replace("windspeed_", "energy_") + "_kwh" for ws_col in ws_cols
+        ]
 
         for ws_col in ws_cols:
             if ws_col not in df.columns:

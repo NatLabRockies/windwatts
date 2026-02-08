@@ -49,7 +49,8 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
 
   const { currentPosition, preferredModel } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
-  const dataModel = preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const downloadInfo = dataModel ? DATA_MODEL_INFO[dataModel] : null;
 
   const nearestGridLocation =

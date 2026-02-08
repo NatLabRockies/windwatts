@@ -117,7 +117,7 @@ export const getExportCSV = async (
       period: period,
       powercurve: turbine,
     });
-    dataModel = 'era5-timeseries'; // Hardcode timeseries model
+    dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries/energy?${params.toString()}`;
     const options = {
       method: "GET",
@@ -132,7 +132,7 @@ export const getExportCSV = async (
       gridIndex: gridIndex,
       period: period,
     });
-    dataModel = 'era5-timeseries'; // Hardcode timeseries model
+    dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries?${params.toString()}`;
     const options = {
       method: "GET",
@@ -163,7 +163,7 @@ export const getBatchExportCSV = async (
       period: period,
       powercurve: turbine,
     });
-    dataModel = 'era5-timeseries'; // Hardcode timeseries model
+    dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries/energy/batch?${params.toString()}`;
     const body = {
       locations: gridLocations,
@@ -181,7 +181,7 @@ export const getBatchExportCSV = async (
     const params = new URLSearchParams({
       period: period,
     });
-    dataModel = 'era5-timeseries'; // Hardcode timeseries model
+    dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries/batch?${params.toString()}`;
     const body = {
       locations: gridLocations,
