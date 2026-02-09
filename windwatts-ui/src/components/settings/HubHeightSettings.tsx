@@ -1,6 +1,7 @@
 import { useContext, useEffect, useMemo } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { Box, Slider, Typography, Paper } from "@mui/material";
+import { Box, Slider, Typography, Paper, Tooltip, IconButton } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { HUB_HEIGHTS, TURBINE_DATA, TurbineInfo } from "../../constants";
 
 export function HubHeightSettings() {
@@ -49,10 +50,10 @@ export function HubHeightSettings() {
     ? hubHeight >= turbineData.minHeight && hubHeight <= turbineData.maxHeight
     : true;
 
-  const validationColor: "primary" | "success" | "error" = turbineData
+  const validationColor: "primary" | "success" | "warning" = turbineData
     ? isHeightInRange
       ? "success"
-      : "error"
+      : "warning"
     : "primary";
 
   return (
@@ -67,19 +68,30 @@ export function HubHeightSettings() {
       {turbineData && (
         <Paper
           sx={{
-            p: 1.5,
+            p: 1,
             mb: 2,
             backgroundColor: `${validationColor}.light`,
             borderLeft: `4px solid`,
             borderLeftColor: `${validationColor}.main`,
           }}
         >
-          <Typography variant="body2">
-            <strong>
-              {isHeightInRange ? "Within" : "Outside"} recommended range - (
-              {turbineData.minHeight}m - {turbineData.maxHeight}m)
-            </strong>
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center"}}>
+            <Typography variant="body2">
+              <strong>
+                {isHeightInRange ? "Within" : "Outside"} recommended range - (
+                {turbineData.minHeight}m - {turbineData.maxHeight}m)
+              </strong>
+            </Typography>
+            <Tooltip
+              title={turbineData.info}
+              arrow
+              placement="right"
+            >
+              <IconButton size="small">
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Paper>
       )}
 
