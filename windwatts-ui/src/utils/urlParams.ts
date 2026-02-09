@@ -1,4 +1,4 @@
-import { DataModel } from "../types";
+import { DataModel, DATA_MODELS } from "../types";
 import { MODEL_COORDINATES_BOUNDS, VALID_POWER_CURVES } from "../constants";
 
 export interface UrlParams {
@@ -17,7 +17,7 @@ export const URL_PARAM_DEFAULTS = {
   zoom: 12,
   hubHeight: 40,
   powerCurve: "nlr-reference-100kW",
-  dataModel: "era5" as DataModel,
+  dataModel: "era5-quantiles" as DataModel,
   lossAssumption: 0,
   windspeedUnit: "mph",
 };
@@ -65,8 +65,8 @@ export function parseUrlParams(searchParams?: URLSearchParams): UrlParams {
   }
 
   const dataModel = params.get("dataModel");
-  if (dataModel === "era5" || dataModel === "wtk" || dataModel === "ensemble") {
-    result.dataModel = dataModel;
+  if (dataModel && DATA_MODELS.includes(dataModel as DataModel)) {
+    result.dataModel = dataModel as DataModel;
   }
 
   const lossAssumption = params.get("lossAssumption");

@@ -7,7 +7,7 @@ import re
 import os
 
 from app.config_manager import ConfigManager
-from app.config.model_config import MODEL_CONFIG
+from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
@@ -17,6 +17,7 @@ from app.utils.wind_data_core import (
     get_windspeed_core,
     get_production_core,
     get_timeseries_core,
+    get_timeseries_energy_core
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
@@ -49,30 +50,35 @@ if not _skip_data_init:
     athena_config = config_manager.get_config()
 
     # Initialize Athena data fetchers
-    athena_data_fetchers["era5"] = AthenaDataFetcher(
+    athena_data_fetchers["era5-quantiles"] = AthenaDataFetcher(
         athena_config=athena_config, source_key="era5"
     )
-    athena_data_fetchers["ensemble"] = AthenaDataFetcher(
+    athena_data_fetchers["ensemble-quantiles"] = AthenaDataFetcher(
         athena_config=athena_config, source_key="ensemble"
     )
-    athena_data_fetchers["wtk"] = AthenaDataFetcher(
+    athena_data_fetchers["wtk-timeseries"] = AthenaDataFetcher(
         athena_config=athena_config, source_key="wtk"
     )
 
     # Initialize S3 data fetchers
-    s3_data_fetchers["era5"] = S3DataFetcher(
+    s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
         bucket_name="windwatts-era5",
         prefix="era5_timeseries",
         grid="era5",
         s3_key_template="era5",
     )
-    s3_data_fetchers["wtk"] = S3DataFetcher(
+    s3_data_fetchers["wtk-timeseries"] = S3DataFetcher(
         bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
     )
 
     # Register fetchers with DataFetcherRouter
     # Register with simple names: athena, s3 (not athena_era5, s3_era5)
-    for model_key in ["era5", "ensemble", "wtk"]:
+    for model_key in [
+        "era5-quantiles",
+        "ensemble-quantiles",
+        "wtk-timeseries",
+        "era5-timeseries",
+    ]:
         if model_key in athena_data_fetchers:
             data_fetcher_router.register_fetcher(
                 f"athena_{model_key}", athena_data_fetchers[model_key]
@@ -127,7 +133,7 @@ def get_windspeed(
 
         # Use default source if not provided
         if source is None:
-            source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
+            source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_windspeed_core(
             model, lat, lng, height, period, source, data_fetcher_router
@@ -142,6 +148,7 @@ def get_windspeed(
     "/{model}/production",
     summary="Get energy production estimate for a location with a power curve",
     response_model=EnergyProductionResponse,
+    response_model_exclude_none=True,
     responses={
         200: {
             "description": "Energy production data retrieved successfully",
@@ -200,7 +207,7 @@ def get_production(
 
         # Use default source if not provided
         if source is None:
-            source = MODEL_CONFIG.get(model, {}).get("default_source", "athena")
+            source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_production_core(
             model, lat, lng, height, turbine, period, source, data_fetcher_router
@@ -306,9 +313,6 @@ def get_grid_points(
     lat: float = Query(..., description="Latitude of the target location"),
     lng: float = Query(..., description="Longitude of the target location"),
     limit: int = Query(1, description="Number of nearest grid points to return (1-4)"),
-    source: Optional[str] = Query(
-        None, description="Data source. Defaults to model's default source."
-    ),
 ):
     """
     Find the nearest grid points to a given coordinate.
@@ -319,7 +323,6 @@ def get_grid_points(
     - **lat**: (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: (varies by model, refer info endpoint for coordinate bounds)
     - **limit**: Number of nearest points to return (1-4)
-    - **source**: Optional data source override
     """
     try:
         model = validate_model(model)
@@ -378,12 +381,13 @@ def get_model_info(
     try:
         model = validate_model(model)
         config = MODEL_CONFIG[model]
-
+        schema = config["schema"]
+        temporal_config = TEMPORAL_SCHEMAS[schema]
         return {
             "model": model,
             # "available_sources": config["sources"],
             # "default_source": config["default_source"],
-            "supported_periods": config["period_type"],
+            "supported_periods": temporal_config["period_type"],
             "available_years": config.get("years", {}).get("full", []),
             "available_heights": config.get("heights", []),
             "grid_info": config.get("grid_info", {}),
@@ -409,8 +413,13 @@ def get_model_info(
 def download_timeseries(
     model: str = Path(..., description="Data model: era5 or wtk"),
     gridIndex: str = Query(..., description="Grid index identifier"),
+    year_range: Optional[str] = Query(None, description="Range of years for download. Format: YYYY-YYYY"),
+    year_set: Optional[str] = Query(None, description="Download full or sample dataset"),
     years: Optional[List[int]] = Query(
         None, description="Years to download (defaults to sample years)"
+    ),
+    period: Optional[str] = Query(
+        "hourly", description = "Time aggregation: hourly (raw data) or monthly (yyyy-mm aggregation)"
     ),
     source: str = Query(
         "s3",
@@ -424,13 +433,16 @@ def download_timeseries(
 
     - **model**: Data model (era5, wtk)
     - **gridIndex**: Grid index from grid-points endpoint
+    - **year_range**: Range of years for download. Format: YYYY-YYYY.
+    - **year_set**: Full or Sample dataset to download (optional)
     - **years**: List of years to include (optional)
+    - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     - **source**: Data source (defaults to S3)
     """
     try:
         # Get CSV content from core function
         csv_content = get_timeseries_core(
-            model, [gridIndex], years, source, data_fetcher_router
+            model, [gridIndex], period, source, data_fetcher_router, years, year_range, year_set
         )
 
         return StreamingResponse(
@@ -471,7 +483,10 @@ def download_timeseries_batch(
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: List of years to include (optional, defaults to sample years)
+      - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+      - **year_set**: Full or Sample dataset to download (optional)
       - **source**: Data source (optional, defaults to s3)
+      - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     """
     try:
         # Create spooled temporary file for ZIP
@@ -482,9 +497,12 @@ def download_timeseries_batch(
                 csv_content = get_timeseries_core(
                     model,
                     [loc.index],
-                    payload.years,
+                    payload.period,
                     payload.source,
                     data_fetcher_router,
+                    payload.years,
+                    payload.year_range,
+                    payload.year_set
                 )
                 file_name = f"wind_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
@@ -499,6 +517,60 @@ def download_timeseries_batch(
             chunker(spooled), media_type="application/zip", headers=headers
         )
 
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get(
+    "/{model}/timeseries/energy",
+    summary = "Download timeseries CSV data along with energy estimates for a selected turbine.",
+    responses = {
+        200: {"description": "CSV file downloaded successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def download_energy_timeseries(
+    model: str = Path(..., description="Data model: era5 or wtk"),
+    gridIndex: str = Query(..., description="Grid index indentifier"),
+    powercurve: str = Query(..., description="Turbine/Powercurve for energy estimates"),
+    year_range: Optional[str] = Query(None, description="Range of years for download. Format: YYYY-YYYY"),
+    year_set: Optional[str] = Query(None, description="Download full or sample dataset"),
+    years: Optional[List[int]] = Query(
+        None, description="Years to download (default to sample years)"
+    ),
+    period: Optional[str] = Query(
+        "hourly", description="Time aggregation: hourly (raw data) or monthly (yyyy-mm aggregation)"
+    ),
+    source: str = Query(
+        "s3", description = "Data source: athena or s3 (typically s3 for timeseries downloads)"
+    )
+):
+    """
+    Download energy timeseries data as CSV for a specific grid point.
+
+    - **model**: Data model (era5, wtk)
+    - **gridIndex**: Grid index from grid-points endpoint
+    - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+    - **year_set**: Full or Sample dataset to download (optional)
+    - **years**: List of years to include (optional)
+    - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
+    - **source**: Data source (defaults to S3)
+    """
+    try:
+        csv_content = get_timeseries_energy_core(
+            model, [gridIndex], powercurve, period, source, data_fetcher_router, years, year_range, year_set
+        )
+
+        return StreamingResponse(
+            iter([csv_content]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="wind_&_energy_data_{gridIndex}.csv"'
+            },
+        )
     except HTTPException:
         raise
     except Exception:

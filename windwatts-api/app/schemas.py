@@ -162,7 +162,8 @@ class YearlyEnergyProductionResponse(BaseModel):
 class FullEnergyProductionResponse(BaseModel):
     energy_production: Numeric = Field(description="global-averaged kWh produced")
     summary_avg_energy_production: Dict[str, ValueMapAlphaNumericNone]
-    yearly_avg_energy_production: Dict[str, ValueMapAlphaNumeric]
+    yearly_avg_energy_production: Optional[Dict[str, ValueMapAlphaNumeric]] = None
+    monthly_avg_energy_production: Optional[Dict[str, ValueMapAlphaNumeric]] = None
 
     model_config = {
         "json_schema_extra": {
@@ -188,6 +189,9 @@ class FullEnergyProductionResponse(BaseModel):
                 "yearly_avg_energy_production": {
                     "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117}
                 },
+                "monthly_avg_energy_production": {
+                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": 46141}
+                },
             }
         }
     }
@@ -200,8 +204,8 @@ class MonthlyEnergyProductionResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "monthly_avg_energy_production": {
-                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": "5,934"},
-                    "Feb": {"Average wind speed, m/s": "3.92", "kWh produced": "6,357"},
+                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": 46141},
+                    "Feb": {"Average wind speed, m/s": "3.92", "kWh produced": 38757},
                 }
             }
         }
@@ -277,9 +281,19 @@ class TimeseriesBatchRequest(BaseModel):
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
     )
+    year_range: Optional[str] = Field(
+        None, description="Range of years for download. Format: YYYY-YYYY."
+    )
+    year_set: Optional[str] = Field(
+        None, description="Full or Sample dataset to download."
+    )
     source: str = Field(
         "s3",
         description="Data source: athena or s3 (typically s3 for timeseries downloads)",
+    )
+    period: str = Field(
+        "hourly",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
     )
 
     model_config = {
@@ -299,6 +313,9 @@ class TimeseriesBatchRequest(BaseModel):
                 ],
                 "years": [2020, 2021, 2022],
                 "source": "s3",
+                "period": "hourly",
+                "year_range": "2013-2015",
+                "year_set": "sample"
             }
         }
     }
