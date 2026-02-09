@@ -6,9 +6,9 @@ export interface TurbineInfo {
 
 /**
  * Hub height ranges for wind turbines
- * 
- * IMPORTANT: Specific manufacturer specifications were not available for all models 
- * and may have changed since this research (February 2026). These ranges may vary 
+ *
+ * IMPORTANT: Specific manufacturer specifications were not available for all models
+ * and may have changed since this research (February 2026). These ranges may vary
  * based on site conditions, local regulations, and specific project requirements.
  * For production use, verify with manufacturer specifications and site assessments.
  */
