@@ -17,7 +17,7 @@ from app.utils.wind_data_core import (
     get_windspeed_core,
     get_production_core,
     get_timeseries_core,
-    get_timeseries_energy_core
+    get_timeseries_energy_core,
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
@@ -413,13 +413,18 @@ def get_model_info(
 def download_timeseries(
     model: str = Path(..., description="Data model: era5 or wtk"),
     gridIndex: str = Query(..., description="Grid index identifier"),
-    year_range: Optional[str] = Query(None, description="Range of years for download. Format: YYYY-YYYY"),
-    year_set: Optional[str] = Query(None, description="Download full or sample dataset"),
+    year_range: Optional[str] = Query(
+        None, description="Range of years for download. Format: YYYY-YYYY"
+    ),
+    year_set: Optional[str] = Query(
+        None, description="Download full or sample dataset"
+    ),
     years: Optional[List[int]] = Query(
         None, description="Years to download (defaults to sample years)"
     ),
     period: Optional[str] = Query(
-        "hourly", description = "Time aggregation: hourly (raw data) or monthly (yyyy-mm aggregation)"
+        "hourly",
+        description="Time aggregation: hourly (raw data) or monthly (yyyy-mm aggregation)",
     ),
     source: str = Query(
         "s3",
@@ -442,7 +447,14 @@ def download_timeseries(
     try:
         # Get CSV content from core function
         csv_content = get_timeseries_core(
-            model, [gridIndex], period, source, data_fetcher_router, years, year_range, year_set
+            model,
+            [gridIndex],
+            period,
+            source,
+            data_fetcher_router,
+            years,
+            year_range,
+            year_set,
         )
 
         return StreamingResponse(
@@ -502,7 +514,7 @@ def download_timeseries_batch(
                     data_fetcher_router,
                     payload.years,
                     payload.year_range,
-                    payload.year_set
+                    payload.year_set,
                 )
                 file_name = f"wind_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
@@ -522,10 +534,11 @@ def download_timeseries_batch(
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
+
 @router.get(
     "/{model}/timeseries/energy",
-    summary = "Download timeseries CSV data along with energy estimates for a selected turbine.",
-    responses = {
+    summary="Download timeseries CSV data along with energy estimates for a selected turbine.",
+    responses={
         200: {"description": "CSV file downloaded successfully"},
         400: {"description": "Bad request - invalid parameters"},
         404: {"description": "Data not found"},
@@ -536,17 +549,23 @@ def download_energy_timeseries(
     model: str = Path(..., description="Data model: era5 or wtk"),
     gridIndex: str = Query(..., description="Grid index indentifier"),
     powercurve: str = Query(..., description="Turbine/Powercurve for energy estimates"),
-    year_range: Optional[str] = Query(None, description="Range of years for download. Format: YYYY-YYYY"),
-    year_set: Optional[str] = Query(None, description="Download full or sample dataset"),
+    year_range: Optional[str] = Query(
+        None, description="Range of years for download. Format: YYYY-YYYY"
+    ),
+    year_set: Optional[str] = Query(
+        None, description="Download full or sample dataset"
+    ),
     years: Optional[List[int]] = Query(
         None, description="Years to download (default to sample years)"
     ),
     period: Optional[str] = Query(
-        "hourly", description="Time aggregation: hourly (raw data) or monthly (yyyy-mm aggregation)"
+        "hourly",
+        description="Time aggregation: hourly (raw data) or monthly (yyyy-mm aggregation)",
     ),
     source: str = Query(
-        "s3", description = "Data source: athena or s3 (typically s3 for timeseries downloads)"
-    )
+        "s3",
+        description="Data source: athena or s3 (typically s3 for timeseries downloads)",
+    ),
 ):
     """
     Download energy timeseries data as CSV for a specific grid point.
@@ -561,7 +580,15 @@ def download_energy_timeseries(
     """
     try:
         csv_content = get_timeseries_energy_core(
-            model, [gridIndex], powercurve, period, source, data_fetcher_router, years, year_range, year_set
+            model,
+            [gridIndex],
+            powercurve,
+            period,
+            source,
+            data_fetcher_router,
+            years,
+            year_range,
+            year_set,
         )
 
         return StreamingResponse(

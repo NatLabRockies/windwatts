@@ -1,8 +1,8 @@
-import { useState, useMemo, useContext } from "react";
+import { useState, useContext, useMemo } from "react";
 import useSWR from "swr";
 import {
-  getCSVFile,
-  getBatchCSVFiles,
+  getExportCSV,
+  getBatchExportCSV,
   getNearestGridLocation,
 } from "../services/api";
 import { downloadWindDataCSV, downloadWindDataZIP } from "../services/download";
@@ -11,11 +11,17 @@ import { GridLocation } from "../types";
 
 export const useDownloadCSVFile = () => {
   const [isDownloading, setIsDownloading] = useState(false);
-  const { currentPosition, preferredModel } = useContext(SettingsContext);
-  const dataModel = preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const [includeEnergy, setIncludeEnergy] = useState(false);
+  const [period, setPeriod] = useState<"hourly" | "monthly">("hourly");
+  const { currentPosition, preferredModel, powerCurve } =
+    useContext(SettingsContext);
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
 
   const canDownload = !!(lat && lng && dataModel);
+
+  const turbine = powerCurve;
 
   const downloadFile = async (
     gridLat: number,
@@ -24,10 +30,17 @@ export const useDownloadCSVFile = () => {
   ) => {
     try {
       setIsDownloading(true);
-      const response = await getCSVFile({
-        gridIndex: gridIndex,
-        dataModel: dataModel!,
-      });
+
+      const response = await getExportCSV(
+        {
+          gridIndex: gridIndex,
+          dataModel: dataModel!,
+          period: period,
+          turbine: includeEnergy ? turbine : undefined,
+        },
+        includeEnergy
+      );
+
       await downloadWindDataCSV(response, gridLat, gridLng);
       return { success: true };
     } catch (error) {
@@ -41,10 +54,17 @@ export const useDownloadCSVFile = () => {
   const downloadBatchFiles = async (gridLocations: GridLocation[]) => {
     try {
       setIsDownloading(true);
-      const response = await getBatchCSVFiles({
-        gridLocations: gridLocations,
-        dataModel: dataModel!,
-      });
+
+      const response = await getBatchExportCSV(
+        {
+          gridLocations: gridLocations,
+          dataModel: dataModel!,
+          period: period,
+          turbine: includeEnergy ? turbine : undefined,
+        },
+        includeEnergy
+      );
+
       await downloadWindDataZIP(response, lat!, lng!);
       return { success: true };
     } catch (error) {
@@ -60,12 +80,18 @@ export const useDownloadCSVFile = () => {
     isDownloading,
     downloadFile,
     downloadBatchFiles,
+    turbine,
+    includeEnergy,
+    setIncludeEnergy,
+    period,
+    setPeriod,
   };
 };
 
 export const useNearestGridLocation = (n_neighbors: number = 1) => {
   const { currentPosition, preferredModel } = useContext(SettingsContext);
-  const dataModel = preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
 
   const shouldFetch = lat && lng && dataModel;

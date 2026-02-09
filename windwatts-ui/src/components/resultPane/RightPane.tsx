@@ -5,18 +5,16 @@ import {
   Grid,
   Collapse,
   Chip,
-  Button,
   Divider,
   Link,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { POWER_CURVE_LABEL } from "../../constants";
-import { ShareButton, DownloadButton } from "../shared";
+import { ShareButton, SettingsButton, DownloadButton } from "../shared";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -26,7 +24,7 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const RightPane = () => {
-  const { currentPosition, hubHeight, powerCurve, toggleSettings } =
+  const { currentPosition, hubHeight, powerCurve } =
     useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
@@ -104,33 +102,11 @@ export const RightPane = () => {
           }}
         >
           <ShareButton size="small" variant="outlined" />
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<SettingsIcon />}
-            onClick={toggleSettings}
-            sx={{
-              fontSize: "0.9em",
-              textTransform: "none",
-              borderRadius: 2,
-              px: 2,
-              py: 0.5,
-              borderColor: "primary.main",
-              color: "primary.main",
-              "&:hover": {
-                backgroundColor: "primary.main",
-                color: "white",
-                borderColor: "primary.main",
-              },
-            }}
-          >
-            Edit settings
-          </Button>
+          <DownloadButton size="small" variant="outlined" />
+          <SettingsButton size="small" variant="outlined" />
         </Box>
 
         <AnalysisResults />
-
-        <DownloadButton />
 
         <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
           <Chip

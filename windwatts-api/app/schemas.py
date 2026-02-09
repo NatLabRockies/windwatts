@@ -315,7 +315,7 @@ class TimeseriesBatchRequest(BaseModel):
                 "source": "s3",
                 "period": "hourly",
                 "year_range": "2013-2015",
-                "year_set": "sample"
+                "year_set": "sample",
             }
         }
     }
