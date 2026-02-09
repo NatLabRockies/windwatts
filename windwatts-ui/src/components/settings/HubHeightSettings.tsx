@@ -1,6 +1,13 @@
 import { useContext, useEffect, useMemo } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { Box, Slider, Typography, Paper, Tooltip, IconButton } from "@mui/material";
+import {
+  Box,
+  Slider,
+  Typography,
+  Paper,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { HUB_HEIGHTS, TURBINE_DATA, TurbineInfo } from "../../constants";
 
@@ -75,18 +82,14 @@ export function HubHeightSettings() {
             borderLeftColor: `${validationColor}.main`,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center"}}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <Typography variant="body2">
               <strong>
                 {isHeightInRange ? "Within" : "Outside"} recommended range - (
                 {turbineData.minHeight}m - {turbineData.maxHeight}m)
               </strong>
             </Typography>
-            <Tooltip
-              title={turbineData.info}
-              arrow
-              placement="right"
-            >
+            <Tooltip title={turbineData.info} arrow placement="right">
               <IconButton size="small">
                 <InfoOutlinedIcon fontSize="small" />
               </IconButton>
