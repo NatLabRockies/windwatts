@@ -334,6 +334,7 @@ def get_model_info(
             # "default_source": config["default_source"],
             "supported_periods": temporal_config["period_type"],
             "available_years": config.get("years", {}).get("full", []),
+            "sample_years": config.get("years", {}).get("sample", []),
             "available_heights": config.get("heights", []),
             "grid_info": config.get("grid_info", {}),
             "links": config.get("links", []),
