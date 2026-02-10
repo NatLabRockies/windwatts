@@ -100,6 +100,18 @@ export const getNearestGridLocation = async ({
   return fetchWrapper(url, options);
 };
 
+// V1 API: Get model information
+export const getModelInfo = async (dataModel: string) => {
+  const url = `/api/v1/${dataModel}/info`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper(url, options);
+};
+
 // V1 API: Single timeseries CSV download
 // by period of hourly or monthly
 // with option to include energy

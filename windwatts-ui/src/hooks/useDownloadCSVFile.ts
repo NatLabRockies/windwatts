@@ -4,6 +4,7 @@ import {
   getExportCSV,
   getBatchExportCSV,
   getNearestGridLocation,
+  getModelInfo,
 } from "../services/api";
 import { downloadWindDataCSV, downloadWindDataZIP } from "../services/download";
 import { SettingsContext } from "../providers/SettingsContext";
@@ -23,6 +24,28 @@ export const useDownloadCSVFile = () => {
   const canDownload = !!(lat && lng && dataModel);
 
   const turbine = powerCurve;
+
+  const { data: modelInfo } = useSWR(
+    dataModel ? `/api/v1/${dataModel}/info` : null,
+    () => (dataModel ? getModelInfo(dataModel) : null)
+  );
+
+  const fullYearRange: string = useMemo(() => {
+    if (!modelInfo?.available_years) return "All available years";
+    const years = modelInfo.available_years;
+    if (years.length === 0) return "All available years";
+    if (years.length === 1) return `${years[0]}`;
+    return `${years[0]}-${years[years.length - 1]}`;
+  }, [modelInfo]);
+
+  const sampleYearRange: string = useMemo(() => {
+    if (!modelInfo?.sample_years) return "Recent years";
+    const years = modelInfo.sample_years;
+    if (years.length === 0) return "Recent years";
+    if (years.length === 1) return `${years[0]}`;
+    if (years.length <= 4) return years.join(", ");
+    return `${years[0]}-${years[years.length - 1]}`;
+  }, [modelInfo]);
 
   const downloadFile = async (
     gridLat: number,
@@ -90,6 +113,8 @@ export const useDownloadCSVFile = () => {
     setPeriod,
     yearSet,
     setYearSet,
+    fullYearRange,
+    sampleYearRange,
   };
 };
 
