@@ -48,10 +48,14 @@ app.add_exception_handler(RequestValidationError, log_validation_errors)
 
 origins = [
     "http://localhost",
-    "https://windwatts2-dev.stratus.nrel.gov",
-    "https://windwatts2-stage.stratus.nrel.gov",
-    "https://windwatts2-prod.stratus.nrel.gov",
+    "https://windwatts-dev.stratus.nrel.gov",
+    "https://windwatts-stage.stratus.nrel.gov",
+    "https://windwatts-prod.stratus.nrel.gov",
+    "https://windwatts-dev.stratus.nlr.gov",
+    "https://windwatts-stage.stratus.nlr.gov",
+    "https://windwatts-prod.stratus.nlr.gov",
     "https://windwatts.nrel.gov",
+    "https://windwatts.nlr.gov",
 ]
 app.add_middleware(
     CORSMiddleware,

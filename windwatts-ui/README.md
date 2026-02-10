@@ -44,7 +44,7 @@ VITE_MAP_ID=YOUR_MAP_ID
 
 #### .env.production
 ```shell
-VITE_API_BASE_URL=https://windwatts.nrel.gov/
+VITE_API_BASE_URL=https://windwatts.nlr.gov/
 VITE_MAP_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
 VITE_MAP_ID=YOUR_MAP_ID
 ```
