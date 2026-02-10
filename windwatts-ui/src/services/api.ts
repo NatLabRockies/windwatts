@@ -104,7 +104,7 @@ export const getNearestGridLocation = async ({
 // by period of hourly or monthly
 // with option to include energy
 export const getExportCSV = async (
-  { gridIndex, dataModel, period = "hourly", turbine }: CSVExportRequest,
+  { gridIndex, dataModel, period = "hourly", turbine, yearSet }: CSVExportRequest,
   includeEnergy: boolean
 ) => {
   if (includeEnergy) {
@@ -117,6 +117,9 @@ export const getExportCSV = async (
       period: period,
       powercurve: turbine,
     });
+    if (yearSet) {
+      params.append("year_set", yearSet);
+    }
     dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries/energy?${params.toString()}`;
     const options = {
@@ -132,6 +135,9 @@ export const getExportCSV = async (
       gridIndex: gridIndex,
       period: period,
     });
+    if (yearSet) {
+      params.append("year_set", yearSet);
+    }
     dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries?${params.toString()}`;
     const options = {
@@ -151,6 +157,7 @@ export const getBatchExportCSV = async (
     dataModel,
     period = "hourly",
     turbine,
+    yearSet,
   }: CSVBatchExportRequest,
   includeEnergy: boolean
 ) => {
@@ -163,6 +170,9 @@ export const getBatchExportCSV = async (
       period: period,
       powercurve: turbine,
     });
+    if (yearSet) {
+      params.append("year_set", yearSet);
+    }
     dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries/energy/batch?${params.toString()}`;
     const body = {
@@ -181,6 +191,9 @@ export const getBatchExportCSV = async (
     const params = new URLSearchParams({
       period: period,
     });
+    if (yearSet) {
+      params.append("year_set", yearSet);
+    }
     dataModel = "era5-timeseries"; // Hardcode timeseries model
     const url = `/api/v1/${dataModel}/timeseries/batch?${params.toString()}`;
     const body = {

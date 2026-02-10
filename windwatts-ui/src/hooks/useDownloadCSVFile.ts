@@ -13,6 +13,7 @@ export const useDownloadCSVFile = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [includeEnergy, setIncludeEnergy] = useState(false);
   const [period, setPeriod] = useState<"hourly" | "monthly">("hourly");
+  const [yearSet, setYearSet] = useState<"full" | "sample">("full");
   const { currentPosition, preferredModel, powerCurve } =
     useContext(SettingsContext);
   const dataModel =
@@ -37,6 +38,7 @@ export const useDownloadCSVFile = () => {
           dataModel: dataModel!,
           period: period,
           turbine: includeEnergy ? turbine : undefined,
+          yearSet: yearSet,
         },
         includeEnergy
       );
@@ -61,6 +63,7 @@ export const useDownloadCSVFile = () => {
           dataModel: dataModel!,
           period: period,
           turbine: includeEnergy ? turbine : undefined,
+          yearSet: yearSet,
         },
         includeEnergy
       );
@@ -85,6 +88,8 @@ export const useDownloadCSVFile = () => {
     setIncludeEnergy,
     period,
     setPeriod,
+    yearSet,
+    setYearSet,
   };
 };
 
