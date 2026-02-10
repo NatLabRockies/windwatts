@@ -5,7 +5,7 @@ export const DATA_MODELS = [
   "era5-timeseries",
 ] as const;
 
-export type DataModel = typeof DATA_MODELS[number];
+export type DataModel = (typeof DATA_MODELS)[number];
 
 export type DataModelInfo = {
   label: string;

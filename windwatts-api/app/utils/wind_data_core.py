@@ -20,10 +20,9 @@ from app.utils.validation import (
     validate_source,
     validate_period_type,
     validate_powercurve,
-    validate_year,
     validate_year_range,
     validate_year_set,
-    validate_years
+    validate_years,
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
@@ -236,8 +235,8 @@ def get_timeseries_core(
         raise HTTPException(
             status_code=404, detail="No data found for the specified parameters"
         )
-    
-    windspeed_cols = [col for col in df.columns if col.startswith('windspeed')]
+
+    windspeed_cols = [col for col in df.columns if col.startswith("windspeed")]
     time = pd.to_datetime(df["time"], errors="coerce", utc=False)
     df["time"] = time
 
@@ -245,13 +244,12 @@ def get_timeseries_core(
         df["year"] = time.dt.year.astype(int)
         df["month"] = time.dt.month.astype(int)
         df["year_month"] = (
-            df["year"].astype(str) + '-' +
-            df["month"].astype(str).str.zfill(2)
+            df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
         )
 
-        agg_dict = {col: 'mean' for col in windspeed_cols}
+        agg_dict = {col: "mean" for col in windspeed_cols}
 
-        df = df.groupby('year_month').agg(agg_dict).reset_index()
+        df = df.groupby("year_month").agg(agg_dict).reset_index()
 
     df[windspeed_cols] = df[windspeed_cols].round(2)
 
@@ -263,6 +261,7 @@ def get_timeseries_core(
     df.to_csv(csv_io, index=False)
     return csv_io.getvalue()
 
+
 def get_timeseries_energy_core(
     model: str,
     gridIndices: List[str],
@@ -273,12 +272,22 @@ def get_timeseries_energy_core(
     years: Optional[List[int]] = None,
     year_range: Optional[str] = None,
     year_set: Optional[str] = None,
-    return_dataframe: bool = False,   
+    return_dataframe: bool = False,
 ):
     powercurve = validate_powercurve(powercurve)
     heights = MODEL_CONFIG[model].get("heights")
 
-    df = get_timeseries_core(model, gridIndices, "hourly", source, data_fetcher_router, years, year_range, year_set, return_dataframe=True)
+    df = get_timeseries_core(
+        model,
+        gridIndices,
+        "hourly",
+        source,
+        data_fetcher_router,
+        years,
+        year_range,
+        year_set,
+        return_dataframe=True,
+    )
     df_with_energy, _ = power_curve_manager.compute_energy_production_df(
         df, heights, powercurve, model, relevant_columns_only=False
     )
@@ -295,25 +304,30 @@ def get_timeseries_energy_core(
 
     if period == "monthly":
         df_with_energy["year_month"] = (
-            df_with_energy["year"].astype(str) + "-" +
-            df_with_energy["month"].astype(str).str.zfill(2)
+            df_with_energy["year"].astype(str)
+            + "-"
+            + df_with_energy["month"].astype(str).str.zfill(2)
         )
         agg_dict = {}
         for h in heights:
             ws_col = f"windspeed_{h}m"
             energy_col = f"energy_{h}m_kwh"
-            agg_dict[ws_col] = 'mean'
-            agg_dict[energy_col] = 'sum'
+            agg_dict[ws_col] = "mean"
+            agg_dict[energy_col] = "sum"
 
         result_df = df_with_energy.groupby("year_month").agg(agg_dict).reset_index()
-    
-    cols_to_round = [col for col in result_df.columns if col.startswith('windspeed') or col.startswith('energy')]
+
+    cols_to_round = [
+        col
+        for col in result_df.columns
+        if col.startswith("windspeed") or col.startswith("energy")
+    ]
 
     result_df[cols_to_round] = result_df[cols_to_round].round(2)
-    
+
     if return_dataframe:
         return result_df
-    
+
     csv_io = StringIO()
     result_df.to_csv(csv_io, index=False)
     return csv_io.getvalue()

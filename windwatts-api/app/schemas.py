@@ -300,7 +300,7 @@ class TimeseriesBatchRequest(BaseModel):
                 "source": "s3",
                 "period": "hourly",
                 "year_range": "2013-2015",
-                "year_set": "sample"
+                "year_set": "sample",
             }
         }
     }
@@ -314,6 +314,9 @@ class ModelInfoResponse(BaseModel):
     )
     available_years: List[int] = Field(
         ..., description="Available years for timeseries data"
+    )
+    sample_years: List[int] = Field(
+        ..., description="Sample years for quick preview/exploration"
     )
     available_heights: List[int] = Field(
         ..., description="Supported hub heights (in meters)"
@@ -349,6 +352,7 @@ class ModelInfoResponse(BaseModel):
                     2022,
                     2023,
                 ],
+                "sample_years": [2020, 2021, 2022, 2023],
                 "available_heights": [30, 40, 50, 60, 80, 100],
                 "grid_info": {
                     "min_lat": 23.402,

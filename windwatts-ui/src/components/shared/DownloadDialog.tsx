@@ -10,7 +10,15 @@ import {
   CircularProgress,
   Alert,
   Skeleton,
+  FormControlLabel,
+  RadioGroup,
+  Radio,
+  Checkbox,
+  Card,
+  CardContent,
+  Tooltip,
 } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
 import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
@@ -23,8 +31,21 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
   const [n_neighbors, setN_neighbors] = useState(1); // single nearest neighbor
   void setN_neighbors; // avoid unused variable warning
 
-  const { canDownload, isDownloading, downloadFile, downloadBatchFiles } =
-    useDownloadCSVFile();
+  const {
+    canDownload,
+    isDownloading,
+    downloadFile,
+    downloadBatchFiles,
+    turbine,
+    includeEnergy,
+    setIncludeEnergy,
+    period,
+    setPeriod,
+    yearSet,
+    setYearSet,
+    fullYearRange,
+    sampleYearRange,
+  } = useDownloadCSVFile();
   const {
     gridLocations,
     isLoading: isLoadingGridLocation,
@@ -34,7 +55,8 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
 
   const { currentPosition, preferredModel } = useContext(SettingsContext);
   const { lat, lng } = currentPosition || {};
-  const dataModel = preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const downloadInfo = dataModel ? DATA_MODEL_INFO[dataModel] : null;
 
   const nearestGridLocation =
@@ -83,6 +105,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           );
           return;
         }
+
         const result = await downloadBatchFiles(selection);
         if (!result.success) {
           const errorMessage =
@@ -128,7 +151,7 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
       fullWidth
     >
       <DialogTitle id="download-dialog-title">
-        Download Hourly Wind Data
+        Export Wind Data
         {isProcessing && <CircularProgress size={20} sx={{ ml: 2 }} />}
       </DialogTitle>
       <DialogContent>
@@ -199,23 +222,18 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           {nearestGridLocation && !isLoadingGridLocation && (
             <Box sx={{ mb: 1 }}>
               <Typography variant="body2">
-                <strong>Data Grid Coordinates:</strong> (
-                {formatCoordinate(nearestGridLocation.latitude)},{" "}
+                <Tooltip
+                  title="Wind data is available at specific grid points. The download will contain data from the nearest grid point to your selected location."
+                  placement="top"
+                  arrow
+                >
+                  <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.3 }}>
+                    <strong>Data Grid Coordinates</strong>
+                    <InfoOutlinedIcon sx={{ fontSize: 14 }} />
+                  </Box>
+                </Tooltip>
+                : ({formatCoordinate(nearestGridLocation.latitude)},{" "}
                 {formatCoordinate(nearestGridLocation.longitude)})
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: "0.9em",
-                  color: "#666",
-                  fontStyle: "italic",
-                  mt: 0.5,
-                  mb: 1,
-                }}
-              >
-                Note: Wind data is available at specific grid points. The
-                download will contain data from the nearest grid point to your
-                selected location.
               </Typography>
             </Box>
           )}
@@ -233,10 +251,6 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
               <>
                 <Typography variant="body2" sx={{ mb: 1 }}>
                   <strong>Data Source:</strong> {downloadInfo.description}
-                </Typography>
-
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Year Range:</strong> {downloadInfo.year_range}
                 </Typography>
 
                 {downloadInfo.wind_speed_heights && (
@@ -268,6 +282,163 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
             </Alert>
           )}
         </DialogContentText>
+
+        {/* Download Options */}
+        {canDownload && !isLoadingGridLocation && (
+          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+            {/* Time Period Selection Card */}
+            <Card variant="outlined">
+              <CardContent>
+                <RadioGroup
+                  row
+                  value={period}
+                  onChange={(e) =>
+                    setPeriod(e.target.value as "hourly" | "monthly")
+                  }
+                  sx={{ gap: 2, mb: -1 }}
+                >
+                  <FormControlLabel
+                    value="hourly"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Hourly Data
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          Full resolution (~8,760 records/year)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <FormControlLabel
+                    value="monthly"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Monthly Data
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          Aggregated (~12 records/year)
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </RadioGroup>
+              </CardContent>
+            </Card>
+
+            {/* Include Energy Option Card */}
+            <Card
+              variant="outlined"
+              sx={{
+                bgcolor: includeEnergy ? "action.hover" : "transparent",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <CardContent>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={includeEnergy}
+                      onChange={(e) => setIncludeEnergy(e.target.checked)}
+                      size="small"
+                    />
+                  }
+                  label={
+                    <Box sx={{ ml: 1 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 600,
+                          color: includeEnergy
+                            ? "primary.main"
+                            : "text.primary",
+                        }}
+                      >
+                        Include Energy Results
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "text.secondary",
+                          display: "block",
+                          mt: 0.5,
+                        }}
+                      >
+                        Add calculated energy output columns using {turbine}{" "}
+                        power curve
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ width: "100%", alignItems: "flex-start", mb: -1 }}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Dataset Selection Card */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 600, mb: 1.5 }}
+                >
+                  📊 Dataset Size
+                </Typography>
+                <RadioGroup
+                  row
+                  value={yearSet}
+                  onChange={(e) =>
+                    setYearSet(e.target.value as "full" | "sample")
+                  }
+                  sx={{ gap: 2, mb: -1 }}
+                >
+                  <FormControlLabel
+                    value="full"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Complete Dataset
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          {fullYearRange}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <FormControlLabel
+                    value="sample"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Sample Preview
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          {sampleYearRange}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </RadioGroup>
+              </CardContent>
+            </Card>
+          </Box>
+        )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button
@@ -284,12 +455,12 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           sx={{ textTransform: "none" }}
         >
           {isDownloading
-            ? "Downloading..."
+            ? "Exporting..."
             : isLoadingGridLocation
               ? "Loading..."
               : hasError
                 ? "Retry"
-                : "Download"}
+                : "Export Data"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -16,7 +16,9 @@ export const EnsembleSettings = () => {
             <Switch
               checked={preferredModel === "ensemble-quantiles"}
               onChange={(e) =>
-                setPreferredModel(e.target.checked ? "ensemble-quantiles" : "era5-quantiles")
+                setPreferredModel(
+                  e.target.checked ? "ensemble-quantiles" : "era5-quantiles"
+                )
               }
             />
           }
