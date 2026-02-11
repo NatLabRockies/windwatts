@@ -3,33 +3,33 @@ import { SelectChangeEvent } from "@mui/material/Select";
 import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
-import { getAvailablePowerCurves } from "../../services/api";
-import { POWER_CURVE_LABEL, TURBINE_DATA } from "../../constants";
+import { getAvailableTurbines } from "../../services/api";
+import { TURBINE_LABEL, TURBINE_DATA } from "../../constants";
 
-const DefaultPowerCurveOptions = [
+const DefaultTurbineOptions = [
   "nlr-reference-2.5kW",
   "nlr-reference-100kW",
   "nlr-reference-250kW",
   "nlr-reference-2000kW",
 ];
 
-export function PowerCurveSettings() {
-  const { powerCurve, setPowerCurve } = useContext(SettingsContext);
+export function TurbineSettings() {
+  const { turbine, setTurbine } = useContext(SettingsContext);
 
-  // Fetch available power curves from the API
-  const { data } = useSWR("/api/v1/powercurves", getAvailablePowerCurves, {
-    fallbackData: { available_power_curves: DefaultPowerCurveOptions },
+  // Fetch available turbines from the API
+  const { data } = useSWR("/api/v1/turbines", getAvailableTurbines, {
+    fallbackData: { available_turbines: DefaultTurbineOptions },
   });
 
-  const powerCurveOptions: string[] = data?.available_power_curves || [];
+  const turbineOptions: string[] = data?.available_turbines || [];
 
-  const handlePowerCurveChange = (event: SelectChangeEvent<string>) => {
-    setPowerCurve(event.target.value as string);
+  const handleTurbineChange = (event: SelectChangeEvent<string>) => {
+    setTurbine(event.target.value as string);
   };
 
   const getTurbineLabel = (turbineId: string): string => {
     const turbineInfo = TURBINE_DATA[turbineId];
-    const baseName = POWER_CURVE_LABEL[turbineId] || turbineId;
+    const baseName = TURBINE_LABEL[turbineId] || turbineId;
 
     if (turbineInfo) {
       return `${baseName} (${turbineInfo.minHeight}-${turbineInfo.maxHeight}m)`;
@@ -47,19 +47,19 @@ export function PowerCurveSettings() {
       </Typography>
 
       <FormControl component="fieldset" sx={{ width: "100%" }}>
-        {powerCurveOptions.length > 0 ? (
+        {turbineOptions.length > 0 ? (
           <>
             {/* <InputLabel id="power-curve-label">Turbine</InputLabel> */}
             <Select
               labelId="power-curve-label"
               id="power-curve-select"
-              value={powerCurve}
+              value={turbine}
               // label="Turbine"
-              onChange={handlePowerCurveChange}
+              onChange={handleTurbineChange}
               fullWidth
               size="small"
             >
-              {powerCurveOptions.map((option, idx) => (
+              {turbineOptions.map((option, idx) => (
                 <MenuItem key={"power_curve_option_" + idx} value={option}>
                   {getTurbineLabel(option)}
                 </MenuItem>

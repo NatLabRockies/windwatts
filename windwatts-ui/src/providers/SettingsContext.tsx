@@ -12,7 +12,7 @@ export interface StoredSettings {
   currentPosition: CurrentPosition | null;
   zoom: number;
   hubHeight: number;
-  powerCurve: string;
+  turbine: string;
   preferredModel: DataModel;
   lossAssumptionFactor: number;
   windspeedUnit: string;
@@ -30,7 +30,7 @@ export interface Settings extends StoredSettings {
   ) => void;
   setZoom: (zoom: number) => void;
   setHubHeight: (hubHeight: number) => void;
-  setPowerCurve: (curve: string) => void;
+  setTurbine: (turbine: string) => void;
   setPreferredModel: (preferredModel: DataModel) => void;
   setLossAssumptionFactor: (factor: number) => void;
   setLossAssumptionPercent: (percent: number) => void;
@@ -43,7 +43,7 @@ export const defaultValues: StoredSettings = {
   currentPosition: null,
   zoom: 12,
   hubHeight: 40,
-  powerCurve: "nlr-reference-100kW",
+  turbine: "nlr-reference-100kW",
   preferredModel: "era5-quantiles",
   lossAssumptionFactor: 1.0, // 1.0 = 0% loss, 0.83 = 17% loss defaulted to 0% loss
   windspeedUnit: "mph",
@@ -57,7 +57,7 @@ export const SettingsContext = createContext<Settings>({
   setCurrentPosition: () => {},
   setZoom: () => {},
   setHubHeight: () => {},
-  setPowerCurve: () => {},
+  setTurbine: () => {},
   setPreferredModel: () => {},
   setLossAssumptionFactor: () => {},
   setLossAssumptionPercent: () => {},

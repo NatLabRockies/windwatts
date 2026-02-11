@@ -4,7 +4,7 @@ import { UnitsSettings } from "./UnitsSettings";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 // import { ModelSettings } from "./ModelSettings";
-import { PowerCurveSettings } from "./PowerCurveSettings";
+import { TurbineSettings } from "./TurbineSettings";
 import { LossAssumptionSettings } from "./LossAssumptionSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
 import {
@@ -87,7 +87,7 @@ export const Settings = () => {
           onScroll={handleScroll}
         >
           <HubHeightSettings />
-          <PowerCurveSettings />
+          <TurbineSettings />
           <UnitsSettings />
           <LossAssumptionSettings />
           {/* <ModelSettings /> */}

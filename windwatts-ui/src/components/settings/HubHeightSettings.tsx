@@ -16,7 +16,7 @@ export function HubHeightSettings() {
     hubHeight,
     setHubHeight,
     preferredModel: dataModel,
-    powerCurve,
+    turbine,
   } = useContext(SettingsContext);
 
   const { values: availableHeights, interpolation: step } = useMemo(() => {
@@ -51,7 +51,7 @@ export function HubHeightSettings() {
     }
   };
 
-  const turbineData: TurbineInfo | undefined = TURBINE_DATA[powerCurve];
+  const turbineData: TurbineInfo | undefined = TURBINE_DATA[turbine];
 
   const isHeightInRange: boolean = turbineData
     ? hubHeight >= turbineData.minHeight && hubHeight <= turbineData.maxHeight

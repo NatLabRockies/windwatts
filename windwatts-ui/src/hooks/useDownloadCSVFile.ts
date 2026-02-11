@@ -15,15 +15,13 @@ export const useDownloadCSVFile = () => {
   const [includeEnergy, setIncludeEnergy] = useState(false);
   const [period, setPeriod] = useState<"hourly" | "monthly">("hourly");
   const [yearSet, setYearSet] = useState<"full" | "sample">("full");
-  const { currentPosition, preferredModel, powerCurve } =
+  const { currentPosition, preferredModel, turbine } =
     useContext(SettingsContext);
   const dataModel =
     preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
 
   const canDownload = !!(lat && lng && dataModel);
-
-  const turbine = powerCurve;
 
   const { data: modelInfo } = useSWR(
     dataModel ? `/api/v1/${dataModel}/info` : null,

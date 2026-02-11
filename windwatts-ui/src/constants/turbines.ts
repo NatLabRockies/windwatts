@@ -128,7 +128,7 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
   },
 };
 
-export const POWER_CURVE_LABEL: Record<string, string> = Object.entries(
+export const TURBINE_LABEL: Record<string, string> = Object.entries(
   TURBINE_DATA
 ).reduce(
   (acc, [key, turbine]) => {
@@ -138,4 +138,4 @@ export const POWER_CURVE_LABEL: Record<string, string> = Object.entries(
   {} as Record<string, string>
 );
 
-export const VALID_POWER_CURVES = Object.keys(TURBINE_DATA);
+export const VALID_TURBINES = Object.keys(TURBINE_DATA);

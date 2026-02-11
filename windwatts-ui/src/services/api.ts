@@ -71,9 +71,9 @@ export const getEnergyProduction = async ({
 //   return fetchWrapper(url, options);
 // };
 
-// V1 API: Power curves are model-agnostic
-export const getAvailablePowerCurves = async () => {
-  const url = `/api/v1/powercurves`;
+// V1 API: Turbines are model-agnostic
+export const getAvailableTurbines = async () => {
+  const url = `/api/v1/turbines`;
   const options = {
     method: "GET",
     headers: {
