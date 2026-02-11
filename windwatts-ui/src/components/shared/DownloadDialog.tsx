@@ -16,7 +16,9 @@ import {
   Checkbox,
   Card,
   CardContent,
+  Tooltip,
 } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useState, useContext } from "react";
 import { DATA_MODEL_INFO } from "../../constants";
 import { useDownloadCSVFile, useNearestGridLocation } from "../../hooks";
@@ -39,6 +41,10 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
     setIncludeEnergy,
     period,
     setPeriod,
+    yearSet,
+    setYearSet,
+    fullYearRange,
+    sampleYearRange,
   } = useDownloadCSVFile();
   const {
     gridLocations,
@@ -216,23 +222,18 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
           {nearestGridLocation && !isLoadingGridLocation && (
             <Box sx={{ mb: 1 }}>
               <Typography variant="body2">
-                <strong>Data Grid Coordinates:</strong> (
-                {formatCoordinate(nearestGridLocation.latitude)},{" "}
+                <Tooltip
+                  title="Wind data is available at specific grid points. The download will contain data from the nearest grid point to your selected location."
+                  placement="top"
+                  arrow
+                >
+                  <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.3 }}>
+                    <strong>Data Grid Coordinates</strong>
+                    <InfoOutlinedIcon sx={{ fontSize: 14 }} />
+                  </Box>
+                </Tooltip>
+                : ({formatCoordinate(nearestGridLocation.latitude)},{" "}
                 {formatCoordinate(nearestGridLocation.longitude)})
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: "0.9em",
-                  color: "#666",
-                  fontStyle: "italic",
-                  mt: 0.5,
-                  mb: 1,
-                }}
-              >
-                Note: Wind data is available at specific grid points. The
-                download will contain data from the nearest grid point to your
-                selected location.
               </Typography>
             </Box>
           )}
@@ -250,10 +251,6 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
               <>
                 <Typography variant="body2" sx={{ mb: 1 }}>
                   <strong>Data Source:</strong> {downloadInfo.description}
-                </Typography>
-
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Year Range:</strong> {downloadInfo.year_range}
                 </Typography>
 
                 {downloadInfo.wind_speed_heights && (
@@ -383,6 +380,61 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
                   }
                   sx={{ width: "100%", alignItems: "flex-start", mb: -1 }}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Dataset Selection Card */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 600, mb: 1.5 }}
+                >
+                  📊 Dataset Size
+                </Typography>
+                <RadioGroup
+                  row
+                  value={yearSet}
+                  onChange={(e) =>
+                    setYearSet(e.target.value as "full" | "sample")
+                  }
+                  sx={{ gap: 2, mb: -1 }}
+                >
+                  <FormControlLabel
+                    value="full"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Complete Dataset
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          {fullYearRange}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <FormControlLabel
+                    value="sample"
+                    control={<Radio size="small" />}
+                    label={
+                      <Box sx={{ ml: 0.5 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          Sample Preview
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", display: "block" }}
+                        >
+                          {sampleYearRange}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </RadioGroup>
               </CardContent>
             </Card>
           </Box>

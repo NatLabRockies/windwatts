@@ -29,6 +29,7 @@ export interface CSVExportRequest {
   dataModel: DataModel;
   period: "hourly" | "monthly";
   turbine?: string;
+  yearSet?: "full" | "sample";
 }
 
 export interface CSVBatchExportRequest {
@@ -36,4 +37,5 @@ export interface CSVBatchExportRequest {
   dataModel: DataModel;
   period: "hourly" | "monthly";
   turbine?: string;
+  yearSet?: "full" | "sample";
 }
