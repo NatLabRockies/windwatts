@@ -24,8 +24,7 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const RightPane = () => {
-  const { currentPosition, hubHeight, turbine } =
-    useContext(SettingsContext);
+  const { currentPosition, hubHeight, turbine } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
 

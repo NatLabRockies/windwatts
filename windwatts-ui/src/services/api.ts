@@ -116,7 +116,13 @@ export const getModelInfo = async (dataModel: string) => {
 // by period of hourly or monthly
 // with option to include energy
 export const getExportCSV = async (
-  { gridIndex, dataModel, period = "hourly", turbine, yearSet }: CSVExportRequest,
+  {
+    gridIndex,
+    dataModel,
+    period = "hourly",
+    turbine,
+    yearSet,
+  }: CSVExportRequest,
   includeEnergy: boolean
 ) => {
   if (includeEnergy) {
