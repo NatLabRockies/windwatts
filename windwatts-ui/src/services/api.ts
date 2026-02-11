@@ -44,11 +44,11 @@ export const getEnergyProduction = async ({
   lat,
   lng,
   hubHeight,
-  powerCurve,
+  turbine,
   dataModel,
   period = "all",
 }: EnergyProductionRequest) => {
-  const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&powercurve=${powerCurve}&period=${period}`;
+  const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&turbine=${turbine}&period=${period}`;
   const options = {
     method: "GET",
     headers: {
@@ -71,9 +71,9 @@ export const getEnergyProduction = async ({
 //   return fetchWrapper(url, options);
 // };
 
-// V1 API: Power curves are model-agnostic
-export const getAvailablePowerCurves = async () => {
-  const url = `/api/v1/powercurves`;
+// V1 API: Turbines are model-agnostic
+export const getAvailableTurbines = async () => {
+  const url = `/api/v1/turbines`;
   const options = {
     method: "GET",
     headers: {
@@ -116,7 +116,13 @@ export const getModelInfo = async (dataModel: string) => {
 // by period of hourly or monthly
 // with option to include energy
 export const getExportCSV = async (
-  { gridIndex, dataModel, period = "hourly", turbine, yearSet }: CSVExportRequest,
+  {
+    gridIndex,
+    dataModel,
+    period = "hourly",
+    turbine,
+    yearSet,
+  }: CSVExportRequest,
   includeEnergy: boolean
 ) => {
   if (includeEnergy) {

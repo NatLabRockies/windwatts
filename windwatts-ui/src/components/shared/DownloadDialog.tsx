@@ -227,7 +227,14 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
                   placement="top"
                   arrow
                 >
-                  <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.3 }}>
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.3,
+                    }}
+                  >
                     <strong>Data Grid Coordinates</strong>
                     <InfoOutlinedIcon sx={{ fontSize: 14 }} />
                   </Box>

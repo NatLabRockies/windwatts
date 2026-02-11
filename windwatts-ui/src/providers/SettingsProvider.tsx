@@ -40,7 +40,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         },
         zoom: urlParams.zoom ?? URL_PARAM_DEFAULTS.zoom,
         hubHeight: urlParams.hubHeight ?? URL_PARAM_DEFAULTS.hubHeight,
-        powerCurve: urlParams.powerCurve ?? URL_PARAM_DEFAULTS.powerCurve,
+        turbine: urlParams.turbine ?? URL_PARAM_DEFAULTS.turbine,
         preferredModel: urlParams.dataModel ?? URL_PARAM_DEFAULTS.dataModel,
         lossAssumptionFactor:
           urlParams.lossAssumption !== undefined
@@ -72,7 +72,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const url = buildUrlFromSettings({
       currentPosition: settings.currentPosition,
       hubHeight: settings.hubHeight,
-      powerCurve: settings.powerCurve,
+      turbine: settings.turbine,
       preferredModel: settings.preferredModel,
       lossAssumptionPercent: Math.round(
         (1 - settings.lossAssumptionFactor) * 100
@@ -88,7 +88,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     settings.currentPosition,
     settings.zoom,
     settings.hubHeight,
-    settings.powerCurve,
+    settings.turbine,
     settings.preferredModel,
     settings.lossAssumptionFactor,
     settings.windspeedUnit,
@@ -121,9 +121,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setSettings((current) => ({ ...current, hubHeight: height }));
   }, []);
 
-  const setPowerCurve = useCallback(
-    (curve: string) => {
-      setSettings((current) => ({ ...current, powerCurve: curve }));
+  const setTurbine = useCallback(
+    (turbine: string) => {
+      setSettings((current) => ({ ...current, turbine }));
     },
     [setSettings]
   );
@@ -186,8 +186,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setZoom,
       hubHeight: settings.hubHeight,
       setHubHeight,
-      powerCurve: settings.powerCurve,
-      setPowerCurve,
+      turbine: settings.turbine,
+      setTurbine,
       preferredModel: settings.preferredModel,
       setPreferredModel,
       lossAssumptionFactor:
@@ -209,7 +209,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       settings.currentPosition,
       settings.zoom,
       settings.hubHeight,
-      settings.powerCurve,
+      settings.turbine,
       settings.preferredModel,
       settings.lossAssumptionFactor,
       settings.windspeedUnit,
@@ -218,7 +218,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setCurrentPosition,
       setZoom,
       setHubHeight,
-      setPowerCurve,
+      setTurbine,
       setPreferredModel,
       setLossAssumptionFactor,
       setLossAssumptionPercent,

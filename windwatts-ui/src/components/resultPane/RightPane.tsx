@@ -13,7 +13,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { AnalysisResults } from "./AnalysisResults";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { POWER_CURVE_LABEL } from "../../constants";
+import { TURBINE_LABEL } from "../../constants";
 import { ShareButton, SettingsButton, DownloadButton } from "../shared";
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -24,8 +24,7 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const RightPane = () => {
-  const { currentPosition, hubHeight, powerCurve } =
-    useContext(SettingsContext);
+  const { currentPosition, hubHeight, turbine } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition ?? {};
 
@@ -44,8 +43,8 @@ export const RightPane = () => {
       data: hubHeight ? `${hubHeight} meters` : "Not selected",
     },
     {
-      title: "Power curve",
-      data: powerCurve ? `${POWER_CURVE_LABEL[powerCurve]}` : "Not selected",
+      title: "Turbine",
+      data: turbine ? `${TURBINE_LABEL[turbine]}` : "Not selected",
     },
   ];
 
