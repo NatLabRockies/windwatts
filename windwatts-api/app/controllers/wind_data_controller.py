@@ -28,6 +28,7 @@ from app.schemas import (
     EnergyProductionResponse,
     NearestLocationsResponse,
     TimeseriesBatchRequest,
+    TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
 )
 
@@ -105,7 +106,7 @@ if not _skip_data_init:
     },
 )
 def get_windspeed(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
     lat: float = Query(..., description="Latitude of the location"),
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
@@ -120,7 +121,7 @@ def get_windspeed(
     """
     Retrieve wind speed data for a specific location and height.
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, or ensemble-quantiles)
     - **lat**: Latitude (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: Longitude (varies by model, refer info endpoint for coordinate bounds)
     - **height**: Height in meters (varies by model, refer info endpoint for the available heights)
@@ -160,7 +161,7 @@ def get_windspeed(
     },
 )
 def get_production(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
     lat: float = Query(..., description="Latitude of the location"),
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
@@ -184,7 +185,7 @@ def get_production(
     """
     Retrieve energy production estimates for a specific location, height, and turbine.
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, or ensemble-quantiles)
     - **lat**: Latitude (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: Longitude (varies by model, refer info endpoint for coordinate bounds)
     - **height**: Height in meters (varies by model, refer info endpoint for the available heights)
@@ -263,7 +264,7 @@ def get_turbines():
     """
     Retrieve a list of all available turbines.
 
-    Turbines are model-agnostic and can be used with any dataset (era5, wtk, ensemble).
+    Turbines are model-agnostic and can be used with any dataset (era5-quantiles, era5-timeseries, wtk-timeseries or ensemble-quantiles).
     """
     try:
         return _get_available_turbines("turbines")
@@ -290,7 +291,7 @@ def get_powercurves():
 
     Deprecated: Use /turbines endpoint instead.
 
-    Power curves are model-agnostic and can be used with any dataset (era5, wtk, ensemble).
+    Power curves are model-agnostic and can be used with any dataset (era5-quantiles, era5-timeseries, wtk-timeseries or ensemble-quantiles).
     """
     try:
         return _get_available_turbines("power_curves")
@@ -309,7 +310,7 @@ def get_powercurves():
     },
 )
 def get_grid_points(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
     lat: float = Query(..., description="Latitude of the target location"),
     lng: float = Query(..., description="Longitude of the target location"),
     limit: int = Query(1, description="Number of nearest grid points to return (1-4)"),
@@ -319,7 +320,7 @@ def get_grid_points(
 
     Returns grid indices and their coordinates for the closest data points in the model's grid.
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, or ensemble-quantiles)
     - **lat**: (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: (varies by model, refer info endpoint for coordinate bounds)
     - **limit**: Number of nearest points to return (1-4)
@@ -364,7 +365,7 @@ def get_grid_points(
     },
 )
 def get_model_info(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, ensemble-quantiles, wtk-timeseries or era5-timeseries"),
 ):
     """
     Retrieve metadata and configuration information about a specific data model.
@@ -376,7 +377,7 @@ def get_model_info(
     - Grid information (model’s geographic coverage and spatial-temporal resolution)
     - Links & References
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, ensemble-quantiles)
     """
     try:
         model = validate_model(model)
@@ -412,7 +413,7 @@ def get_model_info(
     },
 )
 def download_timeseries(
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries or wtk-timeseries"),
     gridIndex: str = Query(..., description="Grid index identifier"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
@@ -437,7 +438,7 @@ def download_timeseries(
 
     Returns raw timeseries data for the specified grid index and years.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **gridIndex**: Grid index from grid-points endpoint
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
@@ -484,7 +485,7 @@ def download_timeseries(
 )
 def download_timeseries_batch(
     payload: TimeseriesBatchRequest,
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries or wtk-timeseries"),
 ):
     """
     Download timeseries data for multiple grid points as a ZIP archive.
@@ -492,7 +493,7 @@ def download_timeseries_batch(
     Accepts a request body with grid locations, optional years, and data source.
     Returns a ZIP file containing CSV files for each location.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: List of years to include (optional, defaults to sample years)
@@ -547,9 +548,9 @@ def download_timeseries_batch(
     },
 )
 def download_energy_timeseries(
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries"),
     gridIndex: str = Query(..., description="Grid index indentifier"),
-    powercurve: str = Query(..., description="Turbine/Powercurve for energy estimates"),
+    turbine: str = Query(..., description="Turbine for energy estimates"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
@@ -571,8 +572,9 @@ def download_energy_timeseries(
     """
     Download energy timeseries data as CSV for a specific grid point.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries)
     - **gridIndex**: Grid index from grid-points endpoint
+    - **turbine**: Turbine model to use for energy calculations
     - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
     - **year_set**: Full or Sample dataset to download (optional)
     - **years**: List of years to include (optional)
@@ -583,7 +585,7 @@ def download_energy_timeseries(
         csv_content = get_timeseries_energy_core(
             model,
             [gridIndex],
-            powercurve,
+            turbine,
             period,
             source,
             data_fetcher_router,
@@ -599,6 +601,68 @@ def download_energy_timeseries(
                 "Content-Disposition": f'attachment; filename="wind_&_energy_data_{gridIndex}.csv"'
             },
         )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.post(
+    "/{model}/timeseries/energy/batch",
+    summary="Download multiple timeseries CSV data along with energy estimates for a selected turbine as a ZIP file.",
+    responses={
+        200: {"description": "ZIP file downloaded successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def download_timeseries_energy_batch(
+    payload: TimeseriesEnergyBatchRequest,
+    model: str = Path(..., description="Data model: era5-timeseries"),
+):
+    """
+    Download timeseries data along with energy estimates for multiple grid points as a ZIP archive.
+
+    - **model**: Data model (era5-timeseries)
+    - **payload**: Request body containing:
+      - **locations**: List of grid locations with indices (use grid-points endpoint)
+      - **turbine**: Turbine model to use for energy calculations
+      - **years**: List of years to include (optional, defaults to sample years)
+      - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+      - **year_set**: Full or Sample dataset to download (optional)
+      - **source**: Data source (optional, defaults to s3)
+      - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
+    """
+    try:
+        # Create spooled temporary file for ZIP
+        spooled = tempfile.SpooledTemporaryFile(max_size=30 * 1024 * 1024, mode="w+b")
+
+        with zipfile.ZipFile(spooled, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for loc in payload.locations:
+                csv_content = get_timeseries_energy_core(
+                    model,
+                    [loc.index],
+                    payload.turbine,
+                    payload.period,
+                    payload.source,
+                    data_fetcher_router,
+                    payload.years,
+                    payload.year_range,
+                    payload.year_set,
+                )
+                file_name = f"wind_&_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
+                zf.writestr(file_name, csv_content)
+
+        spooled.seek(0)
+
+        headers = {
+            "Content-Disposition": f'attachment; filename="wind_&_energy_data_{model}_{len(payload.locations)}_points.zip"'
+        }
+
+        return StreamingResponse(
+            chunker(spooled), media_type="application/zip", headers=headers
+        )
+
     except HTTPException:
         raise
     except Exception:

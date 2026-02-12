@@ -265,7 +265,7 @@ def get_timeseries_core(
 def get_timeseries_energy_core(
     model: str,
     gridIndices: List[str],
-    powercurve: str,
+    turbine: str,
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -274,7 +274,7 @@ def get_timeseries_energy_core(
     year_set: Optional[str] = None,
     return_dataframe: bool = False,
 ):
-    powercurve = validate_powercurve(powercurve)
+    turbine = validate_powercurve(turbine)
     heights = MODEL_CONFIG[model].get("heights")
 
     df = get_timeseries_core(
@@ -289,7 +289,7 @@ def get_timeseries_energy_core(
         return_dataframe=True,
     )
     df_with_energy, _ = power_curve_manager.compute_energy_production_df(
-        df, heights, powercurve, model, relevant_columns_only=False
+        df, heights, turbine, model, relevant_columns_only=False
     )
 
     if period == "hourly":
