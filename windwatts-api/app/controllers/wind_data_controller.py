@@ -264,7 +264,7 @@ def get_turbines():
     """
     Retrieve a list of all available turbines.
 
-    Turbines are model-agnostic and can be used with any dataset (era5, wtk, ensemble).
+    Turbines are model-agnostic and can be used with any dataset (era5-quantiles, era5-timeseries, wtk-timeseries or ensemble-quantiles).
     """
     try:
         return _get_available_turbines("turbines")
@@ -291,7 +291,7 @@ def get_powercurves():
 
     Deprecated: Use /turbines endpoint instead.
 
-    Power curves are model-agnostic and can be used with any dataset (era5, wtk, ensemble).
+    Power curves are model-agnostic and can be used with any dataset (era5-quantiles, era5-timeseries, wtk-timeseries or ensemble-quantiles).
     """
     try:
         return _get_available_turbines("power_curves")
@@ -377,7 +377,7 @@ def get_model_info(
     - Grid information (model’s geographic coverage and spatial-temporal resolution)
     - Links & References
 
-    - **model**: Data model (era5-quantiles, wtk, ensemble-quantiles)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, ensemble-quantiles)
     """
     try:
         model = validate_model(model)
