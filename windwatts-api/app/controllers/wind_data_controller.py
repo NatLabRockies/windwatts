@@ -106,7 +106,7 @@ if not _skip_data_init:
     },
 )
 def get_windspeed(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
     lat: float = Query(..., description="Latitude of the location"),
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
@@ -121,7 +121,7 @@ def get_windspeed(
     """
     Retrieve wind speed data for a specific location and height.
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, or ensemble-quantiles)
     - **lat**: Latitude (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: Longitude (varies by model, refer info endpoint for coordinate bounds)
     - **height**: Height in meters (varies by model, refer info endpoint for the available heights)
@@ -161,7 +161,7 @@ def get_windspeed(
     },
 )
 def get_production(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
     lat: float = Query(..., description="Latitude of the location"),
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
@@ -185,7 +185,7 @@ def get_production(
     """
     Retrieve energy production estimates for a specific location, height, and turbine.
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, or ensemble-quantiles)
     - **lat**: Latitude (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: Longitude (varies by model, refer info endpoint for coordinate bounds)
     - **height**: Height in meters (varies by model, refer info endpoint for the available heights)
@@ -310,7 +310,7 @@ def get_powercurves():
     },
 )
 def get_grid_points(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
     lat: float = Query(..., description="Latitude of the target location"),
     lng: float = Query(..., description="Longitude of the target location"),
     limit: int = Query(1, description="Number of nearest grid points to return (1-4)"),
@@ -320,7 +320,7 @@ def get_grid_points(
 
     Returns grid indices and their coordinates for the closest data points in the model's grid.
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk-timeseries, or ensemble-quantiles)
     - **lat**: (varies by model, refer info endpoint for coordinate bounds)
     - **lng**: (varies by model, refer info endpoint for coordinate bounds)
     - **limit**: Number of nearest points to return (1-4)
@@ -365,7 +365,7 @@ def get_grid_points(
     },
 )
 def get_model_info(
-    model: str = Path(..., description="Data model: era5, wtk, or ensemble"),
+    model: str = Path(..., description="Data model: era5-quantiles, ensemble-quantiles, wtk-timeseries or era5-timeseries"),
 ):
     """
     Retrieve metadata and configuration information about a specific data model.
@@ -377,7 +377,7 @@ def get_model_info(
     - Grid information (model’s geographic coverage and spatial-temporal resolution)
     - Links & References
 
-    - **model**: Data model (era5, wtk, ensemble)
+    - **model**: Data model (era5-quantiles, wtk, ensemble-quantiles)
     """
     try:
         model = validate_model(model)
@@ -413,7 +413,7 @@ def get_model_info(
     },
 )
 def download_timeseries(
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries or wtk-timeseries"),
     gridIndex: str = Query(..., description="Grid index identifier"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
@@ -438,7 +438,7 @@ def download_timeseries(
 
     Returns raw timeseries data for the specified grid index and years.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **gridIndex**: Grid index from grid-points endpoint
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
@@ -485,7 +485,7 @@ def download_timeseries(
 )
 def download_timeseries_batch(
     payload: TimeseriesBatchRequest,
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries or wtk-timeseries"),
 ):
     """
     Download timeseries data for multiple grid points as a ZIP archive.
@@ -493,7 +493,7 @@ def download_timeseries_batch(
     Accepts a request body with grid locations, optional years, and data source.
     Returns a ZIP file containing CSV files for each location.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: List of years to include (optional, defaults to sample years)
@@ -548,7 +548,7 @@ def download_timeseries_batch(
     },
 )
 def download_energy_timeseries(
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries"),
     gridIndex: str = Query(..., description="Grid index indentifier"),
     turbine: str = Query(..., description="Turbine for energy estimates"),
     year_range: Optional[str] = Query(
@@ -572,7 +572,7 @@ def download_energy_timeseries(
     """
     Download energy timeseries data as CSV for a specific grid point.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries)
     - **gridIndex**: Grid index from grid-points endpoint
     - **turbine**: Turbine model to use for energy calculations
     - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -618,12 +618,12 @@ def download_energy_timeseries(
 )
 def download_timeseries_energy_batch(
     payload: TimeseriesEnergyBatchRequest,
-    model: str = Path(..., description="Data model: era5 or wtk"),
+    model: str = Path(..., description="Data model: era5-timeseries"),
 ):
     """
     Download timeseries data along with energy estimates for multiple grid points as a ZIP archive.
 
-    - **model**: Data model (era5, wtk)
+    - **model**: Data model (era5-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **turbine**: Turbine model to use for energy calculations
