@@ -354,7 +354,7 @@ def get_grid_points(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get(
-        "/info",
+        "/models/info",
         summary="Get list of available data models",
         response_model=AvailableModelsResponse,
         responses={
