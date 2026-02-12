@@ -320,6 +320,20 @@ class TimeseriesBatchRequest(BaseModel):
         }
     }
 
+class AvailableModelsResponse(BaseModel):
+    available_data_models: List[str]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "available_models": [
+                    "era5-quantiles",
+                    "era5-timeseries",
+                ]
+            }
+        }
+    }
+
 
 class ModelInfoResponse(BaseModel):
     model: str = Field(..., description="Data model name")

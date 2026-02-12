@@ -29,6 +29,7 @@ from app.schemas import (
     NearestLocationsResponse,
     TimeseriesBatchRequest,
     ModelInfoResponse,
+    AvailableModelsResponse
 )
 
 router = APIRouter()
@@ -352,6 +353,26 @@ def get_grid_points(
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@router.get(
+        "/info",
+        summary="Get list of available data models",
+        response_model=AvailableModelsResponse,
+        responses={
+        200: {"description": "Available data models retrieved successfully"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_available_data_models():
+    """
+    Retrieve a list of all available data models.
+    """
+    try:
+        data_models = list(MODEL_CONFIG.keys())
+        return {"available_data_models": data_models}
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get(
     "/{model}/info",
