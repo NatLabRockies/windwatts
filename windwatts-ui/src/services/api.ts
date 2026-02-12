@@ -133,7 +133,7 @@ export const getExportCSV = async (
     const params = new URLSearchParams({
       gridIndex: gridIndex,
       period: period,
-      powercurve: turbine,
+      turbine: turbine,
     });
     if (yearSet) {
       params.append("year_set", yearSet);
@@ -186,7 +186,7 @@ export const getBatchExportCSV = async (
     // Batch energy export
     const params = new URLSearchParams({
       period: period,
-      powercurve: turbine,
+      turbine: turbine,
     });
     if (yearSet) {
       params.append("year_set", yearSet);

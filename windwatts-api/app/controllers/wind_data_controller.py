@@ -28,6 +28,7 @@ from app.schemas import (
     EnergyProductionResponse,
     NearestLocationsResponse,
     TimeseriesBatchRequest,
+    TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
 )
 
@@ -549,7 +550,7 @@ def download_timeseries_batch(
 def download_energy_timeseries(
     model: str = Path(..., description="Data model: era5 or wtk"),
     gridIndex: str = Query(..., description="Grid index indentifier"),
-    powercurve: str = Query(..., description="Turbine/Powercurve for energy estimates"),
+    turbine: str = Query(..., description="Turbine for energy estimates"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
@@ -573,6 +574,7 @@ def download_energy_timeseries(
 
     - **model**: Data model (era5, wtk)
     - **gridIndex**: Grid index from grid-points endpoint
+    - **turbine**: Turbine model to use for energy calculations
     - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
     - **year_set**: Full or Sample dataset to download (optional)
     - **years**: List of years to include (optional)
@@ -583,7 +585,7 @@ def download_energy_timeseries(
         csv_content = get_timeseries_energy_core(
             model,
             [gridIndex],
-            powercurve,
+            turbine,
             period,
             source,
             data_fetcher_router,
@@ -599,6 +601,71 @@ def download_energy_timeseries(
                 "Content-Disposition": f'attachment; filename="wind_&_energy_data_{gridIndex}.csv"'
             },
         )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.post(
+    "/{model}/timeseries/energy/batch",
+    summary="Download multiple timeseries CSV data along with energy estimates for a selected turbine as a ZIP file.",
+    responses={
+        200: {"description": "ZIP file downloaded successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def download_timeseries_energy_batch(
+    payload: TimeseriesEnergyBatchRequest,
+    model: str = Path(..., description="Data model: era5 or wtk"),
+):
+    """
+    Download timeseries data for multiple grid points as a ZIP archive.
+
+    Accepts a request body with grid locations, optional years, and data source.
+    Returns a ZIP file containing CSV files for each location.
+
+    - **model**: Data model (era5, wtk)
+    - **payload**: Request body containing:
+      - **locations**: List of grid locations with indices (use grid-points endpoint)
+      - **turbine**: Turbine model to use for energy calculations
+      - **years**: List of years to include (optional, defaults to sample years)
+      - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+      - **year_set**: Full or Sample dataset to download (optional)
+      - **source**: Data source (optional, defaults to s3)
+      - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
+    """
+    try:
+        # Create spooled temporary file for ZIP
+        spooled = tempfile.SpooledTemporaryFile(max_size=30 * 1024 * 1024, mode="w+b")
+
+        with zipfile.ZipFile(spooled, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for loc in payload.locations:
+                csv_content = get_timeseries_energy_core(
+                    model,
+                    [loc.index],
+                    payload.turbine,
+                    payload.period,
+                    payload.source,
+                    data_fetcher_router,
+                    payload.years,
+                    payload.year_range,
+                    payload.year_set,
+                )
+                file_name = f"wind_&_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
+                zf.writestr(file_name, csv_content)
+
+        spooled.seek(0)
+
+        headers = {
+            "Content-Disposition": f'attachment; filename="wind_&_energy_data_{model}_{len(payload.locations)}_points.zip"'
+        }
+
+        return StreamingResponse(
+            chunker(spooled), media_type="application/zip", headers=headers
+        )
+
     except HTTPException:
         raise
     except Exception:
