@@ -621,10 +621,7 @@ def download_timeseries_energy_batch(
     model: str = Path(..., description="Data model: era5 or wtk"),
 ):
     """
-    Download timeseries data for multiple grid points as a ZIP archive.
-
-    Accepts a request body with grid locations, optional years, and data source.
-    Returns a ZIP file containing CSV files for each location.
+    Download timeseries data along with energy estimates for multiple grid points as a ZIP archive.
 
     - **model**: Data model (era5, wtk)
     - **payload**: Request body containing:
