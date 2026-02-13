@@ -12,7 +12,7 @@ export interface EnergyProductionRequest {
   lat: number;
   lng: number;
   hubHeight: number;
-  powerCurve: string;
+  turbine: string;
   dataModel: DataModel;
   period?: string;
 }
@@ -24,12 +24,18 @@ export interface NearestGridLocationRequest {
   dataModel: DataModel;
 }
 
-export interface WindCSVFileRequest {
+export interface CSVExportRequest {
   gridIndex: string;
   dataModel: DataModel;
+  period: "hourly" | "monthly";
+  turbine?: string;
+  yearSet?: "full" | "sample";
 }
 
-export interface WindCSVFilesRequest {
+export interface CSVBatchExportRequest {
   gridLocations: GridLocation[];
-  dataModel: string;
+  dataModel: DataModel;
+  period: "hourly" | "monthly";
+  turbine?: string;
+  yearSet?: "full" | "sample";
 }

@@ -1,12 +1,12 @@
-import { DataModel } from "../types";
-import { MODEL_COORDINATES_BOUNDS, VALID_POWER_CURVES } from "../constants";
+import { DataModel, DATA_MODELS } from "../types";
+import { MODEL_COORDINATES_BOUNDS, VALID_TURBINES } from "../constants";
 
 export interface UrlParams {
   lat?: number;
   lng?: number;
   zoom?: number;
   hubHeight?: number;
-  powerCurve?: string;
+  turbine?: string;
   dataModel?: DataModel;
   lossAssumption?: number;
   partnerId?: string;
@@ -16,8 +16,8 @@ export interface UrlParams {
 export const URL_PARAM_DEFAULTS = {
   zoom: 12,
   hubHeight: 40,
-  powerCurve: "nlr-reference-100kW",
-  dataModel: "era5" as DataModel,
+  turbine: "nlr-reference-100kW",
+  dataModel: "era5-quantiles" as DataModel,
   lossAssumption: 0,
   windspeedUnit: "mph",
 };
@@ -59,14 +59,15 @@ export function parseUrlParams(searchParams?: URLSearchParams): UrlParams {
     }
   }
 
-  const powerCurve = params.get("powerCurve");
-  if (powerCurve && VALID_POWER_CURVES.includes(powerCurve)) {
-    result.powerCurve = powerCurve;
+  // "turbine" or legacy "powerCurve"
+  const turbine = params.get("turbine") || params.get("powerCurve");
+  if (turbine && VALID_TURBINES.includes(turbine)) {
+    result.turbine = turbine;
   }
 
   const dataModel = params.get("dataModel");
-  if (dataModel === "era5" || dataModel === "wtk" || dataModel === "ensemble") {
-    result.dataModel = dataModel;
+  if (dataModel && DATA_MODELS.includes(dataModel as DataModel)) {
+    result.dataModel = dataModel as DataModel;
   }
 
   const lossAssumption = params.get("lossAssumption");
@@ -96,7 +97,7 @@ export function buildUrlFromSettings(settings: {
   currentPosition: { lat: number; lng: number } | null;
   zoom: number;
   hubHeight: number;
-  powerCurve: string;
+  turbine: string;
   preferredModel: DataModel;
   lossAssumptionPercent: number;
   windspeedUnit: string;
@@ -119,8 +120,8 @@ export function buildUrlFromSettings(settings: {
     params.set("hubHeight", settings.hubHeight.toString());
   }
 
-  if (settings.powerCurve !== URL_PARAM_DEFAULTS.powerCurve) {
-    params.set("powerCurve", settings.powerCurve);
+  if (settings.turbine !== URL_PARAM_DEFAULTS.turbine) {
+    params.set("turbine", settings.turbine);
   }
 
   if (settings.preferredModel !== URL_PARAM_DEFAULTS.dataModel) {

@@ -1,11 +1,12 @@
 // Export all types from this directory
 export type { DataModel, DataModelInfo } from "./DataModel";
+export { DATA_MODELS } from "./DataModel";
 export type {
   WindspeedByLatLngRequest,
   EnergyProductionRequest,
   NearestGridLocationRequest,
-  WindCSVFileRequest,
-  WindCSVFilesRequest,
+  CSVExportRequest,
+  CSVBatchExportRequest,
 } from "./Requests";
 export type { Heights } from "./Heights";
 export type { StoredUnits } from "./Units";

@@ -33,7 +33,7 @@ components/
 ├── settings/               # Settings components
 │   ├── HubHeightSettings.tsx
 │   ├── ModelSettings.tsx
-│   ├── PowerCurveSettings.tsx
+│   ├── TurbineSettings.tsx
 │   ├── SettingToggleButtonGroup.tsx
 │   ├── Settings.tsx
 │   ├── UnitsSettings.tsx
@@ -88,7 +88,7 @@ Components for user preferences and configuration:
 
 - **Settings**: Main settings container
 - **ModelSettings**: Model selection
-- **PowerCurveSettings**: Power curve configuration
+- **TurbineSettings**: Turbine configuration
 - **HubHeightSettings**: Hub height configuration
 - **UnitsSettings**: Unit system selection
 

@@ -73,6 +73,21 @@ WindSpeedResponse = Union[
 ]
 
 
+class AvailableTurbinesResponse(BaseModel):
+    available_turbines: List[str]
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "available_turbines": [
+                    "nlr-reference-2.5kW",
+                    "nlr-reference-100kW",
+                ]
+            }
+        }
+    }
+
+
 class AvailablePowerCurvesResponse(BaseModel):
     available_power_curves: List[str]
 
@@ -147,7 +162,8 @@ class YearlyEnergyProductionResponse(BaseModel):
 class FullEnergyProductionResponse(BaseModel):
     energy_production: Numeric = Field(description="global-averaged kWh produced")
     summary_avg_energy_production: Dict[str, ValueMapAlphaNumericNone]
-    yearly_avg_energy_production: Dict[str, ValueMapAlphaNumeric]
+    yearly_avg_energy_production: Optional[Dict[str, ValueMapAlphaNumeric]] = None
+    monthly_avg_energy_production: Optional[Dict[str, ValueMapAlphaNumeric]] = None
 
     model_config = {
         "json_schema_extra": {
@@ -173,6 +189,9 @@ class FullEnergyProductionResponse(BaseModel):
                 "yearly_avg_energy_production": {
                     "2001": {"Average wind speed (m/s)": "5.65", "kWh produced": 250117}
                 },
+                "monthly_avg_energy_production": {
+                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": 46141}
+                },
             }
         }
     }
@@ -185,8 +204,8 @@ class MonthlyEnergyProductionResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "monthly_avg_energy_production": {
-                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": "5,934"},
-                    "Feb": {"Average wind speed, m/s": "3.92", "kWh produced": "6,357"},
+                    "Jan": {"Average wind speed, m/s": "3.80", "kWh produced": 46141},
+                    "Feb": {"Average wind speed, m/s": "3.92", "kWh produced": 38757},
                 }
             }
         }
@@ -262,9 +281,19 @@ class TimeseriesBatchRequest(BaseModel):
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
     )
+    year_range: Optional[str] = Field(
+        None, description="Range of years for download. Format: YYYY-YYYY."
+    )
+    year_set: Optional[str] = Field(
+        None, description="Full or Sample dataset to download."
+    )
     source: str = Field(
         "s3",
         description="Data source: athena or s3 (typically s3 for timeseries downloads)",
+    )
+    period: str = Field(
+        "hourly",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
     )
 
     model_config = {
@@ -284,6 +313,73 @@ class TimeseriesBatchRequest(BaseModel):
                 ],
                 "years": [2020, 2021, 2022],
                 "source": "s3",
+                "period": "hourly",
+                "year_range": "2013-2015",
+                "year_set": "sample",
+            }
+        }
+    }
+
+
+class TimeseriesEnergyBatchRequest(BaseModel):
+    locations: List[GridLocation] = Field(
+        ...,
+        min_length=1,
+        description="List of grid locations to download timeseries data for",
+    )
+    turbine: str = Field(..., description="Turbine for energy estimate calculations")
+    years: Optional[List[int]] = Field(
+        None, description="Years to download (defaults to sample years if not provided)"
+    )
+    year_range: Optional[str] = Field(
+        None, description="Range of years for download. Format: YYYY-YYYY."
+    )
+    year_set: Optional[str] = Field(
+        None, description="Full or Sample dataset to download."
+    )
+    source: str = Field(
+        "s3",
+        description="Data source: athena or s3 (typically s3 for timeseries downloads)",
+    )
+    period: str = Field(
+        "hourly",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
+    )
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "locations": [
+                    {
+                        "index": "031233",
+                        "latitude": 43.653,
+                        "longitude": -79.47437700534891,
+                    },
+                    {
+                        "index": "031234",
+                        "latitude": 43.653,
+                        "longitude": -79.22437433155213,
+                    },
+                ],
+                "turbine": "siva_250kW_30m_rotor_diameter",
+                "years": [2020, 2021, 2022],
+                "source": "s3",
+                "period": "hourly",
+                "year_range": "2013-2015",
+                "year_set": "sample",
+            }
+        }
+    }
+
+
+class AvailableModelsResponse(BaseModel):
+    available_data_models: List[str]
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "available_models": [
+                    "era5-quantiles",
+                    "era5-timeseries",
+                ]
             }
         }
     }
@@ -297,6 +393,9 @@ class ModelInfoResponse(BaseModel):
     )
     available_years: List[int] = Field(
         ..., description="Available years for timeseries data"
+    )
+    sample_years: List[int] = Field(
+        ..., description="Sample years for quick preview/exploration"
     )
     available_heights: List[int] = Field(
         ..., description="Supported hub heights (in meters)"
@@ -332,6 +431,7 @@ class ModelInfoResponse(BaseModel):
                     2022,
                     2023,
                 ],
+                "sample_years": [2020, 2021, 2022, 2023],
                 "available_heights": [30, 40, 50, 60, 80, 100],
                 "grid_info": {
                     "min_lat": 23.402,

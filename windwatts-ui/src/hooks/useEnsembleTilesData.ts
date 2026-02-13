@@ -8,7 +8,7 @@ export const useEnsembleTilesData = () => {
   const {
     currentPosition,
     hubHeight,
-    powerCurve,
+    turbine,
     preferredModel: dataModel,
     lossAssumptionFactor,
   } = useContext(SettingsContext);
@@ -20,9 +20,9 @@ export const useEnsembleTilesData = () => {
     lat &&
     lng &&
     hubHeight &&
-    powerCurve &&
+    turbine &&
     dataModel &&
-    dataModel === "ensemble" &&
+    dataModel === "ensemble-quantiles" &&
     !outOfBounds
   );
 
@@ -32,10 +32,10 @@ export const useEnsembleTilesData = () => {
       lat,
       lng,
       hubHeight,
-      powerCurve,
+      turbine,
       dataModel,
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, turbine, dataModel]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -51,7 +51,7 @@ export const useEnsembleTilesData = () => {
           lat: lat!,
           lng: lng!,
           hubHeight,
-          powerCurve,
+          turbine: turbine,
           dataModel,
           period: "all",
         }),

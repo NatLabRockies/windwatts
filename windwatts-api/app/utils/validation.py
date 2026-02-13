@@ -5,8 +5,7 @@ Validation functions for WindWatts API.
 import re
 from fastapi import HTTPException
 
-from app.config.model_config import MODEL_CONFIG
-from app.power_curve.global_power_curve_manager import power_curve_manager
+from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 
 
 def validate_model(model: str) -> str:
@@ -14,25 +13,26 @@ def validate_model(model: str) -> str:
     if model not in MODEL_CONFIG:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid model. Must be one of: {list(MODEL_CONFIG.keys())}",
+            detail=f"Invalid model. Must be one of: {list(MODEL_CONFIG.keys())}. But got f{model} instead.",
         )
     return model
 
 
 def validate_source(model: str, source: str) -> str:
     """Validate source for given model"""
-    valid_sources = MODEL_CONFIG[model]["sources"]
-    if source not in valid_sources:
+    valid_source = MODEL_CONFIG[model]["source"]
+    if source != valid_source:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid source for {model}. Must be one of: {valid_sources}",
+            detail=f"Invalid source for {model}. Must be : {valid_source}",
         )
     return source
 
 
 def validate_period_type(model: str, period_type: str, data_type: str) -> str:
     """Validate period parameter for given model and data type"""
-    valid_periods = MODEL_CONFIG[model]["period_type"].get(data_type, [])
+    schema = MODEL_CONFIG[model]["schema"]
+    valid_periods = TEMPORAL_SCHEMAS[schema]["period_type"].get(data_type, [])
     if period_type not in valid_periods:
         raise HTTPException(
             status_code=400,
@@ -78,11 +78,19 @@ def validate_height(model: str, height: int) -> int:
 
 def validate_powercurve(powercurve: str) -> str:
     """Validate power curve name"""
+    # Import here to avoid circular dependency
+    from app.power_curve.global_power_curve_manager import power_curve_manager
+
     if not re.match(r"^[\w\-.]+$", powercurve):
         raise HTTPException(status_code=400, detail="Invalid power curve name.")
     if powercurve not in power_curve_manager.power_curves:
         raise HTTPException(status_code=400, detail="Power curve not found.")
     return powercurve
+
+
+def validate_turbine(turbine: str) -> str:
+    """Validate turbine name (alias for validate_powercurve for clarity)"""
+    return validate_powercurve(turbine)
 
 
 def validate_year(year: int, model: str) -> int:
@@ -105,3 +113,88 @@ def validate_limit(limit: int) -> int:
             detail="Invalid limit. Currently supporting up to 4 nearest grid points",
         )
     return limit
+
+
+def validate_data_with_temporal_schema(df, schema: str):
+    """Validate the dataframe with repect to temporal schema config."""
+    temporal_schema_config = TEMPORAL_SCHEMAS.get(schema, {})
+
+    column_config = temporal_schema_config.get("column_config", {})
+
+    df_cols = set(df.columns.str.lower())
+
+    # validate required columns
+    required_cols = column_config.get("temporal_columns", []) + column_config.get(
+        "probability_columns", []
+    )
+    missing_cols = [col for col in required_cols if col.lower() not in df_cols]
+    if missing_cols:
+        raise ValueError(f"Missing columns: {missing_cols} for the schema {schema}.")
+
+    # validate for no temporal columns
+    if not column_config.get("temporal_columns", []):
+        temporal_cols = [
+            col
+            for col in ["year", "month", "day", "hour", "time", "mohr"]
+            if col in df_cols
+        ]
+        if temporal_cols:
+            raise ValueError(
+                f"Schema '{schema}' validation failed: "
+                f"Schema is atemporal and should NOT have temporal columns. "
+                f"Found: {temporal_cols}"
+            )
+
+
+def validate_year_range(year_range: str, model: str) -> tuple[int, int]:
+    """
+    Validates if a string is in YYYY-YYYY format and logic is sound.
+    """
+    if not re.match(r"^\d{4}-\d{4}$", year_range):
+        raise HTTPException(
+            status_code=400, detail="year range must be given in format YYYY-YYYY."
+        )
+
+    start_year, end_year = map(int, year_range.split("-"))
+
+    if start_year > end_year:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid range: Start year ({start_year}) cannot be greater than end year ({end_year}).",
+        )
+
+    valid_years = set(MODEL_CONFIG[model]["years"].get("full", []))
+    if start_year < min(valid_years) or end_year > max(valid_years):
+        valid_range = f"{min(valid_years)}-{max(valid_years)}"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid range for {model}: {start_year}-{end_year}. Currently supporting years {valid_range}",
+        )
+
+    return start_year, end_year
+
+
+def validate_year_set(year_set: str) -> str:
+    """
+    Validate year set for timeseries data download
+    """
+    if year_set not in ["sample", "full"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid year_set: {year_set}. Valid year sets: ['sample', 'full']",
+        )
+    return year_set
+
+
+def validate_years(years: list[int], model: str) -> list[int]:
+    """Validate list of years"""
+    valid_years = set(MODEL_CONFIG[model]["years"].get("full", []))
+    invalid_years = [year for year in years if year not in valid_years]
+
+    if invalid_years:
+        year_range = f"{min(valid_years)}-{max(valid_years)}"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid years for {model}: {invalid_years}. Currently supporting years {year_range}",
+        )
+    return years

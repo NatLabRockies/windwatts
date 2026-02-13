@@ -9,17 +9,18 @@ export const useProductionData = () => {
   const {
     currentPosition,
     hubHeight,
-    powerCurve,
+    turbine,
     preferredModel,
     lossAssumptionFactor,
   } = useContext(SettingsContext);
   // Always use ERA5 for production calculations, even when ensemble is selected
-  const dataModel = preferredModel === "ensemble" ? "era5" : preferredModel;
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
   const shouldFetch =
-    lat && lng && hubHeight && powerCurve && dataModel && !outOfBounds;
+    lat && lng && hubHeight && turbine && dataModel && !outOfBounds;
 
   // Memoize the SWR key to prevent unnecessary re-renders
   const swrKey = useMemo(() => {
@@ -28,11 +29,11 @@ export const useProductionData = () => {
       lat,
       lng,
       hubHeight,
-      powerCurve,
+      turbine,
       dataModel,
       period: "full",
     });
-  }, [shouldFetch, lat, lng, hubHeight, powerCurve, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, turbine, dataModel]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -41,7 +42,7 @@ export const useProductionData = () => {
         lat: lat!,
         lng: lng!,
         hubHeight,
-        powerCurve,
+        turbine: turbine,
         dataModel,
         period: "full",
       }),
