@@ -320,16 +320,14 @@ class TimeseriesBatchRequest(BaseModel):
         }
     }
 
+
 class TimeseriesEnergyBatchRequest(BaseModel):
     locations: List[GridLocation] = Field(
         ...,
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
-    turbine: str = Field(
-        ...,
-        description="Turbine for energy estimate calculations"
-    )
+    turbine: str = Field(..., description="Turbine for energy estimate calculations")
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
     )
@@ -347,7 +345,6 @@ class TimeseriesEnergyBatchRequest(BaseModel):
         "hourly",
         description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
     )
-
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -363,12 +360,26 @@ class TimeseriesEnergyBatchRequest(BaseModel):
                         "longitude": -79.22437433155213,
                     },
                 ],
-                "tubine": "siva_250kW_30m_rotor_diameter",
+                "turbine": "siva_250kW_30m_rotor_diameter",
                 "years": [2020, 2021, 2022],
                 "source": "s3",
                 "period": "hourly",
                 "year_range": "2013-2015",
                 "year_set": "sample",
+            }
+        }
+    }
+
+
+class AvailableModelsResponse(BaseModel):
+    available_data_models: List[str]
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "available_models": [
+                    "era5-quantiles",
+                    "era5-timeseries",
+                ]
             }
         }
     }

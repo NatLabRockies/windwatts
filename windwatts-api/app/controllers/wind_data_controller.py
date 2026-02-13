@@ -30,6 +30,7 @@ from app.schemas import (
     TimeseriesBatchRequest,
     TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
+    AvailableModelsResponse,
 )
 
 router = APIRouter()
@@ -106,7 +107,10 @@ if not _skip_data_init:
     },
 )
 def get_windspeed(
-    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
+    model: str = Path(
+        ...,
+        description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles",
+    ),
     lat: float = Query(..., description="Latitude of the location"),
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
@@ -161,7 +165,10 @@ def get_windspeed(
     },
 )
 def get_production(
-    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
+    model: str = Path(
+        ...,
+        description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles",
+    ),
     lat: float = Query(..., description="Latitude of the location"),
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
@@ -310,7 +317,10 @@ def get_powercurves():
     },
 )
 def get_grid_points(
-    model: str = Path(..., description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles"),
+    model: str = Path(
+        ...,
+        description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles",
+    ),
     lat: float = Query(..., description="Latitude of the target location"),
     lng: float = Query(..., description="Longitude of the target location"),
     limit: int = Query(1, description="Number of nearest grid points to return (1-4)"),
@@ -355,6 +365,28 @@ def get_grid_points(
 
 
 @router.get(
+    "/models",
+    summary="Get list of available data models",
+    response_model=AvailableModelsResponse,
+    responses={
+        200: {"description": "Available data models retrieved successfully"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_available_data_models():
+    """
+    Retrieve a list of all available data models.
+    """
+    try:
+        data_models = list(MODEL_CONFIG.keys())
+        return {"available_data_models": data_models}
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get(
     "/{model}/info",
     summary="Get metadata information about a data model",
     response_model=ModelInfoResponse,
@@ -365,7 +397,10 @@ def get_grid_points(
     },
 )
 def get_model_info(
-    model: str = Path(..., description="Data model: era5-quantiles, ensemble-quantiles, wtk-timeseries or era5-timeseries"),
+    model: str = Path(
+        ...,
+        description="Data model: era5-quantiles, ensemble-quantiles, wtk-timeseries or era5-timeseries",
+    ),
 ):
     """
     Retrieve metadata and configuration information about a specific data model.
@@ -605,6 +640,7 @@ def download_energy_timeseries(
         raise
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
 @router.post(
     "/{model}/timeseries/energy/batch",
