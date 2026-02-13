@@ -327,10 +327,7 @@ class TimeseriesEnergyBatchRequest(BaseModel):
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
-    turbine: str = Field(
-        ...,
-        description="Turbine for energy estimate calculations"
-    )
+    turbine: str = Field(..., description="Turbine for energy estimate calculations")
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
     )
@@ -372,6 +369,7 @@ class TimeseriesEnergyBatchRequest(BaseModel):
             }
         }
     }
+
 
 class AvailableModelsResponse(BaseModel):
     available_data_models: List[str]
