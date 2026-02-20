@@ -10,7 +10,7 @@ export function LayoutDesktop() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Box sx={{ flexGrow: 0 }}>
-        <AppBar position="static" sx={{ bgcolor: "#0279c2" }}>
+        <AppBar position="static" sx={{ bgcolor: "#027dbc" }}>
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
             <Link
               to="/"
@@ -21,12 +21,19 @@ export function LayoutDesktop() {
             >
               {APP_TITLE}
             </Link>
-            <Box
-              component="img"
-              sx={{ height: 40 }}
-              src="/assets/NLR-Blue-TypeTreatment-Block-Top-RGB.svg"
-              alt="NLR Logo"
-            />
+            <Link
+              href="https://www.nlr.gov"
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="none"
+            >
+              <Box
+                component="img"
+                sx={{ height: 40 }}
+                src="/assets/NLR-Blue-TypeTreatment-Block-Top-RGB.svg"
+                alt="NLR Logo"
+              />
+            </Link>
           </Toolbar>
         </AppBar>
       </Box>
