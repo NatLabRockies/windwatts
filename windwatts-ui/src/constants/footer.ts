@@ -2,10 +2,10 @@ import { ReactNode } from "react";
 
 // Logo URLs
 export const ALLIANCE_LOGO =
-  "https://www.nrel.gov/images/libraries/global/alliance-logo-black.svg";
-export const ALLIANCE_URL = "https://www.allianceforsustainableenergy.org/";
+  "https://www.nlr.gov/images/libraries/global/alliance-for-energy-innovation-fy26-logo-black.svg";
+export const ALLIANCE_URL = "https://www.alliance-for-energy-innovation.org/";
 export const DOE_LOGO =
-  "https://www.nrel.gov/images/libraries/about-images/u-s-department-of-energy.svg";
+  "https://www.nlr.gov/images/libraries/about-images/u-s-department-of-energy.svg";
 export const DOE_URL = "https://www.energy.gov/";
 
 // Main navigation links
@@ -16,27 +16,27 @@ export interface FooterLink {
 }
 
 export const NAV_LINKS: FooterLink[] = [
-  { content: "About", href: "https://www.nrel.gov/about" },
-  { content: "Research", href: "https://www.nrel.gov/research" },
-  { content: "Partner with Us", href: "https://www.nrel.gov/workingwithus" },
-  { content: "News", href: "https://www.nrel.gov/news" },
-  { content: "Careers", href: "https://www.nrel.gov/careers" },
+  { content: "About", href: "https://www.nlr.gov/about" },
+  { content: "Research", href: "https://www.nlr.gov/research" },
+  { content: "Partner with Us", href: "https://www.nlr.gov/workingwithus" },
+  { content: "News", href: "https://www.nlr.gov/news" },
+  { content: "Careers", href: "https://www.nlr.gov/careers" },
 ];
 
 // Quick links
 export const QUICK_LINKS: FooterLink[] = [
   {
     content: "Accessibility",
-    href: "https://www.nrel.gov/accessibility.html",
+    href: "https://www.nlr.gov/accessibility",
   },
-  { content: "Disclaimer", href: "https://www.nrel.gov/disclaimer.html" },
+  { content: "Disclaimer", href: "https://www.nlr.gov/disclaimer" },
   {
     content: "Security and Privacy",
-    href: "https://www.nrel.gov/security.html",
+    href: "https://www.nlr.gov/security",
   },
   {
     content: "Site Feedback",
-    href: "https://www.nrel.gov/webmaster.html",
+    href: "https://www.nlr.gov/webmaster",
   },
   { content: "Developers", href: "https://developer.nrel.gov" },
   { content: "Employees", href: "https://thesource.nrel.gov" },
@@ -46,7 +46,7 @@ export const QUICK_LINKS: FooterLink[] = [
 export const SOCIAL_LINKS = [
   {
     name: "facebook",
-    href: "https://www.facebook.com/nationalrenewableenergylab",
+    href: "https://www.facebook.com/nationallaboratoryoftherockies",
     ariaLabel: "Follow NLR on Facebook",
   },
   {
@@ -61,12 +61,12 @@ export const SOCIAL_LINKS = [
   },
   {
     name: "youtube",
-    href: "https://www.youtube.com/user/NRELPR",
+    href: "https://www.youtube.com/@nationallaboratoryoftherockies",
     ariaLabel: "Follow NLR on YouTube",
   },
   {
     name: "x",
-    href: "https://twitter.com/nrel",
+    href: "https://twitter.com/NatLabRockies",
     ariaLabel: "Follow NLR on X",
   },
   {
@@ -77,13 +77,13 @@ export const SOCIAL_LINKS = [
 ];
 
 // Contact information
-export const CONTACT_EMAIL = "windwatts@nrel.gov";
+export const CONTACT_EMAIL = "windwatts@nlr.gov";
 export const CONTACT_LINKS: FooterLink[] = [
   { content: "Contact Us", href: `mailto:${CONTACT_EMAIL}` },
-  { content: "Visit", href: "https://www.nrel.gov/about/visiting-nrel" },
+  { content: "Visit", href: "https://www.nlr.gov/about/visiting-nlr" },
   {
     content: "Subscribe to NLR",
-    href: "https://www.nrel.gov/news/subscribe",
+    href: "https://www.nlr.gov/news/subscribe",
   },
 ];
 
