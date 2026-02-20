@@ -65,7 +65,7 @@ export const Footer = () => (
       >
         <Stack direction="column" spacing="10px">
           <Box>
-            <Link href="https://www.nrel.gov" underline="none" color="inherit">
+            <Link href="https://www.nlr.gov" underline="none" color="inherit">
               <strong>{ATTRIBUTION_TEXT.labName}</strong>
             </Link>
           </Box>
