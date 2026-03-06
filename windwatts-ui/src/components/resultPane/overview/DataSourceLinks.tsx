@@ -1,6 +1,6 @@
 import { Link, Typography } from "@mui/material";
-import { DATA_MODEL_INFO } from "../../constants";
-import { DataModel } from "../../types";
+import { DATA_MODEL_INFO } from "../../../constants";
+import { DataModel } from "../../../types";
 
 export const DataSourceLinks = ({
   preferredModel,

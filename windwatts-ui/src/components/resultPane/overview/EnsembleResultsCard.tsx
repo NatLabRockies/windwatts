@@ -1,9 +1,13 @@
 import { memo, useContext } from "react";
 import { Box, Paper, Typography, Skeleton } from "@mui/material";
-import { UnitsContext } from "../../providers/UnitsContext";
-import { SettingsContext } from "../../providers/SettingsContext";
-import { useEnsembleTilesData } from "../../hooks";
-import { convertWindspeed, convertOutput, getWindResource } from "../../utils";
+import { UnitsContext } from "../../../providers/UnitsContext";
+import { SettingsContext } from "../../../providers/SettingsContext";
+import { useEnsembleTilesData } from "../../../hooks";
+import {
+  convertWindspeed,
+  convertOutput,
+  getWindResource,
+} from "../../../utils";
 
 // Compact, card-less variant for embedding in the top row - using ensemble model
 export const EnsembleTiles = memo(() => {

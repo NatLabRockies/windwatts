@@ -1,50 +1,25 @@
-import { Box, Stack, Divider, Typography } from "@mui/material";
-import { ProductionCard } from "./ProductionCard";
-import { EnsembleTiles } from "./EnsembleResultsCard";
-import { useContext } from "react";
-import { SettingsContext } from "../../providers/SettingsContext";
-import { WindSpeedCard } from "./WindSpeedCard";
-import { WindResourceCard } from "./WindResourceCard";
-import { DataSourceLinks } from "./DataSourceLinks";
-import { useOutputUnit } from "../../hooks";
+import { Stack, Tabs, Tab } from "@mui/material";
+import { useState } from "react";
+import { OverviewTab } from "./overview/OverviewTab";
+import { DetailsTab } from "./details/DetailsTab";
 
 export const AnalysisResults = () => {
-  const { preferredModel } = useContext(SettingsContext);
-
-  useOutputUnit(); // auto-switches between kWh and MWh
+  const [activeTab, setActiveTab] = useState(0);
 
   return (
     <Stack spacing={2}>
-      {/* Top row: either Wind Speed + Resource, or Ensemble Model tiles */}
-      {preferredModel === "ensemble-quantiles" ? (
-        <>
-          <Divider
-            textAlign="center"
-            sx={{ my: 1, fontWeight: 600, color: "text.secondary" }}
-          >
-            Ensemble Model Results *
-          </Divider>
-          <EnsembleTiles />
-          <Typography variant="body2" color="text.secondary">
-            * Experimental model (under development)
-          </Typography>
-        </>
-      ) : (
-        <>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Box sx={{ flex: 1 }}>
-              <WindSpeedCard />
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <WindResourceCard />
-            </Box>
-          </Box>
-          <DataSourceLinks preferredModel={preferredModel} />
-        </>
-      )}
+      <Tabs
+        value={activeTab}
+        onChange={(_, v) => setActiveTab(v)}
+        indicatorColor="primary"
+        textColor="primary"
+        variant="fullWidth"
+      >
+        <Tab label="Overview" />
+        <Tab label="Details" />
+      </Tabs>
 
-      {/* Production card separate */}
-      <ProductionCard />
+      {activeTab === 0 ? <OverviewTab /> : <DetailsTab />}
     </Stack>
   );
 };
