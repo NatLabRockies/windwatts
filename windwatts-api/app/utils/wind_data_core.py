@@ -212,7 +212,8 @@ def get_timeseries_core(
     Returns:
         str or pd.DataFrame: CSV content as string or DataFrame
     """
-    model = validate_model_for_timeseries(model)
+    model = validate_model(model)
+    validate_model_for_timeseries(model)
     source = validate_source(model, source)
     period = validate_period_type(model, period, "timeseries")
 
