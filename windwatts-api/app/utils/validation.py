@@ -13,7 +13,7 @@ def validate_model(model: str) -> str:
     if model not in MODEL_CONFIG:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid model. Must be one of: {list(MODEL_CONFIG.keys())}. But got f{model} instead.",
+            detail=f"Invalid model. Must be one of: {list(MODEL_CONFIG.keys())}. But got {model} instead.",
         )
     return model
 
@@ -198,3 +198,13 @@ def validate_years(years: list[int], model: str) -> list[int]:
             detail=f"Invalid years for {model}: {invalid_years}. Currently supporting years {year_range}",
         )
     return years
+
+def validate_timeseries_model(model: str) -> str:
+    """Validation that model supports timeseries downloads (schema must be full_hourly)"""
+    validate_model(model)
+    if MODEL_CONFIG[model]["schema"] != "full_hourly":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Model '{model}' does not support timeseries downloads."
+        )
+    return model

@@ -448,7 +448,7 @@ def get_model_info(
     },
 )
 def download_timeseries(
-    model: str = Path(..., description="Data model: era5-timeseries or wtk-timeseries"),
+    model: str = Path(..., description="Data model: era5-timeseries"),
     gridIndex: str = Query(..., description="Grid index identifier"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
@@ -473,7 +473,7 @@ def download_timeseries(
 
     Returns raw timeseries data for the specified grid index and years.
 
-    - **model**: Data model (era5-timeseries or wtk-timeseries)
+    - **model**: Data model (era5-timeseries)
     - **gridIndex**: Grid index from grid-points endpoint
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
@@ -520,7 +520,7 @@ def download_timeseries(
 )
 def download_timeseries_batch(
     payload: TimeseriesBatchRequest,
-    model: str = Path(..., description="Data model: era5-timeseries or wtk-timeseries"),
+    model: str = Path(..., description="Data model: era5-timeseries"),
 ):
     """
     Download timeseries data for multiple grid points as a ZIP archive.
