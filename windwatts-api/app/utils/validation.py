@@ -8,12 +8,12 @@ from fastapi import HTTPException
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 
 
-def validate_model(model: str) -> str:
+def validate_model_exists(model: str) -> str:
     """Validate model parameter"""
     if model not in MODEL_CONFIG:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid model. Must be one of: {list(MODEL_CONFIG.keys())}. But got f{model} instead.",
+            detail=f"Invalid model. Must be one of: {list(MODEL_CONFIG.keys())}. But got {model} instead.",
         )
     return model
 
@@ -198,3 +198,13 @@ def validate_years(years: list[int], model: str) -> list[int]:
             detail=f"Invalid years for {model}: {invalid_years}. Currently supporting years {year_range}",
         )
     return years
+
+def validate_model_for_timeseries(model: str) -> str:
+    """Validation that model supports timeseries downloads"""
+    model_schema_cfg = TEMPORAL_SCHEMAS[MODEL_CONFIG[model]["schema"]]
+    if not model_schema_cfg['period_type'].get('timeseries'):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Model '{model}' does not support timeseries downloads."
+        )
+    return model
