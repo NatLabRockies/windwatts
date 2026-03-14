@@ -1,5 +1,6 @@
 {
   "private": true,
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "windwatts-ui",
     "windwatts-api"
@@ -20,5 +21,6 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2"
-  }
+  },
+  "version": "0.0.0"
 }
