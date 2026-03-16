@@ -8,6 +8,13 @@ export interface WindspeedByLatLngRequest {
   dataModel: DataModel;
 }
 
+export interface WindRoseRequest {
+  lat: number;
+  lng: number;
+  hubHeight: number;
+  dataModel: DataModel;
+}
+
 export interface EnergyProductionRequest {
   lat: number;
   lng: number;
