@@ -405,7 +405,7 @@ def get_windrose_core(
         "calm_threshold": calm_threshold,
     }
 
-    if bin == 0:
+    if bin == 1:
         # Raw - return actual windspeed values per sector keyed by str(direction_deg)
         sectors_data = {}
         for i, deg in enumerate(sector_centers):
