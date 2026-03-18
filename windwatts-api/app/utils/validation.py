@@ -237,9 +237,9 @@ def validate_bin(bin: int) -> int:
             status_code=400,
             detail="bin=1 is not meaningful. Use 0 for raw mode or 2+ for binned mode.",
         )
-    if bin > 20:
+    if bin > 10:
         raise HTTPException(
             status_code=400,
-            detail="bin must be <= 20.",
+            detail="bin must be <= 10.",
         )
     return bin
