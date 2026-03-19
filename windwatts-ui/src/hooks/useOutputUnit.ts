@@ -2,14 +2,14 @@ import { useContext, useEffect } from "react";
 import { SettingsContext } from "../providers/SettingsContext";
 import { UnitsContext } from "../providers/UnitsContext";
 import { useProductionData } from "./useProductionData";
-import { useEnsembleTilesData } from "./useEnsembleTilesData";
+import { useEnsemble } from "./useEnsemble";
 import { KEY_AVERAGE_YEAR, KEY_KWH_PRODUCED } from "../constants";
 
 export const useOutputUnit = () => {
   const { preferredModel } = useContext(SettingsContext);
   const { updateUnit } = useContext(UnitsContext);
   const { productionData: prodData } = useProductionData();
-  const { productionData: ensembleData } = useEnsembleTilesData();
+  const { productionData: ensembleData } = useEnsemble();
 
   useEffect(() => {
     const prodAvg = Number(

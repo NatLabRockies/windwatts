@@ -2,7 +2,7 @@ import { memo, useContext } from "react";
 import { Box, Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../../providers/UnitsContext";
 import { SettingsContext } from "../../../providers/SettingsContext";
-import { useEnsembleTilesData } from "../../../hooks";
+import { useEnsemble } from "../../../hooks";
 import {
   convertWindspeed,
   convertOutput,
@@ -20,7 +20,7 @@ export const EnsembleTiles = memo(() => {
     isLoading: isTilesLoading,
     error,
     hasData,
-  } = useEnsembleTilesData();
+  } = useEnsemble();
 
   if (preferredModel !== "ensemble-quantiles") return null;
 
