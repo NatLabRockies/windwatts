@@ -13,7 +13,7 @@ import {
   Skeleton,
   Stack,
 } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useState, type SyntheticEvent } from "react";
 import { ExpandMore } from "@mui/icons-material";
 import { UnitsContext } from "../../../providers/UnitsContext";
 import { convertOutput, convertWindspeed } from "../../../utils";
@@ -30,7 +30,8 @@ interface ProductionDataTableProps {
   timeUnit?: "month" | "year";
   showAccordion?: boolean;
   accordionTitle?: string;
-  defaultExpanded?: boolean;
+  toggle?: boolean;
+  onToggleChange?: (toggle: boolean) => void;
   isLoading?: boolean;
   error?: boolean;
   hasData?: boolean;
@@ -231,14 +232,22 @@ export const ProductionDataTable = ({
   timeUnit = "month",
   showAccordion = true,
   accordionTitle = "Production Data Table",
-  defaultExpanded = true,
+  toggle = true,
+  onToggleChange,
   isLoading = false,
   error = false,
   hasData = true,
   outOfBoundsMessage,
   emptyMessage = "No data available",
 }: ProductionDataTableProps) => {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [expanded, setExpanded] = useState(toggle);
+  const handleExpandedChange = (
+    _event: SyntheticEvent,
+    isExpanded: boolean
+  ) => {
+    setExpanded(isExpanded);
+    onToggleChange?.(isExpanded);
+  };
   const showTitle = title && title.trim().length > 0;
   const isEmpty =
     !data || typeof data !== "object" || Object.keys(data).length === 0;
@@ -282,7 +291,7 @@ export const ProductionDataTable = ({
     <Accordion
       variant="outlined"
       expanded={expanded}
-      onChange={(_, isExpanded) => setExpanded(isExpanded)}
+      onChange={handleExpandedChange}
     >
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Box

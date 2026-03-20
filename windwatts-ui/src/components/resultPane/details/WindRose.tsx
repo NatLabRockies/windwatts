@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type SyntheticEvent } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -16,13 +16,18 @@ import { getOutOfBoundsMessage } from "../../../utils";
 import { OutOfBoundsWarning } from "../../shared";
 
 interface WindRoseProps {
-  defaultExpanded?: boolean;
+  toggle?: boolean;
+  onToggleChange?: (toggle: boolean) => void;
 }
 
 const TRACE_COLORS = ["#D8E6FF", "#9FC2FF", "#5F96F4", "#2E6BD9", "#123E91"];
 
-export const WindRose = ({ defaultExpanded = true }: WindRoseProps) => {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
+  const [expanded, setExpanded] = useState(toggle);
+  const handleExpandChange = (_event: SyntheticEvent, isExpanded: boolean) => {
+    setExpanded(isExpanded);
+    onToggleChange?.(isExpanded);
+  };
   const {
     windRoseData,
     isLoading,
@@ -164,7 +169,7 @@ export const WindRose = ({ defaultExpanded = true }: WindRoseProps) => {
     <Accordion
       variant="outlined"
       expanded={expanded}
-      onChange={(_, isExpanded) => setExpanded(isExpanded)}
+      onChange={handleExpandChange}
     >
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Box

@@ -4,7 +4,19 @@ import { useOutputUnit, useProductionData } from "../../../hooks";
 import { ProductionDataTable } from "./ProductionDataTable";
 import { WindRose } from "./WindRose";
 
-export const DetailsTab = () => {
+interface DetailsTabProps {
+  windRoseToggle?: boolean;
+  onWindRoseToggleChange?: (toggle: boolean) => void;
+  prodTableOpen?: boolean;
+  onProdTableOpenChange?: (open: boolean) => void;
+}
+
+export const DetailsTab = ({
+  windRoseToggle = true,
+  onWindRoseToggleChange,
+  prodTableOpen = true,
+  onProdTableOpenChange,
+}: DetailsTabProps) => {
   const {
     productionData,
     isLoading: productionLoading,
@@ -31,7 +43,10 @@ export const DetailsTab = () => {
 
   return (
     <Stack spacing={2}>
-      <WindRose />
+      <WindRose
+        toggle={windRoseToggle}
+        onToggleChange={onWindRoseToggleChange}
+      />
 
       <ProductionDataTable
         title=""
@@ -42,6 +57,8 @@ export const DetailsTab = () => {
         error={productionError}
         outOfBoundsMessage={outOfBoundsMessage}
         emptyMessage="Select a location and turbine to see production details."
+        toggle={prodTableOpen}
+        onToggleChange={onProdTableOpenChange}
       />
     </Stack>
   );
