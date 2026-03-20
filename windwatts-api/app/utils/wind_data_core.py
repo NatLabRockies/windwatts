@@ -397,14 +397,6 @@ def get_windrose_core(
         int
     )
 
-    # Fields shared by both binned and raw response formats
-    common = {
-        "calm_fraction": calm_fraction,
-        "total_hours": total,
-        "n_sectors": sectors,
-        "calm_threshold": calm_threshold,
-    }
-
     if bin == 1:
         # Raw - return actual windspeed values per sector keyed by str(direction_deg)
         sectors_data = {}
@@ -412,10 +404,10 @@ def get_windrose_core(
             sector_ws = sorted(active_ws[sector_idx == i].round(4).tolist())
             sectors_data[str(deg)] = sector_ws
         return {
-            **common,
-            "bins": [],
+            "calm_fraction": calm_fraction,
+            "bin_edges": [],
+            "cells": [],
             "sectors_data": sectors_data,
-            "calm_windspeeds": sorted(ws[calm_mask].round(4).tolist()),
         }
 
     raw_max_ws = float(np.ceil(active_ws.max()))
@@ -423,16 +415,12 @@ def get_windrose_core(
     max_ws = float(np.ceil(raw_max_ws / bin) * bin)
     bin_edges = [round(float(e), 1) for e in np.linspace(0, max_ws, bin + 1)]
 
-    speed_labels = [f"{bin_edges[j]}-{bin_edges[j + 1]}" for j in range(bin)]
-
-    result_bins = []
+    cells = []
     for i, deg in enumerate(sector_centers):
         in_sector = sector_idx == i
         # Sort once per sector so bisect can locate bin boundaries in O(log n)
         sector_ws = sorted(active_ws[in_sector].tolist())
-
-        speed_fracs = {}
-        for j, slabel in enumerate(speed_labels):
+        for j in range(bin):
             lo = bin_edges[j]
             hi = bin_edges[j + 1] if j + 1 < bin else float("inf")
             left = bisect.bisect_left(sector_ws, lo)
@@ -441,20 +429,13 @@ def get_windrose_core(
                 if hi != float("inf")
                 else len(sector_ws)
             )
-            speed_fracs[slabel] = round((right - left) / total, 4)
-
-        result_bins.append(
-            {
-                "direction_deg": deg,
-                "frequency": round(float(in_sector.sum()) / total, 4),
-                "calm": calm_fraction,
-                "speed_bands": speed_fracs,
-            }
-        )
+            freq = round((right - left) / total, 4)
+            if freq > 0:
+                cells.append({"angle_deg": deg, "bin_index": j, "frequency": freq})
 
     return {
-        **common,
-        "bins": result_bins,
+        "calm_fraction": calm_fraction,
+        "bin_edges": bin_edges,
+        "cells": cells,
         "sectors_data": {},
-        "calm_windspeeds": [],
     }

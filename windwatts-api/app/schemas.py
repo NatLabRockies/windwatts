@@ -454,35 +454,37 @@ class ModelInfoResponse(BaseModel):
         }
     }
 
+class WindRoseCell(BaseModel):
+    angle_deg: float = Field(..., description="Sector centre bearing in degrees (0 = North)")
+    bin_index: int = Field(..., description="Zero-based speed bin index")
+    frequency: float = Field(..., description="Fraction of total hours in this (sector, bin) cell")
 
 class WindRoseResponse(BaseModel):
     calm_fraction: float = Field(
         ..., description="Fraction of total hours with speed below calm_threshold"
     )
-    total_hours: int = Field(..., description="Total number of hourly observations")
-    n_sectors: int = Field(..., description="Number of compass sectors")
-    calm_threshold: float = Field(
-        ..., description="Speed (m/s) below which an observation is considered calm"
-    )
-    # binned-mode fields
-    bins: List[Dict[str, Union[float, Dict[str, float]]]] = Field(
+    # binned mode (bin>=2)
+    bin_edges: List[float] = Field(
         default_factory=list,
         description=(
-            "Per-sector entries with fixed fields direction_deg, frequency, calm, "
-            "and a nested 'speed_bands' dict mapping dynamic band labels "
-            "(e.g. '0.0-4.0') to their fraction of total hours. "
-            "Empty list when bin=0."
+            "Speed bin edges in m/s. Length = n_bins + 1. "
+            "bin_edges[i]–bin_edges[i+1] defines the speed range for bin index i. "
+            "Empty in raw mode."
         ),
     )
-    # unbinned mode fields
+    cells: List[WindRoseCell] = Field(
+        default_factory=list,
+        description=(
+            "Sparse flat grid of (sector, bin) cells with non-zero frequency. "
+            "One entry per occupied (angle_deg, bin_index) pair. "
+            "Empty in raw mode."
+        ),
+    )
+    # raw mode (bin = 1)
     sectors_data: Dict[str, List[float]] = Field(
         default_factory=dict,
         description=(
-            "Map of str(direction_deg) → list of raw values per sector. "
-            "Empty dict when bin!=0"
+            "Map of str(angle_deg) -> sorted list of raw windspeed values per sector. "
+            "Populated only in raw mode (bin=1)."
         ),
-    )
-    calm_windspeeds: List[float] = Field(
-        default_factory=list,
-        description="Raw values below calm_threshold (direction undefined). Empty when bin=0.",
     )

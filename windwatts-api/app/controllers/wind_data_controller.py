@@ -32,7 +32,7 @@ from app.schemas import (
     TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
     AvailableModelsResponse,
-    WindRoseResponse,
+    WindRoseResponse
 )
 
 router = APIRouter()
@@ -711,6 +711,12 @@ def download_timeseries_energy_batch(
     "/{model}/windrose",
     summary="Wind rose from hourly timeseries",
     response_model=WindRoseResponse,
+    responses={
+        200: {"description": "Wind rose data retrieved successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
 )
 def get_windrose(
     model: str = Path(..., description="Data model: era5-timeseries"),
