@@ -32,7 +32,7 @@ from app.schemas import (
     TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
     AvailableModelsResponse,
-    WindRoseResponse
+    WindRoseResponse,
 )
 
 router = APIRouter()

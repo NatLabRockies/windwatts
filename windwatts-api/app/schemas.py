@@ -454,10 +454,16 @@ class ModelInfoResponse(BaseModel):
         }
     }
 
+
 class WindRoseCell(BaseModel):
-    angle_deg: float = Field(..., description="Sector centre bearing in degrees (0 = North)")
+    angle_deg: float = Field(
+        ..., description="Sector centre bearing in degrees (0 = North)"
+    )
     bin_index: int = Field(..., description="Zero-based speed bin index")
-    frequency: float = Field(..., description="Fraction of total hours in this (sector, bin) cell")
+    frequency: float = Field(
+        ..., description="Fraction of total hours in this (sector, bin) cell"
+    )
+
 
 class WindRoseResponse(BaseModel):
     calm_fraction: float = Field(

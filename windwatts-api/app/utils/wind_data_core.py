@@ -387,7 +387,7 @@ def get_windrose_core(
 
     # Separate calm rows (speed below threshold) from active rows used in sector assignment
     calm_mask = ws < calm_threshold
-    calm_fraction = round(float(calm_mask.sum()) / total, 4)
+    calm_fraction = round(float(calm_mask.sum()) / total, 3)
     active_ws = ws[~calm_mask]
     active_wd = wd[~calm_mask]
 
