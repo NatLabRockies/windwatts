@@ -3,6 +3,7 @@ import { getOutOfBoundsMessage } from "../../../utils";
 import { useOutputUnit, useProductionData } from "../../../hooks";
 import { ProductionDataTable } from "./ProductionDataTable";
 import { WindRose } from "./WindRose";
+import { ProductionCard } from "../overview/ProductionCard";
 
 interface DetailsTabProps {
   windRoseToggle?: boolean;
@@ -43,6 +44,7 @@ export const DetailsTab = ({
 
   return (
     <Stack spacing={2}>
+      <ProductionCard />
       <WindRose
         toggle={windRoseToggle}
         onToggleChange={onWindRoseToggleChange}

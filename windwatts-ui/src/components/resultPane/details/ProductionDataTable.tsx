@@ -231,7 +231,7 @@ export const ProductionDataTable = ({
   data,
   timeUnit = "month",
   showAccordion = true,
-  accordionTitle = "Production Data Table",
+  accordionTitle = "Production Table",
   toggle = true,
   onToggleChange,
   isLoading = false,
