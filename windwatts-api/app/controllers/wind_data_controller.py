@@ -724,7 +724,7 @@ def get_windrose(
     height: int = Query(..., description="Height in meters"),
     bin: int = Query(
         5,
-        description="Speed band count per sector. 1 = raw mode: returns the individual wind speed values for each sector. 2–10 = binned mode: divides the wind speed range (0 to site max) into this many equal-width bands and returns the fraction of hours in each band per sector. Default: 5.",
+        description="Number of equal-width speed bins to divide the wind speed range (0 to site max) into per sector. Sorted wind speed values and their frequency are returned for each bin. Default: 5.",
     ),
     sectors: int = Query(16, description="Directional sectors: 4, 8 or 16"),
     calm_threshold: float = Query(

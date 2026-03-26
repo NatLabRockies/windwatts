@@ -492,15 +492,13 @@ class RoseBinData(BaseModel):
 
 class RoseResponse(BaseModel):
     no_of_sectors: int = Field(..., description="Number of compass sectors")
-    no_of_bins: int = Field(..., description="Number of bins (1 = raw mode)")
+    no_of_bins: int = Field(..., description="Number of bins")
     calm_info: RoseCalmInfo = Field(..., description="Calm threshold and fraction")
     calm_data: List[float] = Field(..., description="Raw values below calm_threshold")
     sector_info: List[RoseSectorInfo] = Field(
         ..., description="Geometry of each sector"
     )
-    bin_info: List[RoseBinInfo] = Field(
-        ..., description="Value range of each bin. Empty in raw mode (no_of_bins=1)"
-    )
+    bin_info: List[RoseBinInfo] = Field(..., description="Value range of each bin.")
     bin_data: List[RoseBinData] = Field(
         ..., description="Frequency and raw values per (sector, bin) cell"
     )

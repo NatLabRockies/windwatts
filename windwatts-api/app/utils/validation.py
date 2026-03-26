@@ -206,7 +206,7 @@ def validate_years(years: list[int], model: str) -> list[int]:
 
 
 def validate_sectors(sectors: int) -> int:
-    "Validate number of sectors for WindRose"
+    "Validate number of sectors for Rose"
     if sectors not in (4, 8, 16):
         raise HTTPException(
             status_code=400,
@@ -216,7 +216,8 @@ def validate_sectors(sectors: int) -> int:
 
 
 def validate_calm_threshold(calm_threshold: float) -> float:
-    "Validate calm threshold for WindRose"
+    "Validate calm threshold for Rose"
+    # TODO update the upper threshold based on windrose type for example power/energy rose.
     if not (0 <= calm_threshold < 3):
         raise HTTPException(
             status_code=400,
@@ -226,15 +227,11 @@ def validate_calm_threshold(calm_threshold: float) -> float:
 
 
 def validate_bin(bin: int) -> int:
-    """Validate bin parameter for WindRose"""
-    if bin < 0:
+    """Validate bin parameter for Rose"""
+    # TODO update the valid bin range based on rose type for example power/energy rose.
+    if bin <= 0 or bin > 10:
         raise HTTPException(
             status_code=400,
-            detail="bin must be >= 0. Use 1 for raw mode or 2-10 for binned mode.",
-        )
-    if bin > 10:
-        raise HTTPException(
-            status_code=400,
-            detail="bin must be <= 10.",
+            detail="Incorrect bin value. Valid bin value range is [1,10].",
         )
     return bin
