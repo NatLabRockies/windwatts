@@ -298,7 +298,7 @@ export const SummaryCards = memo(() => {
           elevation={2}
         >
           <Typography variant="subtitle2" gutterBottom>
-            {isEnsemble ? "Production" : "Est. Production"}
+            Production
           </Typography>
           <Typography variant="body2">Error loading data</Typography>
         </Paper>
@@ -315,7 +315,7 @@ export const SummaryCards = memo(() => {
           elevation={2}
         >
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            {isEnsemble ? "Production" : "Est. Production"}
+            Production
           </Typography>
           <Typography variant="body2" color="text.secondary">
             No data available
@@ -335,7 +335,7 @@ export const SummaryCards = memo(() => {
           elevation={2}
         >
           <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
-            {isEnsemble ? "Production" : "Est. Production"}
+            Production
           </Typography>
           <Typography variant="h5" sx={{ fontWeight: "bold", my: 0.5 }}>
             {prodNumber}
