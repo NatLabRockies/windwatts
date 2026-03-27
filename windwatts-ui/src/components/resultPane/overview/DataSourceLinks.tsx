@@ -7,27 +7,32 @@ export const DataSourceLinks = ({
 }: {
   preferredModel: DataModel;
 }) => {
+  const modelInfo = DATA_MODEL_INFO[preferredModel];
+  const label = modelInfo?.label ?? "";
+  const sourceHref = modelInfo?.source_href ?? "";
+  const helpHref = modelInfo?.help_href ?? "";
+
   return (
     <Typography variant="body2" color="text.secondary">
       * Estimates based on{" "}
-      <Link
-        href={
-          DATA_MODEL_INFO[preferredModel]?.source_href ||
-          DATA_MODEL_INFO["era5-quantiles"].source_href
-        }
-        target="_blank"
-        rel="noopener noreferrer"
-        underline="hover"
-      >
-        {DATA_MODEL_INFO[preferredModel]?.label ||
-          DATA_MODEL_INFO["era5-quantiles"].label}{" "}
-        reanalysis data
-      </Link>{" "}
-      &mdash;{" "}
-      {DATA_MODEL_INFO[preferredModel]?.help_href && (
+      {sourceHref ? (
+        <Link
+          href={sourceHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="hover"
+        >
+          {label}
+        </Link>
+      ) : (
+        <>{label}</>
+      )}
+      {helpHref && (
         <>
+          {" "}
+          &mdash;{" "}
           <Link
-            href={DATA_MODEL_INFO[preferredModel]!.help_href}
+            href={helpHref}
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"

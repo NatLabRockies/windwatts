@@ -1,8 +1,17 @@
 import { DataModelInfo } from "../types";
 
 export const DATA_MODEL_INFO: Record<string, DataModelInfo> = {
+  "ensemble-quantiles": {
+    label: "WindWatts Ensemble",
+    source_href: "",
+    help_href: "",
+    description: "WindWatts Ensemble model (experimental)",
+    year_range: "",
+    wind_speed_heights: [],
+    wind_direction_heights: [],
+  },
   "era5-quantiles": {
-    label: "ERA5",
+    label: "ERA5 reanalysis data",
     source_href:
       "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
     help_href: "https://github.com/NREL/windwatts/blob/main/docs/about/era5.md",
