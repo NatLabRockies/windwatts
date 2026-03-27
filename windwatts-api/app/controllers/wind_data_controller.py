@@ -724,11 +724,11 @@ def get_windrose(
     height: int = Query(..., description="Height in meters"),
     bin: int = Query(
         5,
-        description="Number of equal-width speed bins to divide the wind speed range (0 to site max) into per sector. Sorted wind speed values and their frequency are returned for each bin. Default: 5.",
+        description="Number of equal-width bins to divide the data range (0 to site max) into per sector. Sorted values and their frequency are returned for each bin. Default: 5.",
     ),
     sectors: int = Query(16, description="Directional sectors: 4, 8 or 16"),
     calm_threshold: float = Query(
-        0.0, description="Speed (m/s) below which a row is calm. Defaults to 0."
+        0.0, description="Value below which a row is calm. Defaults to 0."
     ),
     year_set: str = Query("sample", description="Dataset size: full or sample"),
     year_range: Optional[str] = Query(

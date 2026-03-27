@@ -438,15 +438,26 @@ def get_windrose_core(
     }
 
     bin_data = []
-    for i, _ in enumerate(sector_centers):
-        sector_ws = sorted(active_ws[sector_idx == i].round(2).tolist()) + [
-            float("inf")
+    for i in range(sectors):
+        sector_ws = sorted(active_ws[sector_idx == i].round(2).tolist())
+        # skip binning computation if sector_ws is empty
+        if not sector_ws:
+            for j in range(bin):
+                bin_data.append({
+                    "bin_index": j,
+                    "sector_index": i,
+                    "data": [],
+                    "frequency": 0.0,
+                })
+            continue
+
+        right_boundaries = [
+            bisect.bisect_right(sector_ws, e) for e in bin_edges[1:]
         ]
-        boundaries = [
-            bisect.bisect_left(sector_ws, e) for e in bin_edges[:-1] + [float("inf")]
-        ]
+        prev = 0
         for j in range(bin):
-            data = sector_ws[boundaries[j] : boundaries[j + 1]]
+            data = sector_ws[prev:right_boundaries[j]]
+            prev = right_boundaries[j]
             freq = round(len(data) / total, 4)
             bin_data.append(
                 {

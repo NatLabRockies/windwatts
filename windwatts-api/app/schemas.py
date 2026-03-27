@@ -460,7 +460,7 @@ class RoseCalmInfo(BaseModel):
         ..., description="Value below which an observation is calm"
     )
     calm_fraction: float = Field(
-        ..., description="Fraction of total hours that are calm (3 d.p.)"
+        ..., description="Fraction of data points that are calm (3 d.p.)"
     )
 
 
@@ -485,20 +485,20 @@ class RoseBinData(BaseModel):
     sector_index: int = Field(..., description="Sector this cell belongs to")
     bin_index: int = Field(..., description="Bin this cell belongs to")
     frequency: float = Field(
-        ..., description="Fraction of total hours in this (sector, bin) cell"
+        ..., description="Fraction of data points in this (sector, bin) cell"
     )
-    data: List[float] = Field(..., description="Raw values in this (sector, bin) cell")
+    data: List[float] = Field(..., description="Sorted values in this (sector, bin) cell")
 
 
 class RoseResponse(BaseModel):
     no_of_sectors: int = Field(..., description="Number of compass sectors")
     no_of_bins: int = Field(..., description="Number of bins")
     calm_info: RoseCalmInfo = Field(..., description="Calm threshold and fraction")
-    calm_data: List[float] = Field(..., description="Raw values below calm_threshold")
+    calm_data: List[float] = Field(..., description="Sorted values below calm_threshold")
     sector_info: List[RoseSectorInfo] = Field(
-        ..., description="Geometry of each sector"
+        ..., description="Statistics of each sector"
     )
     bin_info: List[RoseBinInfo] = Field(..., description="Value range of each bin.")
     bin_data: List[RoseBinData] = Field(
-        ..., description="Frequency and raw values per (sector, bin) cell"
+        ..., description="Frequency and data values per (sector, bin) cell"
     )
