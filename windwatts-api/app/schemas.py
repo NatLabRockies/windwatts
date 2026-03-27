@@ -487,14 +487,18 @@ class RoseBinData(BaseModel):
     frequency: float = Field(
         ..., description="Fraction of data points in this (sector, bin) cell"
     )
-    data: List[float] = Field(..., description="Sorted values in this (sector, bin) cell")
+    data: List[float] = Field(
+        ..., description="Sorted values in this (sector, bin) cell"
+    )
 
 
 class RoseResponse(BaseModel):
     no_of_sectors: int = Field(..., description="Number of compass sectors")
     no_of_bins: int = Field(..., description="Number of bins")
     calm_info: RoseCalmInfo = Field(..., description="Calm threshold and fraction")
-    calm_data: List[float] = Field(..., description="Sorted values below calm_threshold")
+    calm_data: List[float] = Field(
+        ..., description="Sorted values below calm_threshold"
+    )
     sector_info: List[RoseSectorInfo] = Field(
         ..., description="Statistics of each sector"
     )
