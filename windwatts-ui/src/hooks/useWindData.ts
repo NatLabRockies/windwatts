@@ -1,7 +1,7 @@
 import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
-import { getWindspeedByLatLong } from "../services/api";
+import { getWindspeedGlobalAverage } from "../services/api";
 import { isOutOfBounds } from "../utils";
 
 export const useWindData = () => {
@@ -24,7 +24,7 @@ export const useWindData = () => {
   const { isLoading, data, error } = useSWR(
     swrKey,
     () =>
-      getWindspeedByLatLong({
+      getWindspeedGlobalAverage({
         lat: lat!,
         lng: lng!,
         hubHeight,

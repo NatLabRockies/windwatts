@@ -106,12 +106,18 @@ export const SummaryCards = memo(() => {
   }
 
   // Wind speed & resource data
-  const windGlobalAvg = isEnsemble
-    ? (ensembleTiles.windData?.global_avg ?? 0)
-    : (eraWind.windData?.global_avg ?? 0);
-  const windResource = getWindResource(windGlobalAvg);
+  const windResource = getWindResource(
+    isEnsemble
+      ? (ensembleTiles.windData?.global_avg ?? 0)
+      : (eraWind.windData?.global_avg ?? 0)
+  );
   const windInfo = getWindResourceInfo(windResource);
-  const windSpeedDisplay = convertWindspeed(windGlobalAvg, units.windspeed);
+  const windSpeedDisplay = convertWindspeed(
+    isEnsemble
+      ? (ensembleTiles.windData?.global_avg ?? 0)
+      : (eraWind.windData?.global_avg ?? 0),
+    units.windspeed
+  );
 
   // Production data
   const rawProdValue = isEnsemble

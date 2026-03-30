@@ -46,8 +46,8 @@ export const useNearestGridLocation = (n_neighbors: number = 1) => {
     }
   );
 
-  const gridLocations =
-    data?.locations?.map((location: GridLocation) => ({
+  const gridLocations: GridLocation[] =
+    data?.locations?.map((location) => ({
       latitude: location.latitude,
       longitude: location.longitude,
       index: location.index,

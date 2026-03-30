@@ -45,7 +45,10 @@ export const WindSpeedCard = memo(() => {
     return <EmptyCard title={title} />;
   }
 
-  const windSpeedData = convertWindspeed(windData.global_avg, units.windspeed);
+  const windSpeedData = convertWindspeed(
+    windData?.global_avg ?? 0,
+    units.windspeed
+  );
 
   return (
     <DataCard title={title}>

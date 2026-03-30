@@ -151,7 +151,7 @@ export const WindResourceCard = memo(() => {
     );
   }
 
-  const windResourceData = getWindResource(windData.global_avg);
+  const windResourceData = getWindResource(windData?.global_avg ?? 0);
   const windInfo = getWindResourceInfo(windResourceData);
 
   return (

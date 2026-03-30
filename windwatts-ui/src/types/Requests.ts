@@ -1,6 +1,8 @@
 import { DataModel } from "./DataModel";
 import { GridLocation } from "./GridLocation";
 
+export type WindspeedPeriod = "all" | "annual" | "monthly" | "hourly";
+
 export interface WindspeedByLatLngRequest {
   lat: number;
   lng: number;

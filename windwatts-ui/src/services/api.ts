@@ -1,7 +1,12 @@
 import {
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
+  WindspeedPeriod,
   WindspeedResponse,
+  GlobalWindspeedResponse,
+  YearlyWindspeedResponse,
+  MonthlyWindspeedResponse,
+  HourlyWindspeedResponse,
   WindRoseRequest,
   WindRoseResponse,
   ModelInfoResponse,
@@ -34,6 +39,27 @@ export const fetchBlobWrapper = async (
   }
   return response;
 };
+
+const fetchWindspeedByPeriod = async <T>(
+  { lat, lng, hubHeight, dataModel }: WindspeedByLatLngRequest,
+  period: WindspeedPeriod
+): Promise<T> => {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+    height: String(hubHeight),
+    period,
+  });
+  const url = `/api/v1/${dataModel}/windspeed?${params.toString()}`;
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  return fetchWrapper<T>(url, options);
+};
+
 // V1 API: Uses unified endpoint with model as path parameter
 export const getWindspeedByLatLong = async ({
   lat,
@@ -41,14 +67,34 @@ export const getWindspeedByLatLong = async ({
   hubHeight,
   dataModel,
 }: WindspeedByLatLngRequest): Promise<WindspeedResponse> => {
-  const url = `/api/v1/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  return fetchWrapper<WindspeedResponse>(url, options);
+  return fetchWindspeedByPeriod<WindspeedResponse>(
+    { lat, lng, hubHeight, dataModel },
+    "all"
+  );
+};
+
+export const getWindspeedGlobalAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<GlobalWindspeedResponse> => {
+  return fetchWindspeedByPeriod<GlobalWindspeedResponse>(request, "all");
+};
+
+export const getWindspeedYearlyAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<YearlyWindspeedResponse> => {
+  return fetchWindspeedByPeriod<YearlyWindspeedResponse>(request, "annual");
+};
+
+export const getWindspeedMonthlyAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<MonthlyWindspeedResponse> => {
+  return fetchWindspeedByPeriod<MonthlyWindspeedResponse>(request, "monthly");
+};
+
+export const getWindspeedHourlyAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<HourlyWindspeedResponse> => {
+  return fetchWindspeedByPeriod<HourlyWindspeedResponse>(request, "hourly");
 };
 
 export const getWindRose = async ({
