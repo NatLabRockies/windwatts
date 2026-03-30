@@ -13,4 +13,20 @@ export type { Heights } from "./Heights";
 export type { StoredUnits } from "./Units";
 export type { BaseTable } from "./Tables";
 export type { GridLocation } from "./GridLocation";
-export type { WindRoseBin, WindRoseSector, WindRoseResponse } from "./WindRose";
+export type {
+  WindspeedResponse,
+  GlobalWindspeedResponse,
+  YearlyWindspeedResponse,
+  MonthlyWindspeedResponse,
+  HourlyWindspeedResponse,
+  ModelInfoResponse,
+  WindRoseResponse,
+  RoseCalmInfo,
+  RoseSectorInfo,
+  RoseBinInfo,
+  RoseBinData,
+  EnergyProductionResponse,
+  GridPointLocation,
+  GridPointsResponse,
+  AvailableTurbinesResponse,
+} from "./Responses";

@@ -9,10 +9,12 @@ export interface WindspeedByLatLngRequest {
 }
 
 export interface WindRoseRequest {
-  lat: number;
-  lng: number;
-  hubHeight: number;
+  gridIndex: string;
+  height: number;
   dataModel: DataModel;
+  sectors?: 4 | 8 | 16;
+  bin?: number;
+  calmThreshold?: number;
 }
 
 export interface EnergyProductionRequest {
