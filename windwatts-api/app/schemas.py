@@ -397,7 +397,7 @@ class ModelInfoResponse(BaseModel):
     sample_years: List[int] = Field(
         ..., description="Sample years for quick preview/exploration"
     )
-    available_heights: List[int] = Field(
+    available_heights: Dict[str, List[int]] = Field(
         ..., description="Supported hub heights (in meters)"
     )
     grid_info: Dict[str, AlphaNumeric] = Field(
@@ -432,7 +432,10 @@ class ModelInfoResponse(BaseModel):
                     2023,
                 ],
                 "sample_years": [2020, 2021, 2022, 2023],
-                "available_heights": [30, 40, 50, 60, 80, 100],
+                "available_heights": {
+                    "windspeed": [30, 40, 50, 60, 80, 100],
+                    "winddirection": [10, 100],
+                },
                 "grid_info": {
                     "min_lat": 23.402,
                     "min_long": -137.725,
@@ -450,3 +453,56 @@ class ModelInfoResponse(BaseModel):
             }
         }
     }
+
+
+class RoseCalmInfo(BaseModel):
+    calm_threshold: float = Field(
+        ..., description="Value below which an observation is calm"
+    )
+    calm_fraction: float = Field(
+        ..., description="Fraction of data points that are calm (3 d.p.)"
+    )
+
+
+class RoseSectorInfo(BaseModel):
+    sector_index: int = Field(..., description="Zero-based sector index")
+    center_bearing_deg: float = Field(
+        ..., description="Sector centre bearing in degrees CW from North"
+    )
+    from_deg: float = Field(
+        ..., description="Sector start bearing (degrees CW from North)"
+    )
+    to_deg: float = Field(..., description="Sector end bearing (degrees CW from North)")
+
+
+class RoseBinInfo(BaseModel):
+    bin_index: int = Field(..., description="Zero-based bin index")
+    bin_min: float = Field(..., description="Lower bound of bin")
+    bin_max: float = Field(..., description="Upper bound of bin")
+
+
+class RoseBinData(BaseModel):
+    sector_index: int = Field(..., description="Sector this cell belongs to")
+    bin_index: int = Field(..., description="Bin this cell belongs to")
+    frequency: float = Field(
+        ..., description="Fraction of data points in this (sector, bin) cell"
+    )
+    data: List[float] = Field(
+        ..., description="Sorted values in this (sector, bin) cell"
+    )
+
+
+class RoseResponse(BaseModel):
+    no_of_sectors: int = Field(..., description="Number of compass sectors")
+    no_of_bins: int = Field(..., description="Number of bins")
+    calm_info: RoseCalmInfo = Field(..., description="Calm threshold and fraction")
+    calm_data: List[float] = Field(
+        ..., description="Sorted values below calm_threshold"
+    )
+    sector_info: List[RoseSectorInfo] = Field(
+        ..., description="Statistics of each sector"
+    )
+    bin_info: List[RoseBinInfo] = Field(..., description="Value range of each bin.")
+    bin_data: List[RoseBinData] = Field(
+        ..., description="Frequency and data values per (sector, bin) cell"
+    )
