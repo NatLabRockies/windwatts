@@ -2,39 +2,38 @@ import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getWindRose } from "../services/api";
-import { isOutOfBounds } from "../utils";
+import { DATA_MODEL_INFO } from "../constants";
+import { findNearestWindDirectionHeight } from "../utils";
 
-export const useWindRoseData = () => {
-  const {
-    currentPosition,
-    hubHeight,
-    preferredModel: dataModel,
-  } = useContext(SettingsContext);
-  const { lat, lng } = currentPosition || {};
-  const outOfBounds =
-    lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
-  const shouldFetch = lat && lng && hubHeight && dataModel && !outOfBounds;
+export const useWindRoseData = (gridIndex?: string) => {
+  const { hubHeight, preferredModel } = useContext(SettingsContext);
+
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+
+  const directionHeights =
+    DATA_MODEL_INFO["era5-quantiles"].wind_direction_heights;
+  const windRoseHeight = findNearestWindDirectionHeight(
+    directionHeights,
+    hubHeight
+  );
+
+  const shouldFetch = !!(gridIndex && hubHeight && dataModel);
 
   const swrKey = useMemo(() => {
     if (!shouldFetch) return null;
     return JSON.stringify({
-      lat,
-      lng,
-      hubHeight,
+      gridIndex,
+      height: windRoseHeight,
       dataModel,
       endpoint: "windrose",
     });
-  }, [shouldFetch, lat, lng, hubHeight, dataModel]);
+  }, [shouldFetch, gridIndex, windRoseHeight, dataModel]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
     () =>
-      getWindRose({
-        lat: lat!,
-        lng: lng!,
-        hubHeight,
-        dataModel,
-      }),
+      getWindRose({ gridIndex: gridIndex!, height: windRoseHeight, dataModel }),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -45,12 +44,9 @@ export const useWindRoseData = () => {
 
   return {
     windRoseData: data,
+    windRoseHeight,
     isLoading,
     error,
     hasData: !!data,
-    outOfBounds,
-    dataModel,
-    lat,
-    lng,
   };
 };

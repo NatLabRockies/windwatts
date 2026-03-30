@@ -1,45 +1,33 @@
 import {
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
+  WindspeedResponse,
   WindRoseRequest,
+  WindRoseResponse,
+  ModelInfoResponse,
+  EnergyProductionResponse,
+  GridPointsResponse,
+  AvailableTurbinesResponse,
   NearestGridLocationRequest,
   CSVExportRequest,
   CSVBatchExportRequest,
-  WindRoseResponse,
 } from "../types";
 
-const USE_WIND_ROSE_PLACEHOLDER = true;
-
-const WIND_ROSE_PLACEHOLDER_RESPONSE: WindRoseResponse = {
-  unit: "m/s",
-  speedBins: [
-    { label: "0-3", min: 0, max: 3 },
-    { label: "3-6", min: 3, max: 6 },
-    { label: "6-9", min: 6, max: 9 },
-    { label: "9-12", min: 9, max: 12 },
-    { label: "12-15", min: 12, max: 15 },
-  ],
-  sectors: [
-    { direction: "N", frequencies: [4, 8, 5, 2, 1] },
-    { direction: "NE", frequencies: [3, 7, 8, 4, 2] },
-    { direction: "E", frequencies: [2, 5, 10, 5, 2] },
-    { direction: "SE", frequencies: [2, 4, 7, 4, 1] },
-    { direction: "S", frequencies: [3, 6, 6, 2, 1] },
-    { direction: "SW", frequencies: [4, 9, 8, 3, 1] },
-    { direction: "W", frequencies: [5, 10, 7, 3, 1] },
-    { direction: "NW", frequencies: [4, 8, 6, 2, 1] },
-  ],
-};
-
-export const fetchWrapper = async (url: string, options: RequestInit) => {
+export const fetchWrapper = async <T>(
+  url: string,
+  options: RequestInit
+): Promise<T> => {
   const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  return response.json() as Promise<T>;
 };
 
-export const fetchBlobWrapper = async (url: string, options: RequestInit) => {
+export const fetchBlobWrapper = async (
+  url: string,
+  options: RequestInit
+): Promise<Response> => {
   const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -52,7 +40,7 @@ export const getWindspeedByLatLong = async ({
   lng,
   hubHeight,
   dataModel,
-}: WindspeedByLatLngRequest) => {
+}: WindspeedByLatLngRequest): Promise<WindspeedResponse> => {
   const url = `/api/v1/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
   const options = {
     method: "GET",
@@ -60,28 +48,35 @@ export const getWindspeedByLatLong = async ({
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<WindspeedResponse>(url, options);
 };
 
 export const getWindRose = async ({
-  lat,
-  lng,
-  hubHeight,
+  gridIndex,
+  height,
   dataModel,
+  sectors = 16,
+  bin = 5,
+  calmThreshold,
 }: WindRoseRequest): Promise<WindRoseResponse> => {
-  const url = `/api/v1/${dataModel}/windrose?lat=${lat}&lng=${lng}&height=${hubHeight}`;
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
+  dataModel = "era5-timeseries"; // Hardcode timeseries model
+  const headers = { "Content-Type": "application/json" };
 
-  if (USE_WIND_ROSE_PLACEHOLDER) {
-    return structuredClone(WIND_ROSE_PLACEHOLDER_RESPONSE);
+  const params = new URLSearchParams({
+    gridIndex,
+    height: String(height),
+    sectors: String(sectors),
+    bin: String(bin),
+  });
+
+  if (calmThreshold !== undefined) {
+    params.append("calm_threshold", String(calmThreshold));
   }
 
-  return fetchWrapper(url, options);
+  return fetchWrapper<WindRoseResponse>(
+    `/api/v1/${dataModel}/windrose?${params.toString()}`,
+    { method: "GET", headers }
+  );
 };
 
 // V1 API:
@@ -93,7 +88,7 @@ export const getEnergyProduction = async ({
   turbine,
   dataModel,
   period = "all",
-}: EnergyProductionRequest) => {
+}: EnergyProductionRequest): Promise<EnergyProductionResponse> => {
   const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&turbine=${turbine}&period=${period}`;
   const options = {
     method: "GET",
@@ -101,7 +96,7 @@ export const getEnergyProduction = async ({
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<EnergyProductionResponse>(url, options);
 };
 
 // export const getAvailablePowerCurves = async ({
@@ -118,16 +113,17 @@ export const getEnergyProduction = async ({
 // };
 
 // V1 API: Turbines are model-agnostic
-export const getAvailableTurbines = async () => {
-  const url = `/api/v1/turbines`;
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+export const getAvailableTurbines =
+  async (): Promise<AvailableTurbinesResponse> => {
+    const url = `/api/v1/turbines`;
+    const options = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return fetchWrapper<AvailableTurbinesResponse>(url, options);
   };
-  return fetchWrapper(url, options);
-};
 
 // V1 API: Grid points lookup
 export const getNearestGridLocation = async ({
@@ -135,7 +131,7 @@ export const getNearestGridLocation = async ({
   lng,
   n_neighbors = 1,
   dataModel,
-}: NearestGridLocationRequest) => {
+}: NearestGridLocationRequest): Promise<GridPointsResponse> => {
   const url = `/api/v1/${dataModel}/grid-points?lat=${lat}&lng=${lng}&limit=${n_neighbors}`;
   const options = {
     method: "GET",
@@ -143,11 +139,13 @@ export const getNearestGridLocation = async ({
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<GridPointsResponse>(url, options);
 };
 
 // V1 API: Get model information
-export const getModelInfo = async (dataModel: string) => {
+export const getModelInfo = async (
+  dataModel: string
+): Promise<ModelInfoResponse> => {
   const url = `/api/v1/${dataModel}/info`;
   const options = {
     method: "GET",
@@ -155,7 +153,7 @@ export const getModelInfo = async (dataModel: string) => {
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<ModelInfoResponse>(url, options);
 };
 
 // V1 API: Single timeseries CSV download
@@ -170,7 +168,7 @@ export const getExportCSV = async (
     yearSet,
   }: CSVExportRequest,
   includeEnergy: boolean
-) => {
+): Promise<Response> => {
   if (includeEnergy) {
     if (!turbine) {
       throw new Error("Turbine must be specified for energy export");
@@ -224,7 +222,7 @@ export const getBatchExportCSV = async (
     yearSet,
   }: CSVBatchExportRequest,
   includeEnergy: boolean
-) => {
+): Promise<Response> => {
   if (includeEnergy) {
     if (!turbine) {
       throw new Error("Turbine must be specified for energy export");

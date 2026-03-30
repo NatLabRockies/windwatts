@@ -1,4 +1,4 @@
-import { useMemo, useState, type SyntheticEvent } from "react";
+import { useContext, useMemo, useState, type SyntheticEvent } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -10,9 +10,15 @@ import {
 } from "@mui/material";
 import { ExpandMore } from "@mui/icons-material";
 import Plot from "react-plotly.js";
-import type { Config, Data, Layout } from "plotly.js";
-import { useWindRoseData } from "../../../hooks";
-import { getOutOfBoundsMessage } from "../../../utils";
+import { useNearestGridLocation, useWindRoseData } from "../../../hooks";
+import { SettingsContext } from "../../../providers/SettingsContext";
+import { getOutOfBoundsMessage, isOutOfBounds } from "../../../utils";
+import {
+  buildWindRosePlotData,
+  getWindRoseConfig,
+  getWindRoseLayout,
+  getWindRoseRadialAxisMax,
+} from "../../../plots/windRosePlot";
 import { OutOfBoundsWarning } from "../../shared";
 
 interface WindRoseProps {
@@ -20,111 +26,61 @@ interface WindRoseProps {
   onToggleChange?: (toggle: boolean) => void;
 }
 
-const TRACE_COLORS = ["#D8E6FF", "#9FC2FF", "#5F96F4", "#2E6BD9", "#123E91"];
-
 export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
   const [expanded, setExpanded] = useState(toggle);
   const handleExpandChange = (_event: SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded);
     onToggleChange?.(isExpanded);
   };
+
   const {
-    windRoseData,
-    isLoading,
-    error,
-    hasData,
-    outOfBounds,
-    dataModel,
-    lat,
-    lng,
-  } = useWindRoseData();
+    gridLocations,
+    isLoading: isGridLoading,
+    error: gridLocationError,
+  } = useNearestGridLocation(1);
+  const gridIndex = gridLocations[0]?.index;
+  const { currentPosition, preferredModel, hubHeight } =
+    useContext(SettingsContext);
+  const lat = currentPosition?.lat;
+  const lng = currentPosition?.lng;
+  const dataModel =
+    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const outOfBounds =
+    lat !== undefined && lng !== undefined
+      ? isOutOfBounds(lat, lng, dataModel)
+      : false;
 
-  const plotData = useMemo<Data[]>(() => {
-    if (!windRoseData) {
-      return [];
-    }
+  const { windRoseData, windRoseHeight, isLoading, error, hasData } =
+    useWindRoseData(outOfBounds ? undefined : gridIndex);
 
-    return windRoseData.speedBins.map((bin, index) => ({
-      type: "barpolar",
-      name: `${bin.label} ${windRoseData.unit}`,
-      theta: windRoseData.sectors.map((sector) => sector.direction),
-      r: windRoseData.sectors.map((sector) => sector.frequencies[index] ?? 0),
-      width: windRoseData.sectors.map(() => 45),
-      marker: {
-        color: TRACE_COLORS[index % TRACE_COLORS.length],
-        line: {
-          color: "#FFFFFF",
-          width: 1,
-        },
-      },
-      hovertemplate:
-        "%{theta}<br>Speed bin: %{fullData.name}<br>Frequency: %{r:.1f}%<extra></extra>",
-    }));
-  }, [windRoseData]);
+  const plotData = useMemo(
+    () => (windRoseData ? buildWindRosePlotData(windRoseData) : []),
+    [windRoseData]
+  );
 
   const radialAxisMax = useMemo(() => {
-    if (!windRoseData) {
-      return 10;
-    }
-
-    const sectorTotals = windRoseData.sectors.map((sector) =>
-      sector.frequencies.reduce((total, value) => total + value, 0)
-    );
-    const maxValue = Math.max(...sectorTotals, 0);
-    return Math.max(10, Math.ceil(maxValue / 5) * 5);
+    if (!windRoseData) return 10;
+    return getWindRoseRadialAxisMax(windRoseData);
   }, [windRoseData]);
 
-  const layout = useMemo<Partial<Layout>>(
-    () => ({
-      autosize: true,
-      barmode: "stack",
-      dragmode: false,
-      margin: { t: 8, r: 36, b: 8, l: 36 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
-      showlegend: true,
-      legend: {
-        orientation: "h",
-        y: -0.14,
-        x: 0.5,
-        xanchor: "center",
-        yanchor: "top",
-        font: { size: 12 },
-      },
-      polar: {
-        bgcolor: "rgba(0,0,0,0)",
-        angularaxis: {
-          direction: "clockwise",
-          rotation: 90,
-          tickfont: { size: 12 },
-        },
-        radialaxis: {
-          angle: 90,
-          ticksuffix: "%",
-          gridcolor: "rgba(24, 62, 145, 0.16)",
-          linecolor: "rgba(24, 62, 145, 0.20)",
-          range: [0, radialAxisMax],
-        },
-      },
-    }),
-    [radialAxisMax]
+  const layout = useMemo(
+    () => getWindRoseLayout(radialAxisMax, windRoseData?.no_of_sectors),
+    [radialAxisMax, windRoseData?.no_of_sectors]
   );
 
-  const config = useMemo<Partial<Config>>(
-    () => ({
-      displayModeBar: false,
-      responsive: true,
-    }),
-    []
-  );
+  const config = useMemo(() => getWindRoseConfig(), []);
 
   const content = outOfBounds ? (
     <OutOfBoundsWarning message={getOutOfBoundsMessage(lat, lng, dataModel)} />
-  ) : isLoading ? (
+  ) : isGridLoading || isLoading ? (
     <Stack spacing={1.5} sx={{ py: 1 }}>
       <Skeleton variant="text" width="35%" height={24} />
       <Skeleton variant="rounded" height={360} />
     </Stack>
+  ) : gridLocationError ? (
+    <Typography color="error" variant="body2">
+      Unable to resolve nearest grid location. Please check your settings.
+    </Typography>
   ) : error ? (
     <Typography color="error" variant="body2">
       Unable to load wind rose data. Please check your settings.
@@ -136,9 +92,12 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
     </Typography>
   ) : (
     <Stack spacing={2}>
-      {/* <Typography variant="body2" color="text.secondary">
-        Wind speed frequency by direction.
-      </Typography> */}
+      {windRoseHeight !== undefined && windRoseHeight !== hubHeight && (
+        <Typography variant="caption" color="text.secondary">
+          Showing closest available height for wind direction: {windRoseHeight}m
+          (selected: {hubHeight}m).
+        </Typography>
+      )}
       <Box
         sx={{
           width: "100%",
