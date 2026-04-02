@@ -1,15 +1,15 @@
 import { useContext, memo } from "react";
 import { Typography } from "@mui/material";
-import { UnitsContext } from "../../providers/UnitsContext";
-import { convertWindspeed, getOutOfBoundsMessage } from "../../utils";
-import { useWindData } from "../../hooks";
+import { UnitsContext } from "../../../providers/UnitsContext";
+import { convertWindspeed, getOutOfBoundsMessage } from "../../../utils";
+import { useWindData } from "../../../hooks";
 import {
   OutOfBoundsCard,
   ErrorCard,
   LoadingCard,
   EmptyCard,
   DataCard,
-} from "../shared/CardStates";
+} from "../../shared/CardStates";
 
 export const WindSpeedCard = memo(() => {
   const { units } = useContext(UnitsContext);

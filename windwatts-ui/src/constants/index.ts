@@ -6,3 +6,4 @@ export * from "./dataModelInfo";
 export * from "./hubSettings";
 export * from "./dataKeys";
 export * from "./footer";
+export * from "./windRose";

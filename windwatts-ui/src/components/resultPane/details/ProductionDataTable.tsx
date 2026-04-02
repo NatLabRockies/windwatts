@@ -7,20 +7,36 @@ import {
   TableRow,
   Typography,
   Box,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Skeleton,
+  Stack,
 } from "@mui/material";
-import { useContext } from "react";
-import { UnitsContext } from "../../providers/UnitsContext";
-import { convertOutput, convertWindspeed } from "../../utils";
+import { useContext, useState, type SyntheticEvent } from "react";
+import { ExpandMore } from "@mui/icons-material";
+import { UnitsContext } from "../../../providers/UnitsContext";
+import { convertOutput, convertWindspeed } from "../../../utils";
 import {
   KEY_AVG_WIND_SPEED,
   KEY_KWH_PRODUCED,
   MONTH_NAMES,
-} from "../../constants";
+} from "../../../constants";
+import { OutOfBoundsWarning } from "../../shared";
 
 interface ProductionDataTableProps {
-  title: string;
-  data: Record<string, Record<string, string | number | null>>;
+  title?: string;
+  data?: Record<string, Record<string, string | number | null>>;
   timeUnit?: "month" | "year";
+  showAccordion?: boolean;
+  accordionTitle?: string;
+  toggle?: boolean;
+  onToggleChange?: (toggle: boolean) => void;
+  isLoading?: boolean;
+  error?: boolean;
+  hasData?: boolean;
+  outOfBoundsMessage?: string;
+  emptyMessage?: string;
 }
 
 const ProductionDisplay = ({
@@ -214,26 +230,87 @@ export const ProductionDataTable = ({
   title,
   data,
   timeUnit = "month",
+  showAccordion = true,
+  accordionTitle = "Production Table",
+  toggle = true,
+  onToggleChange,
+  isLoading = false,
+  error = false,
+  hasData = true,
+  outOfBoundsMessage,
+  emptyMessage = "No data available",
 }: ProductionDataTableProps) => {
-  if (!data || typeof data !== "object" || Object.keys(data).length === 0) {
-    return (
-      <>
-        <Typography variant="h6" gutterBottom>
+  const [expanded, setExpanded] = useState(toggle);
+  const handleExpandedChange = (
+    _event: SyntheticEvent,
+    isExpanded: boolean
+  ) => {
+    setExpanded(isExpanded);
+    onToggleChange?.(isExpanded);
+  };
+  const showTitle = title && title.trim().length > 0;
+  const isEmpty =
+    !data || typeof data !== "object" || Object.keys(data).length === 0;
+
+  const content = outOfBoundsMessage ? (
+    <OutOfBoundsWarning message={outOfBoundsMessage} />
+  ) : isLoading ? (
+    <Stack spacing={1}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Skeleton key={i} variant="rectangular" height={24} />
+      ))}
+    </Stack>
+  ) : error ? (
+    <Typography color="error" variant="body2">
+      Unable to load production data. Please check your settings.
+    </Typography>
+  ) : !hasData || isEmpty ? (
+    <Typography variant="body2" color="text.secondary">
+      {emptyMessage}
+    </Typography>
+  ) : (
+    <ProductionDisplay data={data} timeUnit={timeUnit} />
+  );
+
+  const body = (
+    <>
+      {showTitle ? (
+        <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          No data available
-        </Typography>
-      </>
-    );
+      ) : null}
+      {content}
+    </>
+  );
+
+  if (!showAccordion) {
+    return body;
   }
 
   return (
-    <>
-      <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-        {title}
-      </Typography>
-      <ProductionDisplay data={data} timeUnit={timeUnit} />
-    </>
+    <Accordion
+      variant="outlined"
+      expanded={expanded}
+      onChange={handleExpandedChange}
+    >
+      <AccordionSummary expandIcon={<ExpandMore />}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <Typography variant="subtitle1" fontWeight={600}>
+            {accordionTitle}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {expanded ? "Hide" : "Show"}
+          </Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>{body}</AccordionDetails>
+    </Accordion>
   );
 };

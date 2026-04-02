@@ -8,6 +8,15 @@ export interface WindspeedByLatLngRequest {
   dataModel: DataModel;
 }
 
+export interface WindRoseRequest {
+  gridIndex: string;
+  height: number;
+  dataModel: DataModel;
+  sectors?: 4 | 8 | 16;
+  bin?: number;
+  calmThreshold?: number;
+}
+
 export interface EnergyProductionRequest {
   lat: number;
   lng: number;

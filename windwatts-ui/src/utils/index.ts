@@ -118,6 +118,19 @@ export function isOutOfBounds(
   );
 }
 
+export function findNearestWindDirectionHeight(
+  directionHeights: string[],
+  hubHeight: number
+): number {
+  const heights = directionHeights.map((h) => parseInt(h, 10)).filter(Boolean);
+  if (heights.length === 0) return hubHeight;
+  return heights.reduce((closest, candidate) =>
+    Math.abs(candidate - hubHeight) < Math.abs(closest - hubHeight)
+      ? candidate
+      : closest
+  );
+}
+
 export function getOutOfBoundsMessage(
   lat: number | undefined,
   lng: number | undefined,

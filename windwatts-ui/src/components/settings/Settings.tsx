@@ -11,8 +11,6 @@ import {
   SETTINGS_MODAL_WIDTH,
   SETTINGS_MODAL_MAX_HEIGHT,
 } from "../../constants";
-import { EnsembleSettings } from "./EnsembleSettings";
-
 export const Settings = () => {
   const { settingsOpen, toggleSettings } = useContext(SettingsContext);
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -90,8 +88,6 @@ export const Settings = () => {
           <TurbineSettings />
           <UnitsSettings />
           <LossAssumptionSettings />
-          {/* <ModelSettings /> */}
-          <EnsembleSettings />
         </Box>
       </Box>
     </Modal>

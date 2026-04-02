@@ -6,22 +6,18 @@ import {
   KEY_KWH_PRODUCED,
   KEY_LOWEST_YEAR,
 } from "../constants";
+import type { EnergyProductionResponse } from "../types";
 
 type EnergyRow = Record<string, string | number | null>;
-type ProductionApiData = {
-  summary_avg_energy_production?: Record<string, EnergyRow>;
-  monthly_avg_energy_production?: Record<string, EnergyRow>;
-  yearly_avg_energy_production?: Record<string, EnergyRow>;
-};
 
 export function useLossAdjustedProductionData(
-  data: ProductionApiData | undefined,
+  data: EnergyProductionResponse | undefined,
   lossAssumptionFactor: number
-): ProductionApiData | undefined {
+): EnergyProductionResponse | undefined {
   return useMemo(() => {
     if (!data) return undefined;
     try {
-      const clone: ProductionApiData = structuredClone
+      const clone: EnergyProductionResponse = structuredClone
         ? structuredClone(data)
         : JSON.parse(JSON.stringify(data));
 
