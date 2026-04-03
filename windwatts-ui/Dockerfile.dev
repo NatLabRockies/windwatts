@@ -27,7 +27,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn install --silent --ignore-scripts
+RUN yarn install --frozen-lockfile
 
 COPY . .
 
