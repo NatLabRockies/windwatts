@@ -61,6 +61,14 @@ export const MapViewMobile = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+              position: window.google.maps.ControlPosition.BOTTOM_LEFT,
+              mapTypeIds: [
+                window.google.maps.MapTypeId.ROADMAP,
+                window.google.maps.MapTypeId.SATELLITE,
+              ],
+            },
           }}
         >
           {outOfBounds && currentPosition && infoWindowOpen && (

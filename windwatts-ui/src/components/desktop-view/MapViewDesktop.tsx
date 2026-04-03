@@ -104,6 +104,14 @@ export const MapViewDesktop = () => {
             streetViewControl: false,
             fullscreenControl: false,
             disableDefaultUI: true,
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+              position: window.google.maps.ControlPosition.BOTTOM_LEFT,
+              mapTypeIds: [
+                window.google.maps.MapTypeId.ROADMAP,
+                window.google.maps.MapTypeId.SATELLITE,
+              ],
+            },
             zoomControl: true,
             zoomControlOptions: {
               position: window.google.maps.ControlPosition.RIGHT_BOTTOM,
