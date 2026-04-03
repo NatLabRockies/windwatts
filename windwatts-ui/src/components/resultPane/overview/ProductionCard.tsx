@@ -1,7 +1,8 @@
-import { useContext, memo } from "react";
+import { useContext, memo, useState, type SyntheticEvent } from "react";
 import {
-  Card,
-  CardContent,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Typography,
   Box,
   Skeleton,
@@ -9,6 +10,7 @@ import {
   Tooltip,
   IconButton,
 } from "@mui/material";
+import { WindPower, ExpandMore, InfoOutlined } from "@mui/icons-material";
 import { UnitsContext } from "../../../providers/UnitsContext";
 import {
   KEY_AVERAGE_YEAR,
@@ -18,14 +20,12 @@ import {
   DATA_MODEL_INFO,
 } from "../../../constants";
 import { convertOutput, getOutOfBoundsMessage } from "../../../utils";
-import { InfoOutlined } from "@mui/icons-material";
 import { OutOfBoundsWarning } from "../../shared";
 import { useProductionData } from "../../../hooks";
-// import { SettingsContext } from "../../providers/SettingsContext";
 
 export const ProductionCard = memo(() => {
   const { units } = useContext(UnitsContext);
-  // const { preferredModel } = useContext(SettingsContext);
+  const [expanded, setExpanded] = useState(true);
   const {
     productionData,
     isLoading,
@@ -36,7 +36,11 @@ export const ProductionCard = memo(() => {
     lat,
     lng,
   } = useProductionData();
-  // Always show ERA5 in the subheader since production always uses ERA5 data
+
+  const handleExpandChange = (_event: SyntheticEvent, isExpanded: boolean) => {
+    setExpanded(isExpanded);
+  };
+
   const productionModelDisplay = dataModel.split("-")[0].toUpperCase();
   const subheader = (
     <>
@@ -57,146 +61,114 @@ export const ProductionCard = memo(() => {
   const productionNote =
     "Wind energy production can vary significantly from year to year. Understanding both the average resource and its variability is key to setting realistic expectations.";
 
-  // Out-of-bounds state
+  let content: React.ReactNode;
+
   if (outOfBounds) {
-    return (
-      <Card
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          boxShadow: "none",
-          borderRadius: 2,
-        }}
-      >
-        <CardContent sx={{ pb: 2 }}>
-          <OutOfBoundsWarning
-            message={getOutOfBoundsMessage(lat, lng, dataModel)}
-          />
-        </CardContent>
-      </Card>
+    content = (
+      <OutOfBoundsWarning
+        message={getOutOfBoundsMessage(lat, lng, dataModel)}
+      />
     );
-  }
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <Card
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          boxShadow: "none",
-          borderRadius: 2,
-        }}
-      >
-        <CardContent sx={{ pb: 2 }}>
-          <Skeleton variant="text" width="70%" height={20} sx={{ mb: 1.5 }} />
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-              gap: 2,
-            }}
-          >
-            {[1, 2, 3].map((index) => (
-              <Box key={index}>
-                <Skeleton variant="text" width="55%" height={20} />
-                <Skeleton
-                  variant="text"
-                  width="85%"
-                  height={28}
-                  sx={{ mb: 0.75 }}
-                />
-                <Skeleton variant="rounded" width="100%" height={7} />
-              </Box>
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
+  } else if (isLoading) {
+    content = (
+      <>
+        <Skeleton variant="text" width="70%" height={20} sx={{ mb: 1.5 }} />
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+            gap: 2,
+          }}
+        >
+          {[1, 2, 3].map((index) => (
+            <Box key={index}>
+              <Skeleton variant="text" width="55%" height={20} />
+              <Skeleton
+                variant="text"
+                width="30%"
+                height={14}
+                sx={{ mb: 0.25 }}
+              />
+              <Skeleton
+                variant="text"
+                width="85%"
+                height={28}
+                sx={{ mb: 0.75 }}
+              />
+              <Skeleton variant="rounded" width="100%" height={7} />
+            </Box>
+          ))}
+        </Box>
+      </>
     );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <Card
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          boxShadow: "none",
-          borderRadius: 2,
-        }}
-      >
-        <CardContent sx={{ py: 4, textAlign: "center" }}>
-          <Typography color="error" variant="h6" gutterBottom>
-            Error Loading Production Data
-          </Typography>
-          <Typography color="text.secondary" variant="body2">
-            Unable to load production analysis. Please check your settings and
-            try again.
-          </Typography>
-        </CardContent>
-      </Card>
+  } else if (error) {
+    content = (
+      <Box sx={{ py: 3, textAlign: "center" }}>
+        <Typography color="error" variant="h6" gutterBottom>
+          Error Loading Production Data
+        </Typography>
+        <Typography color="text.secondary" variant="body2">
+          Unable to load production analysis. Please check your settings and try
+          again.
+        </Typography>
+      </Box>
     );
-  }
-
-  // No data state
-  if (!hasData) {
-    return (
-      <Card
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          boxShadow: "none",
-          borderRadius: 2,
-        }}
-      >
-        <CardContent sx={{ py: 4, textAlign: "center" }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            {subheader}
-          </Typography>
-          <Typography color="text.secondary" variant="h6" gutterBottom>
-            No Production Data Available
-          </Typography>
-          <Typography color="text.secondary" variant="body2">
-            Please set your location and turbine settings to see production
-            analysis.
-          </Typography>
-        </CardContent>
-      </Card>
+  } else if (!hasData) {
+    content = (
+      <Box sx={{ py: 3, textAlign: "center" }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          {subheader}
+        </Typography>
+        <Typography color="text.secondary" variant="h6" gutterBottom>
+          No Production Data Available
+        </Typography>
+        <Typography color="text.secondary" variant="body2">
+          Please set your location and turbine settings to see production
+          analysis.
+        </Typography>
+      </Box>
     );
-  }
+  } else {
+    const summaryData = productionData?.summary_avg_energy_production;
+    const avgProduction = Number(
+      summaryData?.[KEY_AVERAGE_YEAR]?.[KEY_KWH_PRODUCED] || 0
+    );
+    const lowProduction = Number(
+      summaryData?.[KEY_LOWEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
+    );
+    const highProduction = Number(
+      summaryData?.[KEY_HIGHEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
+    );
 
-  // Data loaded successfully
-  const summaryData = productionData?.summary_avg_energy_production;
-  const avgProduction = Number(
-    summaryData?.[KEY_AVERAGE_YEAR]?.[KEY_KWH_PRODUCED] || 0
-  );
-  const lowProduction = Number(
-    summaryData?.[KEY_LOWEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
-  );
-  const highProduction = Number(
-    summaryData?.[KEY_HIGHEST_YEAR]?.[KEY_KWH_PRODUCED] || 0
-  );
+    const summaryValues = [avgProduction, highProduction, lowProduction];
+    const maxSummaryValue = Math.max(...summaryValues, 1);
+    const lowestYear = summaryData?.[KEY_LOWEST_YEAR]?.["year"];
+    const highestYear = summaryData?.[KEY_HIGHEST_YEAR]?.["year"];
+    const yearRange = DATA_MODEL_INFO[dataModel]?.year_range || undefined;
 
-  const summaryValues = [avgProduction, highProduction, lowProduction];
-  const maxSummaryValue = Math.max(...summaryValues, 1);
-  const summaryMetrics = [
-    { label: "Average", value: avgProduction, color: "primary.main" },
-    { label: "Highest", value: highProduction, color: "success.main" },
-    { label: "Lowest", value: lowProduction, color: "warning.main" },
-  ];
+    const summaryMetrics = [
+      {
+        label: "Annual Average",
+        value: avgProduction,
+        color: "primary.main",
+        yearLabel: yearRange,
+      },
+      {
+        label: "Highest Year",
+        value: highProduction,
+        color: "success.main",
+        yearLabel: highestYear != null ? String(highestYear) : undefined,
+      },
+      {
+        label: "Lowest Year",
+        value: lowProduction,
+        color: "warning.main",
+        yearLabel: lowestYear != null ? String(lowestYear) : undefined,
+      },
+    ];
 
-  return (
-    <Card
-      sx={{
-        border: 1,
-        borderColor: "divider",
-        boxShadow: "none",
-        borderRadius: 2,
-      }}
-    >
-      {/* Key Production Metrics */}
-      <CardContent sx={{ pb: 2, pt: 1.5 }}>
+    content = (
+      <>
         <Box
           sx={{
             display: "flex",
@@ -242,17 +214,11 @@ export const ProductionCard = memo(() => {
                     display: "flex",
                     alignItems: "center",
                     gap: 1,
-                    mb: 0.5,
+                    mb: 0.25,
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 0.5,
-                      bgcolor: metric.color,
-                      flexShrink: 0,
-                    }}
+                  <WindPower
+                    sx={{ color: metric.color, fontSize: 16, flexShrink: 0 }}
                   />
                   <Typography
                     variant="body2"
@@ -261,6 +227,16 @@ export const ProductionCard = memo(() => {
                     {metric.label}
                   </Typography>
                 </Box>
+
+                {metric.yearLabel && (
+                  <Typography
+                    variant="caption"
+                    color="text.disabled"
+                    sx={{ display: "block", mb: 0.5, pl: "16px" }}
+                  >
+                    {metric.yearLabel}
+                  </Typography>
+                )}
 
                 <Typography
                   sx={{
@@ -297,7 +273,34 @@ export const ProductionCard = memo(() => {
             );
           })}
         </Box>
-      </CardContent>
-    </Card>
+      </>
+    );
+  }
+
+  return (
+    <Accordion
+      variant="outlined"
+      expanded={expanded}
+      onChange={handleExpandChange}
+    >
+      <AccordionSummary expandIcon={<ExpandMore />}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <Typography variant="subtitle1" fontWeight={600}>
+            Production Summary
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {expanded ? "Hide" : "Show"}
+          </Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails sx={{ pt: 0.5 }}>{content}</AccordionDetails>
+    </Accordion>
   );
 });
