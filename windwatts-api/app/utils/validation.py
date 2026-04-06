@@ -65,13 +65,18 @@ def validate_lng(model: str, lng: float) -> float:
     return lng
 
 
-def validate_height(model: str, height: int) -> int:
+def validate_height(model: str, height: int, height_type: str) -> int:
     """Validate height parameter"""
-    valid_heights = MODEL_CONFIG[model].get("heights", [])
-    if valid_heights and height not in valid_heights:
+    valid_heights = MODEL_CONFIG[model]["heights"].get(height_type)
+    if not valid_heights:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid height for {model}. Must be one of: {valid_heights}",
+            detail=f"Model {model} doesn't support heights for {height_type}.",
+        )
+    if height not in valid_heights:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid height for {model}. Must be one of: {valid_heights} for {height_type}",
         )
     return height
 
@@ -199,12 +204,45 @@ def validate_years(years: list[int], model: str) -> list[int]:
         )
     return years
 
+
+def validate_sectors(sectors: int) -> int:
+    "Validate number of sectors for Rose"
+    if sectors not in (4, 8, 16):
+        raise HTTPException(
+            status_code=400,
+            detail="sectors must be 4, 8, or 16",
+        )
+    return sectors
+
+
+def validate_calm_threshold(calm_threshold: float) -> float:
+    "Validate calm threshold for Rose"
+    # TODO update the upper threshold based on windrose type for example power/energy rose.
+    if not (0 <= calm_threshold < 3):
+        raise HTTPException(
+            status_code=400,
+            detail="calm_threshold must be between 0 and 3.",
+        )
+    return calm_threshold
+
+
+def validate_bin(bin: int) -> int:
+    """Validate bin parameter for Rose"""
+    # TODO update the valid bin range based on rose type for example power/energy rose.
+    if bin <= 0 or bin > 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect bin value. Valid bin value range is [1,10].",
+        )
+    return bin
+
+
 def validate_model_for_timeseries(model: str) -> str:
     """Validation that model supports timeseries downloads"""
     model_schema_cfg = TEMPORAL_SCHEMAS[MODEL_CONFIG[model]["schema"]]
-    if not model_schema_cfg['period_type'].get('timeseries'):
+    if not model_schema_cfg["period_type"].get("timeseries"):
         raise HTTPException(
             status_code=400,
-            detail=f"Model '{model}' does not support timeseries downloads."
+            detail=f"Model '{model}' does not support timeseries downloads.",
         )
     return model

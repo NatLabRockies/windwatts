@@ -11,6 +11,8 @@ from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from io import StringIO
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 import pandas as pd
+import numpy as np
+import bisect
 
 from app.utils.validation import (
     validate_lat,
@@ -23,6 +25,9 @@ from app.utils.validation import (
     validate_year_range,
     validate_year_set,
     validate_years,
+    validate_sectors,
+    validate_calm_threshold,
+    validate_bin,
     validate_model_for_timeseries,
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
@@ -55,7 +60,7 @@ def get_windspeed_core(
     lat = validate_lat(model, lat)
     lng = validate_lng(model, lng)
     model = validate_model_exists(model)
-    height = validate_height(model, height)
+    height = validate_height(model, height, "windspeed")
     source = validate_source(model, source)
     period = validate_period_type(model, period, "windspeed")
 
@@ -97,7 +102,7 @@ def get_production_core(
     lat = validate_lat(model, lat)
     lng = validate_lng(model, lng)
     model = validate_model_exists(model)
-    height = validate_height(model, height)
+    height = validate_height(model, height, "windspeed")
     powercurve = validate_powercurve(powercurve)
     source = validate_source(model, source)
     period = validate_period_type(model, period, "production")
@@ -333,3 +338,138 @@ def get_timeseries_energy_core(
     csv_io = StringIO()
     result_df.to_csv(csv_io, index=False)
     return csv_io.getvalue()
+
+
+def _compute_sectors(n: int):
+    "Return sector centre bearings (degrees CW from North), sector width in degrees, and sector edges."
+    sector_width_deg = 360.0 / n
+    centers = [round(i * sector_width_deg, 2) for i in range(n)]
+    edges = [
+        (
+            round((c - 0.5 * sector_width_deg) % 360, 2),
+            round((c + 0.5 * sector_width_deg) % 360, 2),
+        )
+        for c in centers
+    ]
+    return centers, sector_width_deg, edges
+
+
+def get_windrose_core(
+    model: str,
+    gridIndices: List[str],
+    height: int,
+    data_fetcher_router: DataFetcherRouter,
+    bin: int,
+    sectors: int,
+    calm_threshold: float,
+    year_set: str,
+    year_range: Optional[str],
+):
+    # Validate model and ensure the requested height has wind direction data available
+    model = validate_model_exists(model)
+    height = validate_height(model, height, "windspeed")
+    height = validate_height(model, height, "winddirection")
+    sectors = validate_sectors(sectors)
+    calm_threshold = validate_calm_threshold(calm_threshold)
+    bin = validate_bin(bin)
+    source = MODEL_CONFIG.get(model, {}).get("source")
+
+    ws_col = f"windspeed_{height}m"
+    wd_col = f"winddirection_{height}m"
+
+    # Fetch raw hourly timeseries; wind rose requires full per-hour records
+    df = get_timeseries_core(
+        model,
+        gridIndices,
+        "hourly",
+        source,
+        data_fetcher_router,
+        years=None,
+        year_range=year_range,
+        year_set=year_set,
+        return_dataframe=True,
+    )
+
+    ws = df[ws_col].to_numpy(dtype=float)
+    wd = df[wd_col].to_numpy(dtype=float)
+    total = len(ws)
+
+    # Separate calm rows (speed below threshold) from active rows used in sector assignment
+    calm_mask = ws < calm_threshold
+    calm_fraction = round(float(calm_mask.sum()) / total, 3)
+    active_ws = ws[~calm_mask]
+    active_wd = wd[~calm_mask]
+
+    # Divide the compass into equal sectors and assign each active observation to one
+    sector_centers, sector_width_deg, sector_edges = _compute_sectors(sectors)
+    sector_idx = (
+        np.floor((active_wd + sector_width_deg / 2) % 360 / sector_width_deg)
+    ).astype(int)
+    raw_max_ws = float(np.ceil(active_ws.max()))
+    # Round up to the nearest multiple of bin count for clean integer edges
+    max_ws = float(np.ceil(raw_max_ws / bin) * bin)
+    bin_edges = [round(float(e), 1) for e in np.linspace(0, max_ws, bin + 1)]
+
+    bin_info = [
+        {
+            "bin_index": j,
+            "bin_min": bin_edges[j],
+            "bin_max": bin_edges[j + 1],
+        }
+        for j in range(bin)
+    ]
+
+    sector_info = [
+        {
+            "sector_index": i,
+            "center_bearing_deg": sector_centers[i],
+            "from_deg": sector_edges[i][0],
+            "to_deg": sector_edges[i][1],
+        }
+        for i in range(sectors)
+    ]
+
+    common = {
+        "no_of_sectors": sectors,
+        "no_of_bins": bin,
+        "calm_info": {"calm_threshold": calm_threshold, "calm_fraction": calm_fraction},
+        "calm_data": ws[calm_mask].round(2).tolist(),
+        "sector_info": sector_info,
+    }
+
+    bin_data = []
+    for i in range(sectors):
+        sector_ws = sorted(active_ws[sector_idx == i].round(2).tolist())
+        # skip binning computation if sector_ws is empty
+        if not sector_ws:
+            for j in range(bin):
+                bin_data.append(
+                    {
+                        "bin_index": j,
+                        "sector_index": i,
+                        "data": [],
+                        "frequency": 0.0,
+                    }
+                )
+            continue
+
+        right_boundaries = [bisect.bisect_right(sector_ws, e) for e in bin_edges[1:]]
+        prev = 0
+        for j in range(bin):
+            data = sector_ws[prev : right_boundaries[j]]
+            prev = right_boundaries[j]
+            freq = round(len(data) / total, 4)
+            bin_data.append(
+                {
+                    "bin_index": j,
+                    "sector_index": i,
+                    "data": data,
+                    "frequency": freq,
+                }
+            )
+
+    return {
+        **common,
+        "bin_info": bin_info,
+        "bin_data": bin_data,
+    }

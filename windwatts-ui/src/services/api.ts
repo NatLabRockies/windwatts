@@ -1,41 +1,128 @@
 import {
   EnergyProductionRequest,
   WindspeedByLatLngRequest,
+  WindspeedPeriod,
+  WindspeedResponse,
+  GlobalWindspeedResponse,
+  YearlyWindspeedResponse,
+  MonthlyWindspeedResponse,
+  HourlyWindspeedResponse,
+  WindRoseRequest,
+  WindRoseResponse,
+  ModelInfoResponse,
+  EnergyProductionResponse,
+  GridPointsResponse,
+  AvailableTurbinesResponse,
   NearestGridLocationRequest,
   CSVExportRequest,
   CSVBatchExportRequest,
 } from "../types";
 
-export const fetchWrapper = async (url: string, options: RequestInit) => {
+export const fetchWrapper = async <T>(
+  url: string,
+  options: RequestInit
+): Promise<T> => {
   const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json();
+  return response.json() as Promise<T>;
 };
 
-export const fetchBlobWrapper = async (url: string, options: RequestInit) => {
+export const fetchBlobWrapper = async (
+  url: string,
+  options: RequestInit
+): Promise<Response> => {
   const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   return response;
 };
-// V1 API: Uses unified endpoint with model as path parameter
-export const getWindspeedByLatLong = async ({
-  lat,
-  lng,
-  hubHeight,
-  dataModel,
-}: WindspeedByLatLngRequest) => {
-  const url = `/api/v1/${dataModel}/windspeed?lat=${lat}&lng=${lng}&height=${hubHeight}`;
+
+const fetchWindspeedByPeriod = async <T>(
+  { lat, lng, hubHeight, dataModel }: WindspeedByLatLngRequest,
+  period: WindspeedPeriod
+): Promise<T> => {
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+    height: String(hubHeight),
+    period,
+  });
+  const url = `/api/v1/${dataModel}/windspeed?${params.toString()}`;
   const options = {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<T>(url, options);
+};
+
+// V1 API: Uses unified endpoint with model as path parameter
+export const getWindspeedByLatLong = async ({
+  lat,
+  lng,
+  hubHeight,
+  dataModel,
+}: WindspeedByLatLngRequest): Promise<WindspeedResponse> => {
+  return fetchWindspeedByPeriod<WindspeedResponse>(
+    { lat, lng, hubHeight, dataModel },
+    "all"
+  );
+};
+
+export const getWindspeedGlobalAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<GlobalWindspeedResponse> => {
+  return fetchWindspeedByPeriod<GlobalWindspeedResponse>(request, "all");
+};
+
+export const getWindspeedYearlyAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<YearlyWindspeedResponse> => {
+  return fetchWindspeedByPeriod<YearlyWindspeedResponse>(request, "annual");
+};
+
+export const getWindspeedMonthlyAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<MonthlyWindspeedResponse> => {
+  return fetchWindspeedByPeriod<MonthlyWindspeedResponse>(request, "monthly");
+};
+
+export const getWindspeedHourlyAverage = async (
+  request: WindspeedByLatLngRequest
+): Promise<HourlyWindspeedResponse> => {
+  return fetchWindspeedByPeriod<HourlyWindspeedResponse>(request, "hourly");
+};
+
+export const getWindRose = async ({
+  gridIndex,
+  height,
+  dataModel,
+  sectors = 16,
+  bin = 5,
+  calmThreshold,
+}: WindRoseRequest): Promise<WindRoseResponse> => {
+  dataModel = "era5-timeseries"; // Hardcode timeseries model
+  const headers = { "Content-Type": "application/json" };
+
+  const params = new URLSearchParams({
+    gridIndex,
+    height: String(height),
+    sectors: String(sectors),
+    bin: String(bin),
+  });
+
+  if (calmThreshold !== undefined) {
+    params.append("calm_threshold", String(calmThreshold));
+  }
+
+  return fetchWrapper<WindRoseResponse>(
+    `/api/v1/${dataModel}/windrose?${params.toString()}`,
+    { method: "GET", headers }
+  );
 };
 
 // V1 API:
@@ -47,7 +134,7 @@ export const getEnergyProduction = async ({
   turbine,
   dataModel,
   period = "all",
-}: EnergyProductionRequest) => {
+}: EnergyProductionRequest): Promise<EnergyProductionResponse> => {
   const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&turbine=${turbine}&period=${period}`;
   const options = {
     method: "GET",
@@ -55,7 +142,7 @@ export const getEnergyProduction = async ({
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<EnergyProductionResponse>(url, options);
 };
 
 // export const getAvailablePowerCurves = async ({
@@ -72,16 +159,17 @@ export const getEnergyProduction = async ({
 // };
 
 // V1 API: Turbines are model-agnostic
-export const getAvailableTurbines = async () => {
-  const url = `/api/v1/turbines`;
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+export const getAvailableTurbines =
+  async (): Promise<AvailableTurbinesResponse> => {
+    const url = `/api/v1/turbines`;
+    const options = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    return fetchWrapper<AvailableTurbinesResponse>(url, options);
   };
-  return fetchWrapper(url, options);
-};
 
 // V1 API: Grid points lookup
 export const getNearestGridLocation = async ({
@@ -89,7 +177,7 @@ export const getNearestGridLocation = async ({
   lng,
   n_neighbors = 1,
   dataModel,
-}: NearestGridLocationRequest) => {
+}: NearestGridLocationRequest): Promise<GridPointsResponse> => {
   const url = `/api/v1/${dataModel}/grid-points?lat=${lat}&lng=${lng}&limit=${n_neighbors}`;
   const options = {
     method: "GET",
@@ -97,11 +185,13 @@ export const getNearestGridLocation = async ({
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<GridPointsResponse>(url, options);
 };
 
 // V1 API: Get model information
-export const getModelInfo = async (dataModel: string) => {
+export const getModelInfo = async (
+  dataModel: string
+): Promise<ModelInfoResponse> => {
   const url = `/api/v1/${dataModel}/info`;
   const options = {
     method: "GET",
@@ -109,7 +199,7 @@ export const getModelInfo = async (dataModel: string) => {
       "Content-Type": "application/json",
     },
   };
-  return fetchWrapper(url, options);
+  return fetchWrapper<ModelInfoResponse>(url, options);
 };
 
 // V1 API: Single timeseries CSV download
@@ -124,7 +214,7 @@ export const getExportCSV = async (
     yearSet,
   }: CSVExportRequest,
   includeEnergy: boolean
-) => {
+): Promise<Response> => {
   if (includeEnergy) {
     if (!turbine) {
       throw new Error("Turbine must be specified for energy export");
@@ -178,7 +268,7 @@ export const getBatchExportCSV = async (
     yearSet,
   }: CSVBatchExportRequest,
   includeEnergy: boolean
-) => {
+): Promise<Response> => {
   if (includeEnergy) {
     if (!turbine) {
       throw new Error("Turbine must be specified for energy export");

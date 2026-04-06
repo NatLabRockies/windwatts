@@ -1,11 +1,22 @@
 import { DataModel } from "./DataModel";
 import { GridLocation } from "./GridLocation";
 
+export type WindspeedPeriod = "all" | "annual" | "monthly" | "hourly";
+
 export interface WindspeedByLatLngRequest {
   lat: number;
   lng: number;
   hubHeight: number;
   dataModel: DataModel;
+}
+
+export interface WindRoseRequest {
+  gridIndex: string;
+  height: number;
+  dataModel: DataModel;
+  sectors?: 4 | 8 | 16;
+  bin?: number;
+  calmThreshold?: number;
 }
 
 export interface EnergyProductionRequest {

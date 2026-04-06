@@ -74,7 +74,7 @@ MODEL_CONFIG = {
         "source": "athena",
         "schema": "quantile_yearly",
         "years": {"full": list(range(2013, 2024)), "sample": [2020, 2021, 2022, 2023]},
-        "heights": [30, 40, 50, 60, 80, 100],
+        "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
@@ -92,7 +92,10 @@ MODEL_CONFIG = {
         "source": "athena",
         "schema": "aggregated_mohr",
         "years": {"full": list(range(2000, 2021)), "sample": [2018, 2019, 2020]},
-        "heights": [40, 60, 80, 100, 120, 140, 160, 200],
+        "heights": {
+            "windspeed": [40, 60, 80, 100, 120, 140, 160, 200],
+            "winddirection": [],
+        },
         "grid_info": {
             "min_lat": 7.75129,
             "min_long": -179.99918,
@@ -112,7 +115,7 @@ MODEL_CONFIG = {
         "source": "athena",
         "schema": "quantile_atemporal",
         "years": {"full": list(range(2013, 2024)), "sample": []},
-        "heights": [30, 40, 50, 60, 80, 100],
+        "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
@@ -130,7 +133,10 @@ MODEL_CONFIG = {
         "source": "s3",
         "schema": "full_hourly",
         "years": {"full": list(range(2013, 2024)), "sample": [2020, 2021, 2022, 2023]},
-        "heights": [10, 30, 40, 50, 60, 80, 100],
+        "heights": {
+            "windspeed": [10, 30, 40, 50, 60, 80, 100],
+            "winddirection": [10, 100],
+        },
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,

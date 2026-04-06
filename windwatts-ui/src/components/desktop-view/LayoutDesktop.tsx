@@ -29,7 +29,7 @@ export function LayoutDesktop() {
             >
               <Box
                 component="img"
-                sx={{ height: 40 }}
+                sx={{ height: 56 }}
                 src="/assets/NLR-Blue-TypeTreatment-Block-Top-RGB.svg"
                 alt="NLR Logo"
               />

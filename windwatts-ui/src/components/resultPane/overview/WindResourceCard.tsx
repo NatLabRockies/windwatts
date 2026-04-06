@@ -10,9 +10,9 @@ import {
   Skeleton,
 } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
-import { getWindResource, getOutOfBoundsMessage } from "../../utils";
-import { useWindData } from "../../hooks";
-import { OutOfBoundsWarning } from "../shared";
+import { getWindResource, getOutOfBoundsMessage } from "../../../utils";
+import { useWindData } from "../../../hooks";
+import { OutOfBoundsWarning } from "../../shared";
 
 export const WindResourceCard = memo(() => {
   const [expanded, setExpanded] = useState(false);
@@ -151,7 +151,7 @@ export const WindResourceCard = memo(() => {
     );
   }
 
-  const windResourceData = getWindResource(windData.global_avg);
+  const windResourceData = getWindResource(windData?.global_avg ?? 0);
   const windInfo = getWindResourceInfo(windResourceData);
 
   return (

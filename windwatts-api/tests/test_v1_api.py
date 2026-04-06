@@ -5,6 +5,9 @@ Tests for V1 API endpoints.
 
 from fastapi.testclient import TestClient
 from app.main import app
+from unittest.mock import patch
+import numpy as np
+import pandas as pd
 
 client = TestClient(app)
 
@@ -262,6 +265,128 @@ class TestV1Info:
         assert response.status_code == 200
         json = response.json()
         assert json["model"] == "ensemble-quantiles"
+
+
+class TestV1WindRose:
+    """Test windrose endpoint"""
+
+    @staticmethod
+    def _mock_timeseries_df():
+        "Create a mock dataframe of era5-timeseries data"
+        np.random.seed(39)
+        n = 200
+        timestamps = pd.date_range("2020-01-01", periods=n, freq="h")
+        return pd.DataFrame(
+            {
+                "time": timestamps,
+                "windspeed_10m": np.random.uniform(2, 15, n).round(2),
+                "windspeed_30m": np.random.uniform(3, 16, n).round(2),
+                "windspeed_40m": np.random.uniform(3, 17, n).round(2),
+                "windspeed_50m": np.random.uniform(4, 18, n).round(2),
+                "windspeed_60m": np.random.uniform(4, 18, n).round(2),
+                "windspeed_80m": np.random.uniform(5, 19, n).round(2),
+                "windspeed_100m": np.random.uniform(5, 20, n).round(2),
+                "winddirection_10m": np.random.uniform(0, 360, n).round(1),
+                "winddirection_100m": np.random.uniform(0, 360, n).round(1),
+            }
+        )
+
+    @patch("app.controllers.wind_data_controller.data_fetcher_router")
+    def test_windrose_default_params(self, mock_router):
+        "Test windrose with default parameter values sectors=16, bin=5 and calm_threshold=0."
+        mock_router.fetch_data.return_value = self._mock_timeseries_df()
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=026131&height=100"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["no_of_sectors"] == 16
+        assert data["no_of_bins"] == 5
+        assert len(data["sector_info"]) == 16
+        assert len(data["bin_info"]) == 5
+        assert len(data["bin_data"]) == 16 * 5
+        assert data["calm_info"]["calm_threshold"] == 0.0
+
+    @patch("app.controllers.wind_data_controller.data_fetcher_router")
+    def test_windrose_user_params_1(self, mock_router):
+        "Test windrose with user arguments sectors=8, bin=6 and calm_threshold=0.5"
+        mock_router.fetch_data.return_value = self._mock_timeseries_df()
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=026131&height=100&sectors=8&bin=6&calm_threshold=0.5"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["no_of_sectors"] == 8
+        assert data["no_of_bins"] == 6
+        assert len(data["sector_info"]) == 8
+        assert len(data["bin_info"]) == 6
+        assert len(data["bin_data"]) == 8 * 6
+        assert data["calm_info"]["calm_threshold"] == 0.5
+
+    @patch("app.controllers.wind_data_controller.data_fetcher_router")
+    def test_windrose_user_params_2(self, mock_router):
+        "Test windrose with user arguments sectors=8, bin=1 and calm_threshold=0.5"
+        mock_router.fetch_data.return_value = self._mock_timeseries_df()
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=026131&height=100&sectors=8&bin=1&calm_threshold=0.5"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["no_of_sectors"] == 8
+        assert data["no_of_bins"] == 1
+        assert len(data["sector_info"]) == 8
+        assert len(data["bin_info"]) == 1
+        assert len(data["bin_data"]) == 8 * 1
+        assert data["calm_info"]["calm_threshold"] == 0.5
+
+    @patch("app.controllers.wind_data_controller.data_fetcher_router")
+    def test_windrose_calm_threshold(self, mock_router):
+        "Test windrose to filter calm data below calm threshold=2"
+        mock_router.fetch_data.return_value = self._mock_timeseries_df()
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=026131&height=100&calm_threshold=2"
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["calm_info"]["calm_threshold"] == 2.0
+        assert data["calm_info"]["calm_fraction"] >= 0
+        for v in data["calm_data"]:
+            assert v < 3.0
+
+    def test_windrose_invalid_model(self):
+        "Windrose on a model without winddirection should fail."
+        response = client.get(
+            "/api/v1/era5-quantiles/windrose?gridIndex=046271&height=40"
+        )
+        assert response.status_code == 400
+
+    def test_windrose_invalid_sectors(self):
+        "Sectors must be 4, 8, or 16."
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=046271&height=100&sectors=12"
+        )
+        assert response.status_code == 400
+
+    def test_windrose_invalid_calm_threshold(self):
+        "Calm threshold must be 0-3."
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=046271&height=100&calm_threshold=5.0"
+        )
+        assert response.status_code == 400
+
+    def test_windrose_invalid_bin(self):
+        "Bin count must be 1-10."
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=046271&height=100&bin=0"
+        )
+        assert response.status_code == 400
+
+    def test_windrose_invalid_height(self):
+        "Height must have winddirection data (10 or 100 for era5-timeseries)."
+        response = client.get(
+            "/api/v1/era5-timeseries/windrose?gridIndex=046271&height=40"
+        )
+        assert response.status_code == 400
 
 
 if __name__ == "__main__":

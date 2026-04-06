@@ -82,8 +82,8 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
     try {
       if (n_neighbors === 1 && nearestGridLocation) {
         const result = await downloadFile(
-          nearestGridLocation.latitude,
-          nearestGridLocation.longitude,
+          nearestGridLocation.latitude!,
+          nearestGridLocation.longitude!,
           nearestGridLocation.index
         );
 
@@ -239,8 +239,8 @@ export const DownloadDialog = ({ onClose }: { onClose: () => void }) => {
                     <InfoOutlinedIcon sx={{ fontSize: 14 }} />
                   </Box>
                 </Tooltip>
-                : ({formatCoordinate(nearestGridLocation.latitude)},{" "}
-                {formatCoordinate(nearestGridLocation.longitude)})
+                : ({formatCoordinate(nearestGridLocation.latitude!)},{" "}
+                {formatCoordinate(nearestGridLocation.longitude!)})
               </Typography>
             </Box>
           )}

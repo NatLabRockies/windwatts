@@ -1,5 +1,5 @@
 # Use the base image from NodeJS
-FROM node:lts-bookworm AS certificates
+FROM node:22-bookworm AS certificates
 
 # Update and upgrade packages then install NREL root certs
 RUN apt-get update && apt-get upgrade -y && \
@@ -7,7 +7,7 @@ RUN apt-get update && apt-get upgrade -y && \
     curl -fsSLk -o /usr/local/share/ca-certificates/nrel_xca1.crt https://raw.github.nrel.gov/TADA/nrel-certs/v20180329/certs/nrel_xca1.pem && \
     update-ca-certificates
 
-FROM node:lts-alpine AS build
+FROM node:22-alpine AS build
 
 RUN apk update && apk upgrade
 

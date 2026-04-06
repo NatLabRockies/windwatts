@@ -3,6 +3,8 @@ export type { DataModel, DataModelInfo } from "./DataModel";
 export { DATA_MODELS } from "./DataModel";
 export type {
   WindspeedByLatLngRequest,
+  WindspeedPeriod,
+  WindRoseRequest,
   EnergyProductionRequest,
   NearestGridLocationRequest,
   CSVExportRequest,
@@ -12,3 +14,20 @@ export type { Heights } from "./Heights";
 export type { StoredUnits } from "./Units";
 export type { BaseTable } from "./Tables";
 export type { GridLocation } from "./GridLocation";
+export type {
+  WindspeedResponse,
+  GlobalWindspeedResponse,
+  YearlyWindspeedResponse,
+  MonthlyWindspeedResponse,
+  HourlyWindspeedResponse,
+  ModelInfoResponse,
+  WindRoseResponse,
+  RoseCalmInfo,
+  RoseSectorInfo,
+  RoseBinInfo,
+  RoseBinData,
+  EnergyProductionResponse,
+  GridPointLocation,
+  GridPointsResponse,
+  AvailableTurbinesResponse,
+} from "./Responses";

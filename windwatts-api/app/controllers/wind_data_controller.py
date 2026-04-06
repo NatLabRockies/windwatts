@@ -18,6 +18,7 @@ from app.utils.wind_data_core import (
     get_production_core,
     get_timeseries_core,
     get_timeseries_energy_core,
+    get_windrose_core,
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
@@ -31,6 +32,7 @@ from app.schemas import (
     TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
     AvailableModelsResponse,
+    RoseResponse,
 )
 
 router = APIRouter()
@@ -145,8 +147,8 @@ def get_windspeed(
         )
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error {e}")
 
 
 @router.get(
@@ -699,6 +701,52 @@ def download_timeseries_energy_batch(
             chunker(spooled), media_type="application/zip", headers=headers
         )
 
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get(
+    "/{model}/windrose",
+    summary="Wind rose from hourly timeseries",
+    response_model=RoseResponse,
+    responses={
+        200: {"description": "Wind rose data retrieved successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_windrose(
+    model: str = Path(..., description="Data model: era5-timeseries"),
+    gridIndex: str = Query(..., description="Grid index identifier"),
+    height: int = Query(..., description="Height in meters"),
+    bin: int = Query(
+        5,
+        description="Number of equal-width bins to divide the data range (0 to site max) into per sector. Sorted values and their frequency are returned for each bin. Default: 5.",
+    ),
+    sectors: int = Query(16, description="Directional sectors: 4, 8 or 16"),
+    calm_threshold: float = Query(
+        0.0, description="Value below which a row is calm. Defaults to 0."
+    ),
+    year_set: str = Query("sample", description="Dataset size: full or sample"),
+    year_range: Optional[str] = Query(
+        None, description="Range of years for download. Format: YYYY-YYYY"
+    ),
+):
+    try:
+        return get_windrose_core(
+            model,
+            [gridIndex],
+            height,
+            data_fetcher_router,
+            bin,
+            sectors,
+            calm_threshold,
+            year_set,
+            year_range,
+        )
     except HTTPException:
         raise
     except Exception:
