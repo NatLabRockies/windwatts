@@ -1,5 +1,6 @@
 import type { Config, Data, Layout } from "plotly.js";
 import type { WindRoseResponse } from "../types";
+import { convertWindspeed } from "../utils";
 import { getWindRoseDirectionLabel, toPercent } from "../utils/windRose";
 import {
   WIND_ROSE_DIRECTIONS_16,
@@ -9,7 +10,10 @@ import {
 
 const TRACE_COLORS = ["#D8E6FF", "#9FC2FF", "#5F96F4", "#2E6BD9", "#123E91"];
 
-export function buildWindRosePlotData(windRoseData: WindRoseResponse): Data[] {
+export function buildWindRosePlotData(
+  windRoseData: WindRoseResponse,
+  windspeedUnit: string = "m/s"
+): Data[] {
   const sectorInfo = [...windRoseData.sector_info].sort(
     (a, b) => a.sector_index - b.sector_index
   );
@@ -29,26 +33,38 @@ export function buildWindRosePlotData(windRoseData: WindRoseResponse): Data[] {
     frequencyMap.set(`${item.sector_index}-${item.bin_index}`, item.frequency);
   }
 
-  return binInfo.map((bin, index) => ({
-    type: "barpolar",
-    name: `${bin.bin_min}-${bin.bin_max} m/s`,
-    theta,
-    r: sectorInfo.map((sector) =>
-      toPercent(
-        frequencyMap.get(`${sector.sector_index}-${bin.bin_index}`) ?? 0,
-        1
-      )
-    ),
-    marker: {
-      color: TRACE_COLORS[index % TRACE_COLORS.length],
-      line: {
-        color: "#FFFFFF",
-        width: 1,
+  return binInfo.map((bin, index) => {
+    const unitLabel = windspeedUnit === "mph" ? "mph" : "m/s";
+    const minSpeed = convertWindspeed(bin.bin_min, unitLabel).replace(
+      /\s\w+\/?\w*$/,
+      ""
+    );
+    const maxSpeed = convertWindspeed(bin.bin_max, unitLabel).replace(
+      /\s\w+\/?\w*$/,
+      ""
+    );
+
+    return {
+      type: "barpolar",
+      name: `${minSpeed}-${maxSpeed} ${unitLabel}`,
+      theta,
+      r: sectorInfo.map((sector) =>
+        toPercent(
+          frequencyMap.get(`${sector.sector_index}-${bin.bin_index}`) ?? 0,
+          1
+        )
+      ),
+      marker: {
+        color: TRACE_COLORS[index % TRACE_COLORS.length],
+        line: {
+          color: "#FFFFFF",
+          width: 1,
+        },
       },
-    },
-    hovertemplate:
-      "%{theta}<br>Speed bin: %{fullData.name}<br>Frequency: %{r:.1f}%<extra></extra>",
-  }));
+      hovertemplate:
+        "%{theta}<br>Speed bin: %{fullData.name}<br>Frequency: %{r:.1f}%<extra></extra>",
+    };
+  });
 }
 
 export function getWindRoseRadialAxisMax(

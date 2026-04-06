@@ -12,6 +12,7 @@ import { ExpandMore } from "@mui/icons-material";
 import Plot from "react-plotly.js";
 import { useNearestGridLocation, useWindRoseData } from "../../../hooks";
 import { SettingsContext } from "../../../providers/SettingsContext";
+import { UnitsContext } from "../../../providers/UnitsContext";
 import { getOutOfBoundsMessage, isOutOfBounds } from "../../../utils";
 import {
   buildWindRosePlotData,
@@ -38,6 +39,7 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
     isLoading: isGridLoading,
     error: gridLocationError,
   } = useNearestGridLocation(1);
+  const { units } = useContext(UnitsContext);
   const gridIndex = gridLocations[0]?.index;
   const { currentPosition, preferredModel, hubHeight } =
     useContext(SettingsContext);
@@ -54,8 +56,9 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
     useWindRoseData(outOfBounds ? undefined : gridIndex);
 
   const plotData = useMemo(
-    () => (windRoseData ? buildWindRosePlotData(windRoseData) : []),
-    [windRoseData]
+    () =>
+      windRoseData ? buildWindRosePlotData(windRoseData, units.windspeed) : [],
+    [windRoseData, units.windspeed]
   );
 
   const radialAxisMax = useMemo(() => {
