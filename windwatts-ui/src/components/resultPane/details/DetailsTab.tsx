@@ -3,11 +3,13 @@ import { getOutOfBoundsMessage } from "../../../utils";
 import { useOutputUnit, useProductionData } from "../../../hooks";
 import { ProductionDataTable } from "./ProductionDataTable";
 import { WindRose } from "./WindRose";
-import { ProductionCard } from "../overview/ProductionCard";
+import { ProductionCard } from "./ProductionCard";
 
 interface DetailsTabProps {
   windRoseToggle?: boolean;
   onWindRoseToggleChange?: (toggle: boolean) => void;
+  prodCardOpen?: boolean;
+  onProdCardOpenChange?: (open: boolean) => void;
   prodTableOpen?: boolean;
   onProdTableOpenChange?: (open: boolean) => void;
 }
@@ -15,6 +17,8 @@ interface DetailsTabProps {
 export const DetailsTab = ({
   windRoseToggle = true,
   onWindRoseToggleChange,
+  prodCardOpen = true,
+  onProdCardOpenChange,
   prodTableOpen = true,
   onProdTableOpenChange,
 }: DetailsTabProps) => {
@@ -44,7 +48,10 @@ export const DetailsTab = ({
 
   return (
     <Stack spacing={2}>
-      <ProductionCard />
+      <ProductionCard
+        expanded={prodCardOpen}
+        onExpandedChange={onProdCardOpenChange}
+      />
       <WindRose
         toggle={windRoseToggle}
         onToggleChange={onWindRoseToggleChange}

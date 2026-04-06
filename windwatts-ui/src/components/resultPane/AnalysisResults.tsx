@@ -6,6 +6,7 @@ import { DetailsTab } from "./details/DetailsTab";
 export const AnalysisResults = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [windRoseToggle, setWindRoseToggle] = useState(true);
+  const [prodCardOpen, setProdCardOpen] = useState(true);
   const [prodTableOpen, setProdTableOpen] = useState(true);
 
   return (
@@ -36,6 +37,8 @@ export const AnalysisResults = () => {
         <DetailsTab
           windRoseToggle={windRoseToggle}
           onWindRoseToggleChange={setWindRoseToggle}
+          prodCardOpen={prodCardOpen}
+          onProdCardOpenChange={setProdCardOpen}
           prodTableOpen={prodTableOpen}
           onProdTableOpenChange={setProdTableOpen}
         />
