@@ -11,7 +11,7 @@ export const DATA_MODEL_INFO: Record<string, DataModelInfo> = {
     wind_direction_heights: [],
   },
   "era5-quantiles": {
-    label: "ERA5 reanalysis data",
+    label: "ERA5 Reanalysis",
     source_href:
       "https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5",
     help_href: "https://github.com/NREL/windwatts/blob/main/docs/about/era5.md",
@@ -21,7 +21,7 @@ export const DATA_MODEL_INFO: Record<string, DataModelInfo> = {
     wind_direction_heights: ["10m", "100m"],
   },
   "wtk-timeseries": {
-    label: "NLR's 20-year WTK-LED dataset",
+    label: "NLR WTK-LED",
     source_href:
       "https://www.energy.gov/eere/wind/articles/new-wind-resource-database-includes-updated-wind-toolkit",
     help_href: "",

@@ -5,4 +5,5 @@ export { SettingsButton } from "./SettingsButton";
 export { LoadingBackdrop } from "./LoadingBackdrop";
 export { DownloadButton } from "./DownloadButton";
 export { DownloadDialog } from "./DownloadDialog";
+export { ModelSourceChip } from "./ModelSourceChip";
 export * from "./CardStates";
