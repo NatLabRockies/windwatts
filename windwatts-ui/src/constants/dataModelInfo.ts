@@ -30,4 +30,13 @@ export const DATA_MODEL_INFO: Record<string, DataModelInfo> = {
     wind_speed_heights: [],
     wind_direction_heights: [],
   },
+  "era5-timeseries": {
+    label: "ERA5 Timeseries",
+    source_href: "",
+    help_href: "",
+    description: "ERA5 timeseries data for selected location and height",
+    year_range: "",
+    wind_speed_heights: [],
+    wind_direction_heights: [],
+  },
 };

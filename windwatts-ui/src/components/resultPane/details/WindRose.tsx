@@ -21,6 +21,7 @@ import {
   getWindRoseRadialAxisMax,
 } from "../../../plots/windRosePlot";
 import { OutOfBoundsWarning } from "../../shared";
+import { ModelSourceChip } from "../../shared";
 
 interface WindRoseProps {
   toggle?: boolean;
@@ -142,10 +143,25 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
             width: "100%",
           }}
         >
-          <Typography variant="subtitle1" fontWeight={600}>
-            Wind Rose
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              Wind Rose
+            </Typography>
+            {/* hardcode era5-timeseries */}
+            <ModelSourceChip dataModel="era5-timeseries" />
+          </Box>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ flexShrink: 0, ml: 1 }}
+          >
             {expanded ? "Hide" : "Show"}
           </Typography>
         </Box>
