@@ -506,3 +506,57 @@ class RoseResponse(BaseModel):
     bin_data: List[RoseBinData] = Field(
         ..., description="Frequency and data values per (sector, bin) cell"
     )
+
+
+class PowerCurveData(BaseModel):
+    wind_speed: List[float] = Field(..., min_length=2, description="Wind speeds in m/s")
+    turbine_output: List[float] = Field(
+        ..., min_length=2, description="Turbine output in kW"
+    )
+
+
+class CustomProductionRequest(BaseModel):
+    lat: float = Field(..., description="Latitude")
+    lng: float = Field(..., description="Longitude")
+    height: int = Field(..., description="Height in meters")
+    turbine_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        pattern=r"^[\w ]+$",
+        description="Name of the turbine",
+    )
+    turbine_output: float = Field(..., gt=0, description="Rated output in kW")
+    period: str = Field(
+        "all",
+        description="Time period: all, summary, annual, monthly [depends on the model]",
+    )
+    data: PowerCurveData = Field(..., description="Power curve data")
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "lat": 54.32,
+                "lng": 76.23,
+                "height": 40,
+                "turbine_name": "NLR Reference",
+                "turbine_output": 100,
+                "period": "all",
+                "data": {
+                    "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    "turbine_output": [
+                        0,
+                        0,
+                        0,
+                        0.0705428,
+                        0.167212,
+                        0.326587,
+                        0.564342,
+                        0.896154,
+                        1.3377,
+                        1.90465,
+                        2.5,
+                    ],
+                },
+            }
+        }
+    }

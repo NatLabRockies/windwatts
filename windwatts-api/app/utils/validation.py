@@ -246,3 +246,38 @@ def validate_model_for_timeseries(model: str) -> str:
             detail=f"Model '{model}' does not support timeseries downloads.",
         )
     return model
+
+
+def validate_custom_turbine_data(data: list, rated_output: float):
+    """Validate power curve data points for a custom turbine."""
+    wind_speeds = [d["Wind Speed (m/s)"] for d in data]
+    turbine_outputs = [d["Turbine Output"] for d in data]
+
+    if len(data) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Power curve data must have at least 2 data points.",
+        )
+    # wind speeds must be strictly increasing
+    for i in range(1, len(wind_speeds)):
+        if wind_speeds[i] <= wind_speeds[i - 1]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"wind_speed must be strictly increasing. Got {wind_speeds[i]} after {wind_speeds[i - 1]} at index {i}.",
+            )
+
+    # Must have at least one positive output
+    if max(turbine_outputs) <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Power curve must have at least one positive turbine output value.",
+        )
+
+    # Max output shouldn't exceed 110% of rated capacity
+    if max(turbine_outputs) > rated_output * 1.1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Turbine output ({max(turbine_outputs)}) exceeds rated capacity ({rated_output}kW) by more than 10%.",
+        )
+
+    return data

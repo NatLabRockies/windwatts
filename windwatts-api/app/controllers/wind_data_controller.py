@@ -12,7 +12,11 @@ from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.utils.data_fetcher_utils import format_coordinate, chunker
-from app.utils.validation import validate_model_exists, validate_limit
+from app.utils.validation import (
+    validate_model_exists,
+    validate_limit,
+    validate_custom_turbine_data,
+)
 from app.utils.wind_data_core import (
     get_windspeed_core,
     get_production_core,
@@ -22,6 +26,8 @@ from app.utils.wind_data_core import (
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
+from app.power_curve.powercurve import PowerCurve
+
 from app.schemas import (
     AvailableTurbinesResponse,
     WindSpeedResponse,
@@ -33,6 +39,7 @@ from app.schemas import (
     ModelInfoResponse,
     AvailableModelsResponse,
     RoseResponse,
+    CustomProductionRequest,
 )
 
 router = APIRouter()
@@ -279,6 +286,47 @@ def get_turbines():
         return _get_available_turbines("turbines")
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/{model}/production/custom",
+    summary="Calculate energy production using custom powercurve",
+    response_model=EnergyProductionResponse,
+    response_model_exclude_none=True,
+    responses={
+        200: {
+            "description": "Energy production data retrieved successfully",
+            "model": EnergyProductionResponse,
+        },
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_custom_production(
+    payload: CustomProductionRequest,
+    model: str = Path(...),
+):
+    data = [
+        {"Wind Speed (m/s)": ws, "Turbine Output": to}
+        for ws, to in zip(payload.data.wind_speed, payload.data.turbine_output)
+    ]
+
+    validate_custom_turbine_data(data,payload.turbine_output)
+    curve = PowerCurve(data=data)
+
+    source = MODEL_CONFIG.get(model, {}).get("source")
+
+    return get_production_core(
+        model,
+        payload.lat,
+        payload.lng,
+        payload.height,
+        curve,
+        payload.period,
+        source,
+        data_fetcher_router,
+    )
 
 
 @router.get(

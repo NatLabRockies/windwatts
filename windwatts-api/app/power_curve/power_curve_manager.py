@@ -51,7 +51,7 @@ class PowerCurveManager:
 
     def load_power_curves(self, directory: str):
         """
-        Load power curves from the specified directory.
+        Load power curves from the specified directory or the data.
         """
         for file in os.listdir(directory):
             if file.endswith(".csv") or file.endswith(".xlsx"):
@@ -73,6 +73,12 @@ class PowerCurveManager:
         if curve_name not in self.power_curves:
             raise KeyError(f"Power curve '{curve_name}' not found.")
         return self.power_curves[curve_name]
+
+    def _resolve_curve(self, curve: Union[str, PowerCurve]) -> PowerCurve:
+        """Accept a curve name (str) or a PowerCurve object directly."""
+        if isinstance(curve, PowerCurve):
+            return curve
+        return self.get_curve(curve)
 
     def find_inverse(
         self, x_smooth: np.ndarray, y_smooth: np.ndarray, y_hat: np.ndarray
@@ -309,7 +315,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         heights: Union[int, List[int]],
-        selected_power_curve: str,
+        selected_power_curve: Union[str, PowerCurve],
         model_name: str,
         relevant_columns_only: bool = True,
     ) -> tuple[pd.DataFrame, str]:
@@ -357,7 +363,7 @@ class PowerCurveManager:
         # Add temporal dimensions
         df_with_temporal = self._add_temporal_dimensions(df, schema)
 
-        power_curve = self.get_curve(selected_power_curve)
+        power_curve = self._resolve_curve(selected_power_curve)
 
         # Timeseries processing
         if self._is_timeseries_schema(schema):
@@ -443,7 +449,11 @@ class PowerCurveManager:
             raise ValueError(f"Unknown schema type: {schema}")
 
     def prepare_yearly_production_df(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: Union[str, PowerCurve],
+        model_name: str,
     ) -> pd.DataFrame:
         """
         Prepares yearly average energy production and windspeed dataframe for dependent methods.
@@ -534,7 +544,11 @@ class PowerCurveManager:
         return res
 
     def calculate_yearly_energy_production(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: Union[str, PowerCurve],
+        model_name: str,
     ) -> dict:
         """
         Computes yearly average energy production and windspeed.
@@ -570,7 +584,11 @@ class PowerCurveManager:
         return result
 
     def calculate_energy_production_summary(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: Union[str, PowerCurve],
+        model_name: str,
     ) -> dict:
         """
         Computes yearly average energy production and windspeed summary.
@@ -621,7 +639,11 @@ class PowerCurveManager:
         return res_summary.to_dict(orient="index")
 
     def calculate_monthly_energy_production(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: Union[str, PowerCurve],
+        model_name: str,
     ) -> dict:
         """
         Computes monthly average energy production.

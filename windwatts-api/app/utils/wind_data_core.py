@@ -5,7 +5,7 @@ Provides the core business logic for fetching wind speed, energy production,
 and timeseries data from various data sources.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import HTTPException
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from io import StringIO
@@ -13,6 +13,7 @@ from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 import pandas as pd
 import numpy as np
 import bisect
+from app.power_curve.powercurve import PowerCurve
 
 from app.utils.validation import (
     validate_lat,
@@ -78,7 +79,7 @@ def get_production_core(
     lat: float,
     lng: float,
     height: int,
-    powercurve: str,
+    powercurve: Union[str, PowerCurve],
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -103,7 +104,8 @@ def get_production_core(
     lng = validate_lng(model, lng)
     model = validate_model_exists(model)
     height = validate_height(model, height, "windspeed")
-    powercurve = validate_powercurve(powercurve)
+    if isinstance(powercurve, str):
+        powercurve = validate_powercurve(powercurve)
     source = validate_source(model, source)
     period = validate_period_type(model, period, "production")
 
