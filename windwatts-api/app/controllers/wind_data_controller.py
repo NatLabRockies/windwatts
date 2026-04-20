@@ -12,7 +12,11 @@ from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.utils.data_fetcher_utils import format_coordinate, chunker
-from app.utils.validation import validate_model_exists, validate_limit
+from app.utils.validation import (
+    validate_model_exists,
+    validate_limit,
+    validate_and_resolve_production_payload,
+)
 from app.utils.wind_data_core import (
     get_windspeed_core,
     get_production_core,
@@ -22,6 +26,8 @@ from app.utils.wind_data_core import (
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
+from app.power_curve.powercurve import PowerCurve
+
 from app.schemas import (
     AvailableTurbinesResponse,
     WindSpeedResponse,
@@ -29,10 +35,12 @@ from app.schemas import (
     EnergyProductionResponse,
     NearestLocationsResponse,
     TimeseriesBatchRequest,
+    TimeseriesEnergyRequest,
     TimeseriesEnergyBatchRequest,
     ModelInfoResponse,
     AvailableModelsResponse,
     RoseResponse,
+    ProductionRequest,
 )
 
 router = APIRouter()
@@ -277,6 +285,45 @@ def get_turbines():
     """
     try:
         return _get_available_turbines("turbines")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/{model}/production",
+    summary="Calculate energy production using inbuilt or custom powercurve",
+    response_model=EnergyProductionResponse,
+    response_model_exclude_none=True,
+    responses={
+        200: {
+            "description": "Energy production data retrieved successfully",
+            "model": EnergyProductionResponse,
+        },
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_custom_production(
+    payload: ProductionRequest,
+    model: str = Path(...),
+):
+    try:
+        curve = validate_and_resolve_production_payload(payload)
+        source = MODEL_CONFIG.get(model, {}).get("source")
+
+        return get_production_core(
+            model,
+            payload.lat,
+            payload.lng,
+            payload.height,
+            curve,
+            payload.period,
+            source,
+            data_fetcher_router,
+        )
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -640,13 +687,63 @@ def download_energy_timeseries(
         )
     except HTTPException:
         raise
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/{model}/timeseries/energy",
+    summary="Download timeseries CSV data along with energy estimates using inbuilt or custom powercurve.",
+    responses={
+        200: {"description": "CSV file downloaded successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def post_energy_timeseries(
+    payload: TimeseriesEnergyRequest,
+    model: str = Path(..., description="Data model: era5-timeseries"),
+):
+    """
+    Download energy timeseries data as CSV for a specific grid point using inbuilt or custom power curve.
+
+    - **model**: Data model (era5-timeseries)
+    - **payload**: Request body containing grid index, turbine info, and optional custom curve data
+    """
+    try:
+        curve = validate_and_resolve_production_payload(
+            payload.turbine_name, payload.turbine_output, payload.data
+        )
+        csv_content = get_timeseries_energy_core(
+            model,
+            [payload.gridIndex],
+            curve,
+            payload.period,
+            payload.source,
+            data_fetcher_router,
+            payload.years,
+            payload.year_range,
+            payload.year_set,
+        )
+
+        return StreamingResponse(
+            iter([csv_content]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="wind_&_energy_data_{payload.gridIndex}.csv"'
+            },
+        )
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post(
     "/{model}/timeseries/energy/batch",
-    summary="Download multiple timeseries CSV data along with energy estimates for a selected turbine as a ZIP file.",
+    summary="Download multiple timeseries CSV data along with energy estimates using inbuilt or custom powercurve as a ZIP file.",
     responses={
         200: {"description": "ZIP file downloaded successfully"},
         400: {"description": "Bad request - invalid parameters"},
@@ -664,7 +761,9 @@ def download_timeseries_energy_batch(
     - **model**: Data model (era5-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
-      - **turbine**: Turbine model to use for energy calculations
+      - **turbine_name**: Turbine name (built-in ID or custom label)
+      - **turbine_output**: Rated output in kW (required for custom curve)
+      - **data**: Power curve data (required for custom curve)
       - **years**: List of years to include (optional, defaults to sample years)
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
       - **year_set**: Full or Sample dataset to download (optional)
@@ -672,6 +771,9 @@ def download_timeseries_energy_batch(
       - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     """
     try:
+        curve = validate_and_resolve_production_payload(
+            payload.turbine_name, payload.turbine_output, payload.data
+        )
         # Create spooled temporary file for ZIP
         spooled = tempfile.SpooledTemporaryFile(max_size=30 * 1024 * 1024, mode="w+b")
 
@@ -680,7 +782,7 @@ def download_timeseries_energy_batch(
                 csv_content = get_timeseries_energy_core(
                     model,
                     [loc.index],
-                    payload.turbine,
+                    curve,
                     payload.period,
                     payload.source,
                     data_fetcher_router,

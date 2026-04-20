@@ -4,8 +4,11 @@ Validation functions for WindWatts API.
 
 import re
 from fastapi import HTTPException
+from typing import Optional, Union
 
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+from app.schemas import PowerCurveData, ProductionRequest
+from app.power_curve.powercurve import PowerCurve
 
 
 def validate_model_exists(model: str) -> str:
@@ -246,3 +249,57 @@ def validate_model_for_timeseries(model: str) -> str:
             detail=f"Model '{model}' does not support timeseries downloads.",
         )
     return model
+
+
+def validate_custom_turbine_data(data: list, rated_output: float):
+    """Validate power curve data points for a custom turbine."""
+    wind_speeds = [d["Wind Speed (m/s)"] for d in data]
+    turbine_outputs = [d["Turbine Output"] for d in data]
+
+    if len(data) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Power curve data must have at least 2 data points.",
+        )
+    # wind speeds must be strictly increasing
+    for i in range(1, len(wind_speeds)):
+        if wind_speeds[i] <= wind_speeds[i - 1]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"wind_speed must be strictly increasing. Got {wind_speeds[i]} after {wind_speeds[i - 1]} at index {i}.",
+            )
+
+    # Must have at least one positive output
+    if max(turbine_outputs) <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Power curve must have at least one positive turbine output value.",
+        )
+
+    # Max output shouldn't exceed 110% of rated capacity
+    if max(turbine_outputs) > rated_output * 1.1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Turbine output ({max(turbine_outputs)}) exceeds rated capacity ({rated_output}kW) by more than 10%.",
+        )
+
+    return data
+
+def validate_and_resolve_production_payload(payload: ProductionRequest) -> Union[str, PowerCurve]:
+    "validation and resolve function for production payload (post endpoint)"
+    if payload.turbine_output is None and payload.data is None:
+        validate_powercurve(payload.turbine_name)
+        return payload.turbine_name
+    elif (payload.turbine_output is None and payload.data is not None) or (payload.turbine_output is not None and payload.data is None):
+        raise HTTPException(
+            status_code=400,
+            detail="Both turbine_output and data must be provided to get production for custom curve."
+        )
+    else:
+        parsed_data = [
+            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            for ws, to in zip(payload.data.wind_speed, payload.data.turbine_output)
+        ]
+        validate_custom_turbine_data(parsed_data, payload.turbine_output)
+        curve = PowerCurve(data=parsed_data)
+        return curve
