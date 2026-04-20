@@ -282,7 +282,7 @@ def get_timeseries_energy_core(
     return_dataframe: bool = False,
 ):
     turbine = validate_powercurve(turbine)
-    heights = MODEL_CONFIG[model].get("heights")
+    heights = MODEL_CONFIG[model].get("heights").get("windspeed")
 
     df = get_timeseries_core(
         model,
