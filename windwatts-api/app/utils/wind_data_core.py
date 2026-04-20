@@ -274,7 +274,7 @@ def get_timeseries_core(
 def get_timeseries_energy_core(
     model: str,
     gridIndices: List[str],
-    turbine: str,
+    turbine: Union[str, PowerCurve],
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -283,8 +283,9 @@ def get_timeseries_energy_core(
     year_set: Optional[str] = None,
     return_dataframe: bool = False,
 ):
-    turbine = validate_powercurve(turbine)
-    heights = MODEL_CONFIG[model].get("heights")
+    if isinstance(turbine, str):
+        turbine = validate_powercurve(turbine)
+    heights = MODEL_CONFIG[model].get("heights").get("windspeed")
 
     df = get_timeseries_core(
         model,

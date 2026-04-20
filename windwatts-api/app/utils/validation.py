@@ -4,8 +4,11 @@ Validation functions for WindWatts API.
 
 import re
 from fastapi import HTTPException
+from typing import Optional, Union
 
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+from app.schemas import PowerCurveData, ProductionRequest
+from app.power_curve.powercurve import PowerCurve
 
 
 def validate_model_exists(model: str) -> str:
@@ -281,3 +284,22 @@ def validate_custom_turbine_data(data: list, rated_output: float):
         )
 
     return data
+
+def validate_and_resolve_production_payload(payload: ProductionRequest) -> Union[str, PowerCurve]:
+    "validation and resolve function for production payload (post endpoint)"
+    if payload.turbine_output is None and payload.data is None:
+        validate_powercurve(payload.turbine_name)
+        return payload.turbine_name
+    elif (payload.turbine_output is None and payload.data is not None) or (payload.turbine_output is not None and payload.data is None):
+        raise HTTPException(
+            status_code=400,
+            detail="Both turbine_output and data must be provided to get production for custom curve."
+        )
+    else:
+        parsed_data = [
+            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            for ws, to in zip(payload.data.wind_speed, payload.data.turbine_output)
+        ]
+        validate_custom_turbine_data(parsed_data, payload.turbine_output)
+        curve = PowerCurve(data=parsed_data)
+        return curve
