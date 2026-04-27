@@ -23,9 +23,12 @@ import {
   MONTH_NAMES,
 } from "../../../constants";
 import { OutOfBoundsWarning } from "../../shared";
+import { ModelSourceChip } from "../../shared";
+import { DataModel } from "../../../types";
 
 interface ProductionDataTableProps {
   title?: string;
+  dataModel?: DataModel | string;
   data?: Record<string, Record<string, string | number | null>>;
   timeUnit?: "month" | "year";
   showAccordion?: boolean;
@@ -228,6 +231,7 @@ const ProductionDisplay = ({
 
 export const ProductionDataTable = ({
   title,
+  dataModel,
   data,
   timeUnit = "month",
   showAccordion = true,
@@ -302,10 +306,24 @@ export const ProductionDataTable = ({
             width: "100%",
           }}
         >
-          <Typography variant="subtitle1" fontWeight={600}>
-            {accordionTitle}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              {accordionTitle}
+            </Typography>
+            {dataModel && <ModelSourceChip dataModel={dataModel} />}
+          </Box>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ flexShrink: 0, ml: 1 }}
+          >
             {expanded ? "Hide" : "Show"}
           </Typography>
         </Box>
