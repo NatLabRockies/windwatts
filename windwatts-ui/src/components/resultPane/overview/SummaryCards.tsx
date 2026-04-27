@@ -196,7 +196,7 @@ export const SummaryCards = memo(() => {
             Wind Speed *
           </Typography>
           <Typography
-            variant="h5"
+            variant="h6"
             color="primary"
             sx={{ fontWeight: "bold", my: 0.5 }}
           >
@@ -265,7 +265,7 @@ export const SummaryCards = memo(() => {
             Wind Resource
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, my: 0.5 }}>
-            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
               {windResource}
             </Typography>
             <Tooltip title={windInfo.tooltip} arrow>
@@ -343,7 +343,7 @@ export const SummaryCards = memo(() => {
           <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
             Production
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: "bold", my: 0.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", my: 0.5 }}>
             {prodNumber}
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.8 }}>
