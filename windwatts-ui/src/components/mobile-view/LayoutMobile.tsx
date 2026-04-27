@@ -31,14 +31,20 @@ const LayoutMobileContent = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Box sx={{ flexGrow: 0 }}>
-        <AppBar position="static" sx={{ bgcolor: "#0279c2" }}>
+        <AppBar
+          position="static"
+          sx={{
+            bgcolor: "background.paper",
+            borderBottom: "1px solid #ddd",
+          }}
+        >
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
             <Link
               to="/"
-              variant="h5"
+              variant="h6"
               component={RouterLink}
               underline="none"
-              sx={{ flexGrow: 1, color: "white" }}
+              sx={{ flexGrow: 1, color: "text.primary" }}
             >
               {APP_TITLE}
             </Link>
@@ -50,8 +56,8 @@ const LayoutMobileContent = () => {
             >
               <Box
                 component="img"
-                sx={{ height: 56 }}
-                src="/assets/NLR-Blue-TypeTreatment-Block-Top-RGB.svg"
+                sx={{ height: 32 }}
+                src="/assets/nlr-logo-horizontal.svg"
                 alt="NLR Logo"
               />
             </Link>

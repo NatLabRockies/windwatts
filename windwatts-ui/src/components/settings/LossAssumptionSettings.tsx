@@ -51,11 +51,14 @@ export function LossAssumptionSettings() {
           sx={{ flexShrink: 0, mr: 1 }}
           control={
             <Switch
+              size="small"
               checked={enabled}
               onChange={(e) => handleToggle(e.target.checked)}
             />
           }
-          label="Enable"
+          label={
+            <Typography variant="body2">Enable Loss Assumption</Typography>
+          }
         />
         <TextField
           size="small"
