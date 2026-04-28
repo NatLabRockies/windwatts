@@ -29,7 +29,7 @@ app = FastAPI(
         - `/v1/{model}/windspeed` - Wind speed data
         - `/v1/{model}/production` - Energy production estimates
         - `/v1/{model}/timeseries` - Raw timeseries downloads
-        - Supports models: `era5`, `wtk`, `ensemble`
+        - Supports models: `era5-quantiles`, `era5-timeseries`, `wtk-timeseries`, `ensemble-quantiles`
 
         **Legacy**: Model-specific endpoints (deprecated)
         - `/wtk/*` - WTK-specific endpoints
