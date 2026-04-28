@@ -175,7 +175,7 @@ def get_production(
     lng: float = Query(..., description="Longitude of the location"),
     height: int = Query(..., description="Height in meters"),
     turbine: Optional[str] = Query(
-        None, description="Turbine model identifier (e.g., nrl-reference-100kW)"
+        None, description="Turbine model identifier (e.g., nlr-reference-100kW)"
     ),
     powercurve: Optional[str] = Query(
         None,
@@ -411,7 +411,7 @@ def get_model_info(
     - Supported time periods
     - Available years for timeseries downloads
     - Available heights
-    - Grid information (model’s geographic coverage and spatial-temporal resolution)
+    - Grid information (model's geographic coverage and spatial-temporal resolution)
     - Links & References
 
     - **model**: Data model (era5-quantiles, wtk-timeseries, ensemble-quantiles)
