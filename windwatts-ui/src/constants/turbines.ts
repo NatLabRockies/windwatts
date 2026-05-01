@@ -121,10 +121,50 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
     label: "Siva 750kW (57m rotor diameter)",
     minHeight: 50,
     maxHeight: 68,
-    info: "750kW series with rotor diameters 50, 54, 57 m and typical hub heights 50, 60, 68 m respectively. see Siva Powers America https://sivapowersamerica.com/our-turbines/",
+    info: "750kW series with rotor diameters 50, 54, 57 m and typical hub heights 50, 60, 68 m respectively. See Siva Powers America https://sivapowersamerica.com/our-turbines/",
     // Source: Siva Powers America Manufacturer Website
     // Siva Powers America. (2025). Our Turbines. https://sivapowersamerica.com/our-turbines/, accessed 2026-02-08.
     // Note: Rotor diameters are 50, 54, and 57 m, with typical hub heights of 50, 60, and 68 m respectively.
+  },
+  "ewt-dw52-900kw": {
+    label: "EWT DirectWind 52-900kW",
+    minHeight: 35,
+    maxHeight: 50,
+    info: "EWT DirectWind DW 52-900: rotor diameter 52 m, rated power 900 kW, IEC Wind class IIA, cut-in 3 m/s, cut-out 25 m/s, rated wind speed 14 m/s. Typical hub heights 35, 40, 50 m. See Emergya Wind Technologies EWT DW52-900kW Flyer https://ewtdirectwind.com/wp-content/uploads/2018/04/EWT_Flyer-DW52-900kW_HR.pdf",
+    // Source: Emergya Wind Technologies Manufacturer Website
+    // Emergya Wind Technologies. (2018). EWT DW52-900kW Flyer. https://ewtdirectwind.com/wp-content/uploads/2018/04/EWT_Flyer-DW52-900kW_HR.pdf, accessed 2026-04-25.
+    // https://en.wind-turbine-models.com/turbines/1537-ewt-dw-52-900, accessed 2026-04-25.
+    // Note: rotor diameter 52 m, typical hub heights 35, 40, 50 m.
+  },
+  "ewt-dw54-900kw": {
+    label: "EWT DirectWind 54-900kW",
+    minHeight: 40,
+    maxHeight: 75,
+    info: "EWT DirectWind DW 54-900: rotor diameter 54 m, rated power 900 kW, IEC Wind class IIIA, cut-in 2.5 m/s, cut-out 25 m/s, rated wind speed 13.5 m/s. Typical hub heights 40, 50, 75 m. See Emergya Wind Technologies EWT DW54-900kW Flyer https://ewtdirectwind.com/wp-content/uploads/2018/04/EWT_Flyer-dw54-900kW.pdf",
+    // Source: Emergya Wind Technologies Manufacturer Website
+    // Emergya Wind Technologies. (2018). EWT DW54-900kW Flyer. https://ewtdirectwind.com/wp-content/uploads/2018/04/EWT_Flyer-dw54-900kW.pdf, accessed 2026-04-25.
+    // https://en.wind-turbine-models.com/turbines/335-ewt-dw-54-900, accessed 2026-04-25.
+    // Note: rotor diameter 54 m, typical hub heights 40, 50, 75 m.
+  },
+  "ewt-dw58-1000kw": {
+    label: "EWT DirectWind 58-1000kW",
+    minHeight: 46,
+    maxHeight: 69,
+    info: "EWT DirectWind DW 58-1MW: rotor diameter 58 m, rated power 1000 kW, IEC Wind class IIA, cut-in 3 m/s, cut-out 25 m/s, rated wind speed 14.5 m/s. Typical hub heights 46, 69 m. See Emergya Wind Technologies EWT DW58 brochure https://ewtdirectwind.com/wp-content/uploads/2022/01/EWT_DW58.pdf",
+    // Source: Emergya Wind Technologies Manufacturer Website
+    // Emergya Wind Technologies. (2022). EWT DW58 Brochure. https://ewtdirectwind.com/wp-content/uploads/2022/01/EWT_DW58.pdf, accessed 2026-04-25.
+    // https://en.wind-turbine-models.com/turbines/2629-ewt-dw-58-1mw, accessed 2026-04-25.
+    // Note: rotor diameter 58 m, typical hub heights 46, 69 m.
+  },
+  "ewt-dw61-1000kw": {
+    label: "EWT DirectWind 61-1000kW",
+    minHeight: 46,
+    maxHeight: 69,
+    info: "EWT DirectWind DW 61-1MW: rotor diameter 61 m, rated power 1000 kW, IEC Wind class IIIA, cut-in 3 m/s, cut-out 25 m/s, rated wind speed 14.0 m/s. Typical hub heights 46, 69 m. See Emergya Wind Technologies EWT DW61 brochure https://ewtdirectwind.com/wp-content/uploads/2023/11/EWT_DW61.pdf",
+    // Source: Emergya Wind Technologies Manufacturer Website
+    // Emergya Wind Technologies. (2023). EWT DW61 Brochure. https://ewtdirectwind.com/wp-content/uploads/2023/11/EWT_DW61.pdf, accessed 2026-04-25.
+    // https://en.wind-turbine-models.com/turbines/1906-ewt-dw-61-1mw, accessed 2026-04-25.
+    // Note: rotor diameter 61 m, typical hub heights 46, 69 m.
   },
 };
 
