@@ -29,6 +29,6 @@ We recommend using descriptive branch names:
   - `fix: resolve api timeout`
   - `docs: update quickstart guide`
 - **Code Style**: Follow the existing patterns in the codebase.
-  - **Frontend**: Prettier & ESLint are configured. Run `yarn format` before committing.
+  - **Frontend**: Prettier & ESLint are configured. Run `npm run format` before committing.
   - **Backend**: PEP 8 compliance is expected.
 - **Tests**: Add tests for new features or bug fixes.
