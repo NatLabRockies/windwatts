@@ -8,7 +8,6 @@ For development instructions, setup guides, and architecture details, please see
 
 Before you begin, ensure you have met the following requirements:
 - You have installed [Node.js](https://nodejs.org/) (which includes npm). Optionally suggest using `nvm` node version manager.
-- You have installed [Yarn](https://yarnpkg.com/)
 
 ## Getting Started
 
@@ -28,7 +27,7 @@ To get a local copy up and running, follow these steps:
 
 3. Install the dependencies:
     ```bash
-    yarn install
+    npm install
     ```
 
 ### Configure Environment Files
@@ -56,5 +55,5 @@ Replace `YOUR_GOOGLE_MAPS_API_KEY` and `YOUR_MAP_ID` with your actual Google Map
 
 To start the development server, run:
 ```bash
-yarn dev
+npm run dev
 ```
