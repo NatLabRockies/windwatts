@@ -27,13 +27,13 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 
-RUN yarn install --silent --ignore-scripts
+RUN npm ci --ignore-scripts
 
 COPY . .
 
-RUN yarn build
+RUN npm run build
 
 # TODO use split NGINX
 FROM nginx:alpine
