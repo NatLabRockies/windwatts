@@ -161,6 +161,7 @@ def get_windspeed(
 @router.get(
     "/{model}/production",
     summary="Get energy production estimate for a location with a power curve",
+    deprecated=True,
     response_model=EnergyProductionResponse,
     response_model_exclude_none=True,
     responses={
