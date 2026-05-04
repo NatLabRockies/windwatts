@@ -5,7 +5,7 @@ Provides the core business logic for fetching wind speed, energy production,
 and timeseries data from various data sources.
 """
 
-from typing import List, Optional, Union
+from typing import List, Optional
 from fastapi import HTTPException
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from io import StringIO
@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import bisect
 from app.power_curve.powercurve import PowerCurve
+from app.schemas import PowerCurveData
 
 from app.utils.validation import (
     validate_lat,
@@ -30,6 +31,7 @@ from app.utils.validation import (
     validate_calm_threshold,
     validate_bin,
     validate_model_for_timeseries,
+    validate_custom_turbine_data
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
@@ -79,7 +81,9 @@ def get_production_core(
     lat: float,
     lng: float,
     height: int,
-    powercurve: Union[str, PowerCurve],
+    powercurve: Optional[str],
+    custom_power_curve: Optional[PowerCurveData],
+    rated_output: Optional[float],
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -93,6 +97,7 @@ def get_production_core(
         lng (float): Longitude of the location.
         height (int): Height in meters.
         powercurve (str): Power curve name.
+        custom_power_curve (PowerCurveData): custom power curve data with windspeed and turbine output.
         period (str): Time period to retrieve (all, summary, annual, monthly).
         source (str): Source of the data.
         data_fetcher_router: Router instance for fetching data.
@@ -104,8 +109,17 @@ def get_production_core(
     lng = validate_lng(model, lng)
     model = validate_model_exists(model)
     height = validate_height(model, height, "windspeed")
-    if isinstance(powercurve, str):
-        powercurve = validate_powercurve(powercurve)
+    resolved = validate_powercurve(powercurve, custom_power_curve)
+    if isinstance(resolved, PowerCurveData):
+        parsed_data = [
+            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            for ws, to in zip(resolved.wind_speed, resolved.turbine_output)
+        ]
+        validate_custom_turbine_data(parsed_data, rated_output)
+        powercurve = PowerCurve(data=parsed_data)
+    else:
+        powercurve = resolved
+
     source = validate_source(model, source)
     period = validate_period_type(model, period, "production")
 
@@ -274,7 +288,9 @@ def get_timeseries_core(
 def get_timeseries_energy_core(
     model: str,
     gridIndices: List[str],
-    turbine: Union[str, PowerCurve],
+    turbine: Optional[str],
+    custom_power_curve: Optional[PowerCurveData],
+    rated_output: Optional[float],
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -283,8 +299,16 @@ def get_timeseries_energy_core(
     year_set: Optional[str] = None,
     return_dataframe: bool = False,
 ):
-    if isinstance(turbine, str):
-        turbine = validate_powercurve(turbine)
+    resolved = validate_powercurve(turbine, custom_power_curve)
+    if isinstance(resolved, PowerCurveData):
+        parsed_data = [
+            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            for ws, to in zip(resolved.wind_speed, resolved.turbine_output)
+        ]
+        validate_custom_turbine_data(parsed_data, rated_output)
+        turbine = PowerCurve(data=parsed_data)
+    else:
+        turbine = resolved
     heights = MODEL_CONFIG[model].get("heights").get("windspeed")
 
     df = get_timeseries_core(
