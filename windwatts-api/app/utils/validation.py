@@ -84,12 +84,26 @@ def validate_height(model: str, height: int, height_type: str) -> int:
     return height
 
 
-def validate_powercurve(powercurve: str) -> str:
-    """Validate power curve name"""
+def validate_powercurve(powercurve: Optional[str], custom_power_curve: Optional[PowerCurveData] = None):
+    """Validate power curve name or custom power curve data.
+    Returns the powercurve name (str) for built-in curves,
+    or the PowerCurveData object for custom curves.
+    """
     # Import here to avoid circular dependency
     from app.power_curve.global_power_curve_manager import power_curve_manager
 
-    if not re.match(r"^[\w\-.]+$", powercurve):
+    # Custom power curve provided — no turbine name needed
+    if custom_power_curve is not None:
+        return custom_power_curve
+
+    # No custom curve — turbine name is required
+    if not powercurve:
+        raise HTTPException(
+            status_code=400,
+            detail="Either 'turbine' or 'custom_power_curve' must be provided.",
+        )
+
+    if not re.match(r"^[\w\-.\s]+$", powercurve):
         raise HTTPException(status_code=400, detail="Invalid power curve name.")
     if powercurve not in power_curve_manager.power_curves:
         raise HTTPException(status_code=400, detail="Power curve not found.")
@@ -253,20 +267,23 @@ def validate_model_for_timeseries(model: str) -> str:
 
 def validate_custom_turbine_data(data: list, rated_output: float):
     """Validate power curve data points for a custom turbine."""
-    wind_speeds = [d["Wind Speed (m/s)"] for d in data]
-    turbine_outputs = [d["Turbine Output"] for d in data]
-
     if len(data) < 2:
         raise HTTPException(
             status_code=400,
             detail="Power curve data must have at least 2 data points.",
         )
-    # wind speeds must be strictly increasing
+
+    data = sorted(data, key=lambda d: d["Wind Speed (m/s)"])
+
+    wind_speeds = [d["Wind Speed (m/s)"] for d in data]
+    turbine_outputs = [d["Turbine Output"] for d in data]
+
+    # wind speeds must be unique (no duplicates after sorting)
     for i in range(1, len(wind_speeds)):
-        if wind_speeds[i] <= wind_speeds[i - 1]:
+        if wind_speeds[i] == wind_speeds[i - 1]:
             raise HTTPException(
                 status_code=400,
-                detail=f"wind_speed must be strictly increasing. Got {wind_speeds[i]} after {wind_speeds[i - 1]} at index {i}.",
+                detail=f"Duplicate wind_speed value: {wind_speeds[i]} at index {i}.",
             )
 
     # Must have at least one positive output
@@ -277,29 +294,11 @@ def validate_custom_turbine_data(data: list, rated_output: float):
         )
 
     # Max output shouldn't exceed 110% of rated capacity
-    if max(turbine_outputs) > rated_output * 1.1:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Turbine output ({max(turbine_outputs)}) exceeds rated capacity ({rated_output}kW) by more than 10%.",
-        )
-
+    if rated_output:
+        if max(turbine_outputs) > rated_output * 1.1:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Turbine output ({max(turbine_outputs)}) exceeds rated capacity ({rated_output}kW) by more than 10%.",
+            )
+        
     return data
-
-def validate_and_resolve_production_payload(payload: ProductionRequest) -> Union[str, PowerCurve]:
-    "validation and resolve function for production payload (post endpoint)"
-    if payload.turbine_output is None and payload.data is None:
-        validate_powercurve(payload.turbine_name)
-        return payload.turbine_name
-    elif (payload.turbine_output is None and payload.data is not None) or (payload.turbine_output is not None and payload.data is None):
-        raise HTTPException(
-            status_code=400,
-            detail="Both turbine_output and data must be provided to get production for custom curve."
-        )
-    else:
-        parsed_data = [
-            {"Wind Speed (m/s)": ws, "Turbine Output": to}
-            for ws, to in zip(payload.data.wind_speed, payload.data.turbine_output)
-        ]
-        validate_custom_turbine_data(parsed_data, payload.turbine_output)
-        curve = PowerCurve(data=parsed_data)
-        return curve
