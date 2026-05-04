@@ -340,7 +340,8 @@ class TimeseriesEnergyRequest(BaseModel):
         None, gt=0, description="Rated output in kW for custom curve"
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
-        None, description="Power curve data for custom curve. Param 'turbine' is not required when using this."
+        None,
+        description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
     )
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
@@ -373,11 +374,24 @@ class TimeseriesEnergyRequest(BaseModel):
                     "years": [2020, 2021, 2022],
                     "custom_power_curve": {
                         "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                        "turbine_output": [0, 0, 0, 0.07, 0.17, 0.33, 0.56, 0.90, 1.34, 1.90, 2.5],
+                        "turbine_output": [
+                            0,
+                            0,
+                            0,
+                            0.07,
+                            0.17,
+                            0.33,
+                            0.56,
+                            0.90,
+                            1.34,
+                            1.90,
+                            2.5,
+                        ],
                     },
                     "period": "hourly",
-                }
-        ]}
+                },
+            ]
+        }
     }
 
 
@@ -397,7 +411,8 @@ class TimeseriesEnergyBatchRequest(BaseModel):
         None, gt=0, description="Rated output in kW for custom curve"
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
-        None, description="Power curve data for custom curve. Param 'turbine' is not required when using this."
+        None,
+        description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
     )
     years: Optional[List[int]] = Field(
         None, description="Years to download (defaults to sample years if not provided)"
@@ -419,50 +434,63 @@ class TimeseriesEnergyBatchRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "examples": [
-            {
-                "locations": [
-                    {
-                        "index": "031233",
-                        "latitude": 43.653,
-                        "longitude": -79.47437700534891,
-                    },
-                    {
-                        "index": "031234",
-                        "latitude": 43.653,
-                        "longitude": -79.22437433155213,
-                    },
-                ],
-                "turbine": "siva_250kW_30m_rotor_diameter",
-                "years": [2020, 2021, 2022],
-                "source": "s3",
-                "period": "hourly",
-                "year_range": "2013-2015",
-                "year_set": "sample",
-            },
-            {
-                "locations": [
-                    {
-                        "index": "031233",
-                        "latitude": 43.653,
-                        "longitude": -79.47437700534891,
-                    },
-                    {
-                        "index": "031234",
-                        "latitude": 43.653,
-                        "longitude": -79.22437433155213,
-                    },
-                ],
-                "custom_power_curve": {
-                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                        "turbine_output": [0, 0, 0, 0.07, 0.17, 0.33, 0.56, 0.90, 1.34, 1.90, 2.5],
+                {
+                    "locations": [
+                        {
+                            "index": "031233",
+                            "latitude": 43.653,
+                            "longitude": -79.47437700534891,
+                        },
+                        {
+                            "index": "031234",
+                            "latitude": 43.653,
+                            "longitude": -79.22437433155213,
+                        },
+                    ],
+                    "turbine": "siva_250kW_30m_rotor_diameter",
+                    "years": [2020, 2021, 2022],
+                    "source": "s3",
+                    "period": "hourly",
+                    "year_range": "2013-2015",
+                    "year_set": "sample",
                 },
-                "years": [2020, 2021, 2022],
-                "source": "s3",
-                "period": "hourly",
-                "year_range": "2013-2015",
-                "year_set": "sample",
-            }
-        ]}
+                {
+                    "locations": [
+                        {
+                            "index": "031233",
+                            "latitude": 43.653,
+                            "longitude": -79.47437700534891,
+                        },
+                        {
+                            "index": "031234",
+                            "latitude": 43.653,
+                            "longitude": -79.22437433155213,
+                        },
+                    ],
+                    "custom_power_curve": {
+                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output": [
+                            0,
+                            0,
+                            0,
+                            0.07,
+                            0.17,
+                            0.33,
+                            0.56,
+                            0.90,
+                            1.34,
+                            1.90,
+                            2.5,
+                        ],
+                    },
+                    "years": [2020, 2021, 2022],
+                    "source": "s3",
+                    "period": "hourly",
+                    "year_range": "2013-2015",
+                    "year_set": "sample",
+                },
+            ]
+        }
     }
 
 
@@ -613,8 +641,13 @@ class ProductionRequest(BaseModel):
         max_length=50,
         description="Turbine name. Use an ID from /turbines. Required when 'custom_power_curve' is not given.",
     )
-    rated_output: Optional[float] = Field(None, gt=0, description="Rated output in kW for custom curve")
-    custom_power_curve: Optional[PowerCurveData] = Field(None, description="Power curve data for custom curve. Param 'turbine' is not required when using this.")
+    rated_output: Optional[float] = Field(
+        None, gt=0, description="Rated output in kW for custom curve"
+    )
+    custom_power_curve: Optional[PowerCurveData] = Field(
+        None,
+        description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
+    )
     period: str = Field(
         "all",
         description="Time period: all, summary, annual, monthly [depends on the model]",
@@ -637,7 +670,19 @@ class ProductionRequest(BaseModel):
                     "period": "all",
                     "custom_power_curve": {
                         "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                        "turbine_output": [0, 0, 0, 0.07, 0.17, 0.33, 0.56, 0.90, 1.34, 1.90, 2.5],
+                        "turbine_output": [
+                            0,
+                            0,
+                            0,
+                            0.07,
+                            0.17,
+                            0.33,
+                            0.56,
+                            0.90,
+                            1.34,
+                            1.90,
+                            2.5,
+                        ],
                     },
                 },
             ]

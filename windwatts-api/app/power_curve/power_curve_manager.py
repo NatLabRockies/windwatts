@@ -70,7 +70,7 @@ class PowerCurveManager:
             PowerCurve: Corresponding power curve object.
         """
         if curve_name not in self.power_curves:
-                raise KeyError(f"Power curve '{curve_name}' not found.")
+            raise KeyError(f"Power curve '{curve_name}' not found.")
         return self.power_curves[curve_name]
 
     def _resolve_curve(self, curve: Union[str, PowerCurve]) -> PowerCurve:

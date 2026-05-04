@@ -25,7 +25,6 @@ from app.utils.wind_data_core import (
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
-from app.power_curve.powercurve import PowerCurve
 
 from app.schemas import (
     AvailableTurbinesResponse,
@@ -228,7 +227,16 @@ def get_production(
             source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_production_core(
-            model, lat, lng, height, turbine, None, None, period, source, data_fetcher_router
+            model,
+            lat,
+            lng,
+            height,
+            turbine,
+            None,
+            None,
+            period,
+            source,
+            data_fetcher_router,
         )
     except HTTPException:
         raise
@@ -304,7 +312,7 @@ def get_turbines():
         500: {"description": "Internal server error"},
     },
 )
-def get_production(
+def get_post_production(
     payload: ProductionRequest,
     model: str = Path(...),
 ):

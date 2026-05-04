@@ -4,11 +4,10 @@ Validation functions for WindWatts API.
 
 import re
 from fastapi import HTTPException
-from typing import Optional, Union
+from typing import Optional
 
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
-from app.schemas import PowerCurveData, ProductionRequest
-from app.power_curve.powercurve import PowerCurve
+from app.schemas import PowerCurveData
 
 
 def validate_model_exists(model: str) -> str:
@@ -84,7 +83,9 @@ def validate_height(model: str, height: int, height_type: str) -> int:
     return height
 
 
-def validate_powercurve(powercurve: Optional[str], custom_power_curve: Optional[PowerCurveData] = None):
+def validate_powercurve(
+    powercurve: Optional[str], custom_power_curve: Optional[PowerCurveData] = None
+):
     """Validate power curve name or custom power curve data.
     Returns the powercurve name (str) for built-in curves,
     or the PowerCurveData object for custom curves.
@@ -300,5 +301,5 @@ def validate_custom_turbine_data(data: list, rated_output: float):
                 status_code=400,
                 detail=f"Turbine output ({max(turbine_outputs)}) exceeds rated capacity ({rated_output}kW) by more than 10%.",
             )
-        
+
     return data

@@ -11,45 +11,58 @@ import pandas as pd
 
 client = TestClient(app)
 
+
 def mock_era5_quantiles_df(height=40):
     "era5-quantiles: quantile_yearly schema -> windspeed, probability and year"
     probs = [0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
     rows = []
     for year in range(2013, 2016):
         for p in probs:
-            rows.append({
-                f"windspeed_{height}m": round(5.0 + p * 6, 2),
-                "probability": p,
-                "year": year,
-            })
+            rows.append(
+                {
+                    f"windspeed_{height}m": round(5.0 + p * 6, 2),
+                    "probability": p,
+                    "year": year,
+                }
+            )
     return pd.DataFrame(rows)
+
 
 def mock_ensemble_quantiles_df(height=40):
     "ensemble-quantiles: quantile_atemporal schema -> windspeed, probability"
     probs = [0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
-    return pd.DataFrame({
-        "probability": probs,
-        f"windspeed_{height}m": [round(5.0 + p * 6, 2) for p in probs]
-    })
+    return pd.DataFrame(
+        {
+            "probability": probs,
+            f"windspeed_{height}m": [round(5.0 + p * 6, 2) for p in probs],
+        }
+    )
+
 
 def mock_wtk_timeseries_df(height=40):
     "wtk-timeseries: aggregated-mohr schema -> mohr, windspeed"
     rows = []
-    for year in range(2000,2003):
-        for month in range(1,13):
+    for year in range(2000, 2003):
+        for month in range(1, 13):
             for hour in range(1, 25):
-                rows.append({
-                    "mohr" : month * 100 + hour,
-                    f"windspeed_{height}m": round(np.random.uniform(1,5), 2),
-                    "year": year,
-                })
+                rows.append(
+                    {
+                        "mohr": month * 100 + hour,
+                        f"windspeed_{height}m": round(np.random.uniform(1, 5), 2),
+                        "year": year,
+                    }
+                )
     return pd.DataFrame(rows)
+
 
 def mock_era5_timeseries_df(height=40):
     "era5-timeseries: full hourly schema -> time, windspeed and winddirection"
-    timestamps = pd.concat([
-        pd.Series(pd.date_range(f"{year}-01-01", periods=200, freq='h'))
-        for year in range(2013, 2016)]).reset_index(drop=True)
+    timestamps = pd.concat(
+        [
+            pd.Series(pd.date_range(f"{year}-01-01", periods=200, freq="h"))
+            for year in range(2013, 2016)
+        ]
+    ).reset_index(drop=True)
     n = len(timestamps)
     return pd.DataFrame(
         {
@@ -60,6 +73,7 @@ def mock_era5_timeseries_df(height=40):
             "winddirection_100m": np.random.uniform(0, 360, n).round(1),
         }
     )
+
 
 class TestV1WindspeedEndpoints:
     """Test windspeed endpoints for all models."""
@@ -437,6 +451,7 @@ class TestV1WindRose:
         )
         assert response.status_code == 400
 
+
 class TestV1PostProductionEndpoints:
     """Test POST production endpoint with inbuilt and custom power curves."""
 
@@ -445,8 +460,10 @@ class TestV1PostProductionEndpoints:
         mock_router.fetch_raw.return_value = mock_ensemble_quantiles_df()
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "turbine": "nlr-reference-100kW",
                 "period": "all",
             },
@@ -455,63 +472,73 @@ class TestV1PostProductionEndpoints:
         data = response.json()
         assert "energy_production" in data
         assert data["energy_production"] > 0
-    
+
     def test_post_production_ensemble_invalid_period_all(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "turbine": "nlr-reference-100kW",
                 "period": "annual",
             },
         )
         assert response.status_code == 400
-    
+
     def test_post_production_ensemble_invalid_period_summary(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "turbine": "nlr-reference-100kW",
                 "period": "summary",
             },
         )
         assert response.status_code == 400
-    
+
     def test_post_production_ensemble_invalid_period_monthly(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "turbine": "nlr-reference-100kW",
                 "period": "monthly",
             },
         )
         assert response.status_code == 400
-    
+
     def test_post_production_ensemble_invalid_period_full(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "turbine": "nlr-reference-100kW",
                 "period": "full",
             },
         )
         assert response.status_code == 400
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_ensemble_custom_pc(self, mock_router):
         mock_router.fetch_raw.return_value = mock_ensemble_quantiles_df()
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
@@ -524,8 +551,10 @@ class TestV1PostProductionEndpoints:
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "turbine": "nlr-reference-100kW",
             },
@@ -534,33 +563,37 @@ class TestV1PostProductionEndpoints:
         data = response.json()
         assert "energy_production" in data
         assert data["energy_production"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_era5_quantiles_custom_pc_all(self, mock_router):
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
         data = response.json()
         assert "energy_production" in data
         assert data["energy_production"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_era5_quantiles_summary(self, mock_router):
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "summary",
                 "turbine": "nlr-reference-100kW",
             },
@@ -575,19 +608,21 @@ class TestV1PostProductionEndpoints:
             assert "Average wind speed (m/s)" in summary[key]
             assert "kWh produced" in summary[key]
             assert summary[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_era5_quantiles_custom_pc_summary(self, mock_router):
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "summary",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
@@ -600,14 +635,16 @@ class TestV1PostProductionEndpoints:
             assert "Average wind speed (m/s)" in summary[key]
             assert "kWh produced" in summary[key]
             assert summary[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_era5_quantiles_annual(self, mock_router):
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "annual",
                 "turbine": "nlr-reference-100kW",
             },
@@ -616,19 +653,21 @@ class TestV1PostProductionEndpoints:
         data = response.json()
         assert "yearly_avg_energy_production" in data
         yearly_prod = data["yearly_avg_energy_production"]
-        for key in ('2013', '2014', '2015'):
+        for key in ("2013", "2014", "2015"):
             assert key in yearly_prod
             assert "Average wind speed (m/s)" in yearly_prod[key]
             assert "kWh produced" in yearly_prod[key]
             assert yearly_prod[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_era5_quantiles_full(self, mock_router):
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "full",
                 "turbine": "nlr-reference-100kW",
             },
@@ -638,37 +677,41 @@ class TestV1PostProductionEndpoints:
         assert "energy_production" in data
         assert "summary_avg_energy_production" in data
         assert "yearly_avg_energy_production" in data
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_era5_quantiles_custom_pc_annual(self, mock_router):
         mock_router.fetch_raw.return_value = mock_era5_quantiles_df()
         response = client.post(
             "/api/v1/era5-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "annual",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
         data = response.json()
         yearly_prod = data["yearly_avg_energy_production"]
-        for key in ('2013', '2014', '2015'):
+        for key in ("2013", "2014", "2015"):
             assert key in yearly_prod
             assert "Average wind speed (m/s)" in yearly_prod[key]
             assert "kWh produced" in yearly_prod[key]
             assert yearly_prod[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_all(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "turbine": "nlr-reference-100kW",
             },
@@ -677,14 +720,16 @@ class TestV1PostProductionEndpoints:
         data = response.json()
         assert "energy_production" in data
         assert data["energy_production"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_summary(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "summary",
                 "turbine": "nlr-reference-100kW",
             },
@@ -699,14 +744,16 @@ class TestV1PostProductionEndpoints:
             assert "Average wind speed (m/s)" in summary[key]
             assert "kWh produced" in summary[key]
             assert summary[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_annual(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "annual",
                 "turbine": "nlr-reference-100kW",
             },
@@ -714,19 +761,21 @@ class TestV1PostProductionEndpoints:
         assert response.status_code == 200
         data = response.json()
         yearly_prod = data["yearly_avg_energy_production"]
-        for key in ('2000', '2001', '2002'):
+        for key in ("2000", "2001", "2002"):
             assert key in yearly_prod
             assert "Average wind speed (m/s)" in yearly_prod[key]
             assert "kWh produced" in yearly_prod[key]
             assert yearly_prod[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_full(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "full",
                 "turbine": "nlr-reference-100kW",
             },
@@ -736,38 +785,42 @@ class TestV1PostProductionEndpoints:
         assert "energy_production" in data
         assert "summary_avg_energy_production" in data
         assert "yearly_avg_energy_production" in data
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_custom_pc_all(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
         data = response.json()
         assert "energy_production" in data
         assert data["energy_production"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_custom_pc_summary(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "summary",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
@@ -780,42 +833,46 @@ class TestV1PostProductionEndpoints:
             assert "Average wind speed (m/s)" in summary[key]
             assert "kWh produced" in summary[key]
             assert summary[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_custom_pc_annual(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "annual",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
         data = response.json()
         yearly_prod = data["yearly_avg_energy_production"]
-        for key in ('2000', '2001', '2002'):
+        for key in ("2000", "2001", "2002"):
             assert key in yearly_prod
             assert "Average wind speed (m/s)" in yearly_prod[key]
             assert "kWh produced" in yearly_prod[key]
             assert yearly_prod[key]["kWh produced"] > 0
-    
+
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_wtk_timeseries_custom_pc_full(self, mock_router):
         mock_router.fetch_raw.return_value = mock_wtk_timeseries_df()
         response = client.post(
             "/api/v1/wtk-timeseries/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "full",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 200
@@ -823,49 +880,53 @@ class TestV1PostProductionEndpoints:
         assert "energy_production" in data
         assert "summary_avg_energy_production" in data
         assert "yearly_avg_energy_production" in data
-    
+
     def test_post_production_invalid_custom_pc_duplicate_windspeed(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 7, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
-                }
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
             },
         )
         assert response.status_code == 400
-    
+
     def test_post_production_invalid_custom_pc_less_than_two_data_points(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
-                "custom_power_curve": {
-                    "wind_speed": [3],
-                    "turbine_output": [34]
-                }
+                "custom_power_curve": {"wind_speed": [3], "turbine_output": [34]},
             },
         )
         assert response.status_code == 422
-    
+
     def test_post_production_invalid_custom_pc_exceed_rated_output(self):
         response = client.post(
             "/api/v1/ensemble-quantiles/production",
-            json = {
-                "lat" : 40.0, "lng": -70.0, "height": 40,
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
                 "period": "all",
                 "custom_power_curve": {
                     "wind_speed": [0, 3, 5, 7, 7, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100]
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
                 "rated_output": 90,
             },
         )
         assert response.status_code == 400
+
 
 if __name__ == "__main__":
     import pytest

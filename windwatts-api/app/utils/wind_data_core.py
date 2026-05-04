@@ -31,7 +31,7 @@ from app.utils.validation import (
     validate_calm_threshold,
     validate_bin,
     validate_model_for_timeseries,
-    validate_custom_turbine_data
+    validate_custom_turbine_data,
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
