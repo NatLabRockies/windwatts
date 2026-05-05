@@ -20,4 +20,4 @@
 
 ## Others: e.g. Screenshots if UI change
 
-<!-- Add before/after screenshots or other relevant. -->
+<!-- Add before/after screenshots or other relevant details. -->
