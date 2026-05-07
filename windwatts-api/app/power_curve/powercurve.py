@@ -4,38 +4,16 @@ from scipy import interpolate
 
 
 class PowerCurve(object):
-    def __init__(self, power_curve_path=None, data=None):
+    def __init__(self, data=None):
         # Load data and minimal preprocessing
         if data is not None:
             self.raw_data = pd.DataFrame(data)
             self.raw_data.rename(
                 columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
             )
-        elif power_curve_path is not None:
-            if ".xslx" in power_curve_path:
-                self.raw_data = pd.read_excel(power_curve_path)
-                self.raw_data.rename(
-                    columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"},
-                    inplace=True,
-                )
-            elif ".csv" in power_curve_path:
-                self.raw_data = pd.read_csv(power_curve_path)
-                self.raw_data.rename(
-                    columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"},
-                    inplace=True,
-                )
-                # print(self.raw_data.columns)
-            else:
-                raise ValueError(
-                    "Unsupported powercurve file format (should be .xslx or .csv)."
-                )
         else:
-            raise ValueError("Either power_curve_path or data must be provided.")
+            raise ValueError("data must be provided to construct a PowerCurve.")
 
-        self.setup()
-
-    def setup(self):
-        "Common setup for anchoring (0,0), interpolation and counters"
         # Add (0,0) if not there already
         if self.raw_data["ws"].min() > 0:
             self.raw_data.loc[len(self.raw_data)] = [0, 0]

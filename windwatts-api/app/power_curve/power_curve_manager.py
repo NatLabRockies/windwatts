@@ -56,9 +56,17 @@ class PowerCurveManager:
         for file in os.listdir(directory):
             if file.endswith(".csv") or file.endswith(".xlsx"):
                 curve_name = os.path.splitext(file)[0]
-                self.power_curves[curve_name] = PowerCurve(
-                    os.path.join(directory, file)
-                )
+                power_curve_path = os.path.join(directory, file)
+                if power_curve_path is not None:
+                    if ".xlsx" in power_curve_path:
+                        raw_data = pd.read_excel(power_curve_path)
+                    elif ".csv" in power_curve_path:
+                        raw_data = pd.read_csv(power_curve_path)
+                    else:
+                        raise ValueError(
+                            "Unsupported powercurve file format (should be .xslx or .csv)."
+                        )
+                    self.power_curves[curve_name] = PowerCurve(data=raw_data)
 
     def get_curve(self, curve_name: str) -> PowerCurve:
         """
@@ -72,12 +80,6 @@ class PowerCurveManager:
         if curve_name not in self.power_curves:
             raise KeyError(f"Power curve '{curve_name}' not found.")
         return self.power_curves[curve_name]
-
-    def _resolve_curve(self, curve: Union[str, PowerCurve]) -> PowerCurve:
-        """Accept a curve name (str) or a PowerCurve object directly."""
-        if isinstance(curve, PowerCurve):
-            return curve
-        return self.get_curve(curve)
 
     def find_inverse(
         self, x_smooth: np.ndarray, y_smooth: np.ndarray, y_hat: np.ndarray
@@ -314,7 +316,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         heights: Union[int, List[int]],
-        selected_power_curve: Union[str, PowerCurve],
+        selected_power_curve: PowerCurve,
         model_name: str,
         relevant_columns_only: bool = True,
     ) -> tuple[pd.DataFrame, str]:
@@ -362,15 +364,15 @@ class PowerCurveManager:
         # Add temporal dimensions
         df_with_temporal = self._add_temporal_dimensions(df, schema)
 
-        power_curve = self._resolve_curve(selected_power_curve)
-
         # Timeseries processing
         if self._is_timeseries_schema(schema):
             # Add kW columns for each height
             result = df_with_temporal.copy()
             for ws_col in ws_cols:
                 energy_col = ws_col.replace("windspeed_", "energy_") + "_kwh"
-                result[energy_col] = power_curve.windspeed_to_kw(result, ws_col)
+                result[energy_col] = selected_power_curve.windspeed_to_kw(
+                    result, ws_col
+                )
 
             if relevant_columns_only:
                 # Build column list: temporal columns + windspeed + power
@@ -400,7 +402,7 @@ class PowerCurveManager:
                         mid_df = self._quantiles_to_kw_midpoints(
                             group_sorted[["probability", ws_col]].copy(),
                             ws_col,
-                            power_curve,
+                            selected_power_curve,
                             use_swi=use_swi_eff,
                         )
                         col_dfs.append(mid_df)
@@ -430,7 +432,7 @@ class PowerCurveManager:
                     mid_df = self._quantiles_to_kw_midpoints(
                         group_sorted[["probability", ws_col]].copy(),
                         ws_col,
-                        power_curve,
+                        selected_power_curve,
                         use_swi=use_swi_eff,
                     )
                     col_dfs.append(mid_df)
@@ -451,7 +453,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         height: int,
-        selected_power_curve: Union[str, PowerCurve],
+        selected_power_curve: PowerCurve,
         model_name: str,
     ) -> pd.DataFrame:
         """
@@ -546,7 +548,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         height: int,
-        selected_power_curve: Union[str, PowerCurve],
+        selected_power_curve: PowerCurve,
         model_name: str,
     ) -> dict:
         """
@@ -586,7 +588,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         height: int,
-        selected_power_curve: Union[str, PowerCurve],
+        selected_power_curve: PowerCurve,
         model_name: str,
     ) -> dict:
         """
@@ -641,7 +643,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         height: int,
-        selected_power_curve: Union[str, PowerCurve],
+        selected_power_curve: PowerCurve,
         model_name: str,
     ) -> dict:
         """
