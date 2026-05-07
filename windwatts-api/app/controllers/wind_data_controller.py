@@ -231,12 +231,11 @@ def get_production(
             lat,
             lng,
             height,
-            turbine,
-            None,
-            None,
-            period,
-            source,
-            data_fetcher_router,
+            powercurve=turbine,
+            custom_power_curve=None,
+            period=period,
+            source=source,
+            data_fetcher_router=data_fetcher_router,
         )
     except HTTPException:
         raise
@@ -314,10 +313,12 @@ def get_turbines():
 )
 def get_post_production(
     payload: ProductionRequest,
-    model: str = Path(...),
+    model: str = Path(
+        ...,
+        description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles",
+    ),
 ):
     try:
-        # curve = validate_and_resolve_production_payload(payload)
         source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_production_core(
@@ -327,15 +328,13 @@ def get_post_production(
             payload.height,
             payload.turbine,
             payload.custom_power_curve,
-            payload.rated_output,
             payload.period,
             source,
             data_fetcher_router,
         )
     except HTTPException:
         raise
-    except Exception as e:
-        print(e)
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -684,21 +683,20 @@ def download_energy_timeseries(
             model,
             [gridIndex],
             turbine,
-            None,
-            None,
-            period,
-            source,
-            data_fetcher_router,
-            years,
-            year_range,
-            year_set,
+            custom_power_curve=None,
+            period=period,
+            source=source,
+            data_fetcher_router=data_fetcher_router,
+            years=years,
+            year_range=year_range,
+            year_set=year_set,
         )
 
         return StreamingResponse(
             iter([csv_content]),
             media_type="text/csv; charset=utf-8",
             headers={
-                "Content-Disposition": f'attachment; filename="wind_&_energy_data_{gridIndex}.csv"'
+                "Content-Disposition": f'attachment; filename="wind_energy_data_{gridIndex}.csv"'
             },
         )
     except HTTPException:
@@ -734,7 +732,6 @@ def post_energy_timeseries(
             [payload.gridIndex],
             payload.turbine,
             payload.custom_power_curve,
-            payload.rated_output,
             payload.period,
             payload.source,
             data_fetcher_router,
@@ -747,7 +744,7 @@ def post_energy_timeseries(
             iter([csv_content]),
             media_type="text/csv; charset=utf-8",
             headers={
-                "Content-Disposition": f'attachment; filename="wind_&_energy_data_{payload.gridIndex}.csv"'
+                "Content-Disposition": f'attachment; filename="wind_energy_data_{payload.gridIndex}.csv"'
             },
         )
     except HTTPException:
@@ -777,7 +774,6 @@ def download_timeseries_energy_batch(
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **turbine**: Turbine name (built-in ID or custom label)
-      - **rated_output**: Rated output in kW (required for custom curve)
       - **custom_power_curve**: Power curve data (required for custom curve)
       - **years**: List of years to include (optional, defaults to sample years)
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -796,7 +792,6 @@ def download_timeseries_energy_batch(
                     [loc.index],
                     payload.turbine,
                     payload.custom_power_curve,
-                    payload.rated_output,
                     payload.period,
                     payload.source,
                     data_fetcher_router,
@@ -804,13 +799,13 @@ def download_timeseries_energy_batch(
                     payload.year_range,
                     payload.year_set,
                 )
-                file_name = f"wind_&_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
+                file_name = f"wind_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
 
         spooled.seek(0)
 
         headers = {
-            "Content-Disposition": f'attachment; filename="wind_&_energy_data_{model}_{len(payload.locations)}_points.zip"'
+            "Content-Disposition": f'attachment; filename="wind_energy_data_{model}_{len(payload.locations)}_points.zip"'
         }
 
         return StreamingResponse(

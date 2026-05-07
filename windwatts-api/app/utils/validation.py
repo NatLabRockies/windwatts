@@ -8,6 +8,7 @@ from typing import Optional
 
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 from app.schemas import PowerCurveData
+from app.power_curve.powercurve import PowerCurve
 
 
 def validate_model_exists(model: str) -> str:
@@ -85,17 +86,48 @@ def validate_height(model: str, height: int, height_type: str) -> int:
 
 def validate_powercurve(
     powercurve: Optional[str], custom_power_curve: Optional[PowerCurveData] = None
-):
-    """Validate power curve name or custom power curve data.
-    Returns the powercurve name (str) for built-in curves,
-    or the PowerCurveData object for custom curves.
+) -> PowerCurve:
+    """
+    Validate reference power curve name or custom power curve data.
+    Returns PowerCurve object.
     """
     # Import here to avoid circular dependency
     from app.power_curve.global_power_curve_manager import power_curve_manager
 
     # Custom power curve provided — no turbine name needed
     if custom_power_curve is not None:
-        return custom_power_curve
+        parsed_data = [
+            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            for ws, to in zip(
+                custom_power_curve.wind_speed, custom_power_curve.turbine_output
+            )
+        ]
+        if len(parsed_data) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Power curve data must have at least 2 data points.",
+            )
+
+        parsed_data = sorted(parsed_data, key=lambda d: d["Wind Speed (m/s)"])
+
+        wind_speeds = [d["Wind Speed (m/s)"] for d in parsed_data]
+        turbine_outputs = [d["Turbine Output"] for d in parsed_data]
+
+        # wind speeds must be unique (no duplicates after sorting)
+        for i in range(1, len(wind_speeds)):
+            if wind_speeds[i] == wind_speeds[i - 1]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Duplicate wind_speed value: {wind_speeds[i]} found.",
+                )
+
+        # Must have at least one positive output
+        if max(turbine_outputs) <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Power curve must have at least one positive turbine output value.",
+            )
+        return PowerCurve(data=parsed_data)
 
     # No custom curve — turbine name is required
     if not powercurve:
@@ -108,24 +140,8 @@ def validate_powercurve(
         raise HTTPException(status_code=400, detail="Invalid power curve name.")
     if powercurve not in power_curve_manager.power_curves:
         raise HTTPException(status_code=400, detail="Power curve not found.")
-    return powercurve
 
-
-def validate_turbine(turbine: str) -> str:
-    """Validate turbine name (alias for validate_powercurve for clarity)"""
-    return validate_powercurve(turbine)
-
-
-def validate_year(year: int, model: str) -> int:
-    """Validate year for given model"""
-    valid_years = MODEL_CONFIG[model]["years"].get("full", [])
-    if valid_years and year not in valid_years:
-        year_range = f"{min(valid_years)}-{max(valid_years)}"
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid year for {model}. Currently supporting years {year_range}",
-        )
-    return year
+    return power_curve_manager.power_curves[powercurve]
 
 
 def validate_limit(limit: int) -> int:
@@ -264,42 +280,3 @@ def validate_model_for_timeseries(model: str) -> str:
             detail=f"Model '{model}' does not support timeseries downloads.",
         )
     return model
-
-
-def validate_custom_turbine_data(data: list, rated_output: float):
-    """Validate power curve data points for a custom turbine."""
-    if len(data) < 2:
-        raise HTTPException(
-            status_code=400,
-            detail="Power curve data must have at least 2 data points.",
-        )
-
-    data = sorted(data, key=lambda d: d["Wind Speed (m/s)"])
-
-    wind_speeds = [d["Wind Speed (m/s)"] for d in data]
-    turbine_outputs = [d["Turbine Output"] for d in data]
-
-    # wind speeds must be unique (no duplicates after sorting)
-    for i in range(1, len(wind_speeds)):
-        if wind_speeds[i] == wind_speeds[i - 1]:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Duplicate wind_speed value: {wind_speeds[i]} at index {i}.",
-            )
-
-    # Must have at least one positive output
-    if max(turbine_outputs) <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Power curve must have at least one positive turbine output value.",
-        )
-
-    # Max output shouldn't exceed 110% of rated capacity
-    if rated_output:
-        if max(turbine_outputs) > rated_output * 1.1:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Turbine output ({max(turbine_outputs)}) exceeds rated capacity ({rated_output}kW) by more than 10%.",
-            )
-
-    return data
