@@ -279,7 +279,7 @@ class TimeseriesBatchRequest(BaseModel):
         description="List of grid locations to download timeseries data for",
     )
     years: Optional[List[int]] = Field(
-        None, description="Years to download (defaults to sample years if not provided)"
+        None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
     year_range: Optional[str] = Field(
         None, description="Range of years for download. Format: YYYY-YYYY."
@@ -334,17 +334,14 @@ class TimeseriesEnergyRequest(BaseModel):
         None,
         min_length=1,
         max_length=50,
-        description="Turbine name. Use an ID from /turbines. Required when 'custom_power_curve' is not given.",
-    )
-    rated_output: Optional[float] = Field(
-        None, gt=0, description="Rated output in kW for custom curve"
+        description="Turbine name. Use built-in reference turbine names (see the turbines/ endpoint) or leave it None for custom power curve.",
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
         None,
         description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
     )
     years: Optional[List[int]] = Field(
-        None, description="Years to download (defaults to sample years if not provided)"
+        None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
     year_range: Optional[str] = Field(
         None, description="Range of years for download. Format: YYYY-YYYY."
@@ -405,17 +402,14 @@ class TimeseriesEnergyBatchRequest(BaseModel):
         None,
         min_length=1,
         max_length=50,
-        description="Turbine name. Use an ID from /turbines. Required when 'custom_power_curve' is not given.",
-    )
-    rated_output: Optional[float] = Field(
-        None, gt=0, description="Rated output in kW for custom curve"
+        description="Turbine name. Use built-in reference turbine names (see the turbines/ endpoint) or leave it None for custom power curve.",
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
         None,
         description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
     )
     years: Optional[List[int]] = Field(
-        None, description="Years to download (defaults to sample years if not provided)"
+        None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
     year_range: Optional[str] = Field(
         None, description="Range of years for download. Format: YYYY-YYYY."
@@ -639,10 +633,7 @@ class ProductionRequest(BaseModel):
         None,
         min_length=1,
         max_length=50,
-        description="Turbine name. Use an ID from /turbines. Required when 'custom_power_curve' is not given.",
-    )
-    rated_output: Optional[float] = Field(
-        None, gt=0, description="Rated output in kW for custom curve"
+        description="Turbine name. Use built-in reference turbine names (see the turbines/ endpoint) or leave it None for custom power curve.",
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
         None,
@@ -666,7 +657,6 @@ class ProductionRequest(BaseModel):
                     "lat": 40.0,
                     "lng": -70.0,
                     "height": 40,
-                    "rated_output": 100,
                     "period": "all",
                     "custom_power_curve": {
                         "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
