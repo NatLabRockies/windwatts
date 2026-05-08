@@ -653,7 +653,8 @@ def download_energy_timeseries(
         "sample", description="Download full or sample dataset"
     ),
     years: Optional[List[int]] = Query(
-        None, description="Specific years to include (optional). Example: [2015, 2019, 2022]"
+        None,
+        description="Specific years to include (optional). Example: [2015, 2019, 2022]",
     ),
     period: Optional[str] = Query(
         "hourly",
