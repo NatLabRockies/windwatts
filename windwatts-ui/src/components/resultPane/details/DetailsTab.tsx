@@ -59,6 +59,7 @@ export const DetailsTab = ({
 
       <ProductionDataTable
         title=""
+        dataModel={dataModel}
         data={tableData}
         timeUnit={timeUnit}
         isLoading={productionLoading}

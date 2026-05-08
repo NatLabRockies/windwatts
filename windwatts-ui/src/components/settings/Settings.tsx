@@ -7,6 +7,7 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { TurbineSettings } from "./TurbineSettings";
 import { LossAssumptionSettings } from "./LossAssumptionSettings";
 import { HubHeightSettings } from "./HubHeightSettings";
+import { EnsembleSettings } from "./EnsembleSettings";
 import {
   SETTINGS_MODAL_WIDTH,
   SETTINGS_MODAL_MAX_HEIGHT,
@@ -88,6 +89,7 @@ export const Settings = () => {
           <TurbineSettings />
           <UnitsSettings />
           <LossAssumptionSettings />
+          <EnsembleSettings />
         </Box>
       </Box>
     </Modal>

@@ -17,7 +17,7 @@ export const URL_PARAM_DEFAULTS = {
   zoom: 12,
   hubHeight: 40,
   turbine: "nlr-reference-100kW",
-  dataModel: "era5-quantiles" as DataModel,
+  dataModel: "ensemble-quantiles" as DataModel,
   lossAssumption: 0,
   windspeedUnit: "mph",
 };

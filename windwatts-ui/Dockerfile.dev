@@ -25,12 +25,12 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 
-RUN yarn install --frozen-lockfile
+RUN npm ci --ignore-scripts
 
 COPY . .
 
 EXPOSE 5173
 
-CMD [ "yarn", "dev", "--host" ]
+CMD [ "npm", "run", "dev", "--", "--host" ]

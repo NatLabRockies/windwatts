@@ -21,6 +21,7 @@ import {
 } from "../../../constants";
 import { convertOutput, getOutOfBoundsMessage } from "../../../utils";
 import { OutOfBoundsWarning } from "../../shared";
+import { ModelSourceChip } from "../../shared";
 import { useProductionData } from "../../../hooks";
 
 interface ProductionCardProps {
@@ -300,10 +301,24 @@ export const ProductionCard = memo(
               width: "100%",
             }}
           >
-            <Typography variant="subtitle1" fontWeight={600}>
-              Production Summary
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight={600}>
+                Production Summary
+              </Typography>
+              <ModelSourceChip dataModel={dataModel} />
+            </Box>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ flexShrink: 0, ml: 1 }}
+            >
               {expanded ? "Hide" : "Show"}
             </Typography>
           </Box>

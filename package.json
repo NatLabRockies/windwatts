@@ -1,9 +1,6 @@
 {
   "private": true,
-  "workspaces": [
-    "windwatts-ui",
-    "windwatts-api"
-  ],
+  "packageManager": "npm@10",
   "scripts": {
     "prepare": "husky",
     "lint": "eslint",

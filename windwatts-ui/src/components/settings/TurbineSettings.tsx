@@ -38,11 +38,11 @@ export function TurbineSettings() {
   };
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 2 }}>
       <Typography variant="h6" gutterBottom>
         Turbine
       </Typography>
-      <Typography variant="body1" gutterBottom>
+      <Typography variant="body2" gutterBottom>
         Select a turbine option:
       </Typography>
 
@@ -70,8 +70,8 @@ export function TurbineSettings() {
           <Typography variant="body2">Loading turbine options...</Typography>
         )}
 
-        <Typography variant="body2" marginTop={2} gutterBottom>
-          * The height range shows recommended hub height for this turbine.
+        <Typography variant="caption" marginTop={2} gutterBottom>
+          * Note: () = Recommended hub height range.
         </Typography>
       </FormControl>
     </Box>

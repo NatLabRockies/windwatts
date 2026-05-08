@@ -2,18 +2,18 @@
 
 lint:
 	$(MAKE) -C windwatts-api lint
-	cd windwatts-ui && yarn lint
+	cd windwatts-ui && npm run lint
 
 format:
 	$(MAKE) -C windwatts-api format
-	cd windwatts-ui && yarn format
+	cd windwatts-ui && npm run format
 
 test:
 	$(MAKE) -C windwatts-api test
-	cd windwatts-ui && yarn test -- --run
+	cd windwatts-ui && npm run test -- --run
 
 build-ui:
-	cd windwatts-ui && yarn build
+	cd windwatts-ui && npm run build
 
 verify: lint test build-ui
 

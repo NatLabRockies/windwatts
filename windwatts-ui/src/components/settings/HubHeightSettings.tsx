@@ -68,8 +68,8 @@ export function HubHeightSettings() {
       <Typography variant="h6" gutterBottom>
         Hub Height
       </Typography>
-      <Typography variant="body1" gutterBottom>
-        Choose a closest value (in meters) to the considered hub height:
+      <Typography variant="body2" gutterBottom>
+        Choose nearest hub height (m):
       </Typography>
 
       {turbineData && (

@@ -10,14 +10,21 @@ export function LayoutDesktop() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Box sx={{ flexGrow: 0 }}>
-        <AppBar position="static" sx={{ bgcolor: "#027dbc" }}>
+        {/* DO NOT DELETE: previous NREL Color: #027dbc */}
+        <AppBar
+          position="static"
+          sx={{
+            bgcolor: "background.paper",
+            borderBottom: "1px solid #ddd",
+          }}
+        >
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
             <Link
               to="/"
               variant="h5"
               component={RouterLink}
               underline="none"
-              sx={{ flexGrow: 1, color: "white" }}
+              sx={{ flexGrow: 1, color: "text.primary" }}
             >
               {APP_TITLE}
             </Link>
@@ -29,8 +36,8 @@ export function LayoutDesktop() {
             >
               <Box
                 component="img"
-                sx={{ height: 56 }}
-                src="/assets/NLR-Blue-TypeTreatment-Block-Top-RGB.svg"
+                sx={{ height: 42 }}
+                src="/assets/nlr-logo-horizontal.svg"
                 alt="NLR Logo"
               />
             </Link>
@@ -61,7 +68,7 @@ export function LayoutDesktop() {
           className="right-pane"
           sx={{
             width: 420,
-            bgcolor: "white",
+            bgcolor: "background.paper",
             overflowY: "auto",
             borderLeft: "1px solid #ddd",
           }}
