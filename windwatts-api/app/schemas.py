@@ -285,7 +285,7 @@ class TimeseriesBatchRequest(BaseModel):
         None, description="Range of years for download. Format: YYYY-YYYY."
     )
     year_set: Optional[str] = Field(
-        "sample", description="Full or Sample dataset to download."
+        None, description="Full or Sample dataset to download."
     )
     source: str = Field(
         "s3",
@@ -347,7 +347,7 @@ class TimeseriesEnergyRequest(BaseModel):
         None, description="Range of years for download. Format: YYYY-YYYY."
     )
     year_set: Optional[str] = Field(
-        "sample", description="Full or Sample dataset to download."
+        None, description="Full or Sample dataset to download."
     )
     source: str = Field(
         "s3",

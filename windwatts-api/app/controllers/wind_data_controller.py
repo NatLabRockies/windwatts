@@ -513,7 +513,7 @@ def download_timeseries(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
     year_set: Optional[str] = Query(
-        "sample", description="Download full or sample dataset"
+        None, description="Download full or sample dataset"
     ),
     years: Optional[List[int]] = Query(
         None, description="Years to download (defaults to sample years)"
@@ -650,7 +650,7 @@ def download_energy_timeseries(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
     year_set: Optional[str] = Query(
-        "sample", description="Download full or sample dataset"
+        None, description="Download full or sample dataset"
     ),
     years: Optional[List[int]] = Query(
         None,
