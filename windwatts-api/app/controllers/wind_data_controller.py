@@ -536,7 +536,7 @@ def download_timeseries(
     - **gridIndex**: Grid index from grid-points endpoint
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
-    - **years**: List of years to include (optional)
+    - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
     - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     - **source**: Data source (defaults to S3)
     """
@@ -590,7 +590,7 @@ def download_timeseries_batch(
     - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
-      - **years**: List of years to include (optional, defaults to sample years)
+      - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
       - **year_set**: Full or Sample dataset to download (optional)
       - **source**: Data source (optional, defaults to s3)
@@ -653,7 +653,7 @@ def download_energy_timeseries(
         "sample", description="Download full or sample dataset"
     ),
     years: Optional[List[int]] = Query(
-        None, description="Years to download (default to sample years)"
+        None, description="Specific years to include (optional). Example: [2015, 2019, 2022]"
     ),
     period: Optional[str] = Query(
         "hourly",
@@ -674,7 +674,7 @@ def download_energy_timeseries(
     - **turbine**: Turbine model to use for energy calculations
     - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
     - **year_set**: Full or Sample dataset to download (optional)
-    - **years**: List of years to include (optional)
+    - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
     - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     - **source**: Data source (defaults to S3)
     """
@@ -775,7 +775,7 @@ def download_timeseries_energy_batch(
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **turbine**: Turbine name (built-in ID or custom label)
       - **custom_power_curve**: Power curve data (required for custom curve)
-      - **years**: List of years to include (optional, defaults to sample years)
+      - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
       - **year_set**: Full or Sample dataset to download (optional)
       - **source**: Data source (optional, defaults to s3)
