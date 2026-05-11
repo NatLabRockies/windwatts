@@ -910,6 +910,22 @@ class TestV1PostProductionEndpoints:
         )
         assert response.status_code == 422
 
+    def test_post_production_custom_pc_unequal_length_windspeed_turbine_output(self):
+        response = client.post(
+            "/api/v1/ensemble-quantiles/production",
+            json={
+                "lat": 40.0,
+                "lng": -70.0,
+                "height": 40,
+                "period": "all",
+                "custom_power_curve": {
+                    "wind_speed": [0, 3, 5, 7, 13, 15, 25],
+                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                },
+            },
+        )
+        assert response.status_code == 400
+
 
 if __name__ == "__main__":
     import pytest

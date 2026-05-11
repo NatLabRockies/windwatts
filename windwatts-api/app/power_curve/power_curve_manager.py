@@ -51,20 +51,18 @@ class PowerCurveManager:
 
     def load_power_curves(self, directory: str):
         """
-        Load power curves from the specified directory or the data.
+        Load power curves from the specified directory.
         """
         for file in os.listdir(directory):
-            if file.endswith(".csv") or file.endswith(".xlsx"):
+            if file.endswith(".csv"):
                 curve_name = os.path.splitext(file)[0]
                 power_curve_path = os.path.join(directory, file)
                 if power_curve_path is not None:
-                    if ".xlsx" in power_curve_path:
-                        raw_data = pd.read_excel(power_curve_path)
-                    elif ".csv" in power_curve_path:
+                    if ".csv" in power_curve_path:
                         raw_data = pd.read_csv(power_curve_path)
                     else:
                         raise ValueError(
-                            "Unsupported powercurve file format (should be .xslx or .csv)."
+                            "Unsupported powercurve file format (should be .csv)."
                         )
                     self.power_curves[curve_name] = PowerCurve(data=raw_data)
 

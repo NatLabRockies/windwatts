@@ -38,7 +38,7 @@ from app.schemas import (
     ModelInfoResponse,
     AvailableModelsResponse,
     RoseResponse,
-    ProductionRequest,
+    ProductionRequestPayload,
 )
 
 router = APIRouter()
@@ -298,7 +298,7 @@ def get_turbines():
 
 @router.post(
     "/{model}/production",
-    summary="Calculate energy production using inbuilt or custom powercurve",
+    summary="Calculate energy production using reference or custom powercurve",
     response_model=EnergyProductionResponse,
     response_model_exclude_none=True,
     responses={
@@ -312,7 +312,7 @@ def get_turbines():
     },
 )
 def get_post_production(
-    payload: ProductionRequest,
+    payload: ProductionRequestPayload,
     model: str = Path(
         ...,
         description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles",
@@ -702,14 +702,13 @@ def download_energy_timeseries(
         )
     except HTTPException:
         raise
-    except Exception as e:
-        print(e)
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post(
     "/{model}/timeseries/energy",
-    summary="Download timeseries CSV data along with energy estimates using inbuilt or custom powercurve.",
+    summary="Download timeseries CSV data along with energy estimates using reference or custom powercurve.",
     responses={
         200: {"description": "CSV file downloaded successfully"},
         400: {"description": "Bad request - invalid parameters"},
@@ -774,7 +773,7 @@ def download_timeseries_energy_batch(
     - **model**: Data model (era5-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
-      - **turbine**: Turbine name (built-in ID or custom label)
+      - **turbine**:  Turbine name (built-in reference only), ignored for custom power curve.
       - **custom_power_curve**: Power curve data (required for custom curve)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)

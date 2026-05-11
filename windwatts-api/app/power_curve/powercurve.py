@@ -4,15 +4,12 @@ from scipy import interpolate
 
 
 class PowerCurve(object):
-    def __init__(self, data=None):
+    def __init__(self, data):
         # Load data and minimal preprocessing
-        if data is not None:
-            self.raw_data = pd.DataFrame(data)
-            self.raw_data.rename(
-                columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
-            )
-        else:
-            raise ValueError("data must be provided to construct a PowerCurve.")
+        self.raw_data = pd.DataFrame(data)
+        self.raw_data.rename(
+            columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
+        )
 
         # Add (0,0) if not there already
         if self.raw_data["ws"].min() > 0:

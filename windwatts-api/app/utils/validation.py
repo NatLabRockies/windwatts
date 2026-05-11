@@ -108,6 +108,12 @@ def validate_powercurve(
                 detail="Power curve data must have at least 2 data points.",
             )
 
+        if len(custom_power_curve.wind_speed) != len(custom_power_curve.turbine_output):
+            raise HTTPException(
+                status_code=400,
+                detail="wind_speed and turbine_output must have same number of values.",
+            )
+
         parsed_data = sorted(parsed_data, key=lambda d: d["Wind Speed (m/s)"])
 
         wind_speeds = [d["Wind Speed (m/s)"] for d in parsed_data]
@@ -133,7 +139,7 @@ def validate_powercurve(
     if not powercurve:
         raise HTTPException(
             status_code=400,
-            detail="Either 'turbine' or 'custom_power_curve' must be provided.",
+            detail="Either 'turbine' for reference turbine or 'custom_power_curve' must be provided.",
         )
 
     if not re.match(r"^[\w\-.\s]+$", powercurve):

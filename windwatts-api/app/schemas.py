@@ -293,7 +293,7 @@ class TimeseriesBatchRequest(BaseModel):
     )
     period: str = Field(
         "hourly",
-        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm aggregated averages)",
     )
 
     model_config = {
@@ -338,7 +338,7 @@ class TimeseriesEnergyRequest(BaseModel):
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
         None,
-        description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
+        description="Power curve data for custom curve (param 'turbine' is optional and ignored)",
     )
     years: Optional[List[int]] = Field(
         None, description="Specific years to include. Example: [2015, 2019, 2022]"
@@ -355,7 +355,7 @@ class TimeseriesEnergyRequest(BaseModel):
     )
     period: str = Field(
         "hourly",
-        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm aggregated averages)",
     )
     model_config = {
         "json_schema_extra": {
@@ -406,7 +406,7 @@ class TimeseriesEnergyBatchRequest(BaseModel):
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
         None,
-        description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
+        description="Power curve data for custom curve (param 'turbine' is optional and ignored)",
     )
     years: Optional[List[int]] = Field(
         None, description="Specific years to include. Example: [2015, 2019, 2022]"
@@ -423,7 +423,7 @@ class TimeseriesEnergyBatchRequest(BaseModel):
     )
     period: str = Field(
         "hourly",
-        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm aggregated averages)",
     )
     model_config = {
         "json_schema_extra": {
@@ -625,7 +625,7 @@ class RoseResponse(BaseModel):
     )
 
 
-class ProductionRequest(BaseModel):
+class ProductionRequestPayload(BaseModel):
     lat: float = Field(..., description="Latitude")
     lng: float = Field(..., description="Longitude")
     height: int = Field(..., description="Height in meters")
@@ -637,7 +637,7 @@ class ProductionRequest(BaseModel):
     )
     custom_power_curve: Optional[PowerCurveData] = Field(
         None,
-        description="Power curve data for custom curve. Param 'turbine' is not required when using this.",
+        description="Power curve data for custom curve (param 'turbine' is optional and ignored)",
     )
     period: str = Field(
         "all",
