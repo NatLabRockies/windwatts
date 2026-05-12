@@ -32,9 +32,9 @@ from app.schemas import (
     AvailablePowerCurvesResponse,
     EnergyProductionResponse,
     NearestLocationsResponse,
-    TimeseriesBatchRequest,
-    TimeseriesEnergyRequest,
-    TimeseriesEnergyBatchRequest,
+    TimeseriesBatchRequestPayload,
+    TimeseriesEnergyRequestPayload,
+    TimeseriesEnergyBatchRequestPayload,
     ModelInfoResponse,
     AvailableModelsResponse,
     RoseResponse,
@@ -507,7 +507,9 @@ def get_model_info(
     },
 )
 def download_timeseries(
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    model: str = Path(
+        ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
+    ),
     gridIndex: str = Query(..., description="Grid index identifier"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
@@ -532,7 +534,7 @@ def download_timeseries(
 
     Returns raw timeseries data for the specified grid index and years.
 
-    - **model**: Data model (era5-timeseries)
+    - **model**: Data model, for example, era5-timeseries or wtk-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
@@ -578,8 +580,10 @@ def download_timeseries(
     },
 )
 def download_timeseries_batch(
-    payload: TimeseriesBatchRequest,
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    payload: TimeseriesBatchRequestPayload,
+    model: str = Path(
+        ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
+    ),
 ):
     """
     Download timeseries data for multiple grid points as a ZIP archive.
@@ -643,7 +647,7 @@ def download_timeseries_batch(
     },
 )
 def download_energy_timeseries(
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    model: str = Path(..., description="Data model, for example, era5-timeseries"),
     gridIndex: str = Query(..., description="Grid index indentifier"),
     turbine: str = Query(..., description="Turbine for energy estimates"),
     year_range: Optional[str] = Query(
@@ -670,7 +674,7 @@ def download_energy_timeseries(
 
     Deprecated: Use POST /{model}/timeseries/energy instead for custom power curve support.
 
-    - **model**: Data model (era5-timeseries)
+    - **model**: Data model, for example, era5-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
     - **turbine**: Turbine model to use for energy calculations
     - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -717,13 +721,13 @@ def download_energy_timeseries(
     },
 )
 def post_energy_timeseries(
-    payload: TimeseriesEnergyRequest,
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    payload: TimeseriesEnergyRequestPayload,
+    model: str = Path(..., description="Data model, for example, era5-timeseries"),
 ):
     """
-    Download energy timeseries data as CSV for a specific grid point using inbuilt or custom power curve.
+    Download energy timeseries data as CSV for a specific grid point using reference or custom power curve.
 
-    - **model**: Data model (era5-timeseries)
+    - **model**: Data model, for example, era5-timeseries
     - **payload**: Request body containing grid index, turbine info, and optional custom curve data
     """
     try:
@@ -755,7 +759,7 @@ def post_energy_timeseries(
 
 @router.post(
     "/{model}/timeseries/energy/batch",
-    summary="Download multiple timeseries CSV data along with energy estimates using inbuilt or custom powercurve as a ZIP file.",
+    summary="Download multiple timeseries CSV data along with energy estimates using reference or custom powercurve as a ZIP file.",
     responses={
         200: {"description": "ZIP file downloaded successfully"},
         400: {"description": "Bad request - invalid parameters"},
@@ -764,8 +768,8 @@ def post_energy_timeseries(
     },
 )
 def download_timeseries_energy_batch(
-    payload: TimeseriesEnergyBatchRequest,
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    payload: TimeseriesEnergyBatchRequestPayload,
+    model: str = Path(..., description="Data model, for example, era5-timeseries"),
 ):
     """
     Download timeseries data along with energy estimates for multiple grid points as a ZIP archive.

@@ -453,7 +453,7 @@ class TestV1WindRose:
 
 
 class TestV1PostProductionEndpoints:
-    """Test POST production endpoint with inbuilt and custom power curves."""
+    """Test POST production endpoint with reference and custom power curves."""
 
     @patch("app.controllers.wind_data_controller.data_fetcher_router")
     def test_post_production_ensemble_all(self, mock_router):

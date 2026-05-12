@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 from scipy import interpolate
+from typing import List, Dict
 
 
 class PowerCurve(object):
-    def __init__(self, data):
+    def __init__(self, data: List[Dict]):
         # Load data and minimal preprocessing
         self.raw_data = pd.DataFrame(data)
         self.raw_data.rename(

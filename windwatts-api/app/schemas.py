@@ -272,7 +272,7 @@ class NearestLocationsResponse(BaseModel):
     }
 
 
-class TimeseriesBatchRequest(BaseModel):
+class TimeseriesBatchRequestPayload(BaseModel):
     locations: List[GridLocation] = Field(
         ...,
         min_length=1,
@@ -328,7 +328,7 @@ class PowerCurveData(BaseModel):
     )
 
 
-class TimeseriesEnergyRequest(BaseModel):
+class TimeseriesEnergyRequestPayload(BaseModel):
     gridIndex: str = Field(..., description="Grid index identifier")
     turbine: Optional[str] = Field(
         None,
@@ -392,7 +392,7 @@ class TimeseriesEnergyRequest(BaseModel):
     }
 
 
-class TimeseriesEnergyBatchRequest(BaseModel):
+class TimeseriesEnergyBatchRequestPayload(BaseModel):
     locations: List[GridLocation] = Field(
         ...,
         min_length=1,
