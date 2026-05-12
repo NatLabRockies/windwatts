@@ -31,3 +31,4 @@ export type {
   GridPointsResponse,
   AvailableTurbinesResponse,
 } from "./Responses";
+export type { CustomPowerCurve, PowerCurvePoint } from "./CustomPowerCurve";
