@@ -54,11 +54,17 @@ class PowerCurveManager:
         Load power curves from the specified directory.
         """
         for file in os.listdir(directory):
-            if file.endswith(".csv") or file.endswith(".xlsx"):
+            if file.endswith(".csv"):
                 curve_name = os.path.splitext(file)[0]
-                self.power_curves[curve_name] = PowerCurve(
-                    os.path.join(directory, file)
-                )
+                power_curve_path = os.path.join(directory, file)
+                if power_curve_path is not None:
+                    if ".csv" in power_curve_path:
+                        raw_data = pd.read_csv(power_curve_path)
+                    else:
+                        raise ValueError(
+                            "Unsupported powercurve file format (should be .csv)."
+                        )
+                    self.power_curves[curve_name] = PowerCurve(data=raw_data)
 
     def get_curve(self, curve_name: str) -> PowerCurve:
         """
@@ -66,7 +72,6 @@ class PowerCurveManager:
 
         Args:
             curve_name (str): Name of the power curve.
-
         Returns:
             PowerCurve: Corresponding power curve object.
         """
@@ -309,7 +314,7 @@ class PowerCurveManager:
         self,
         df: pd.DataFrame,
         heights: Union[int, List[int]],
-        selected_power_curve: str,
+        selected_power_curve: PowerCurve,
         model_name: str,
         relevant_columns_only: bool = True,
     ) -> tuple[pd.DataFrame, str]:
@@ -357,15 +362,15 @@ class PowerCurveManager:
         # Add temporal dimensions
         df_with_temporal = self._add_temporal_dimensions(df, schema)
 
-        power_curve = self.get_curve(selected_power_curve)
-
         # Timeseries processing
         if self._is_timeseries_schema(schema):
             # Add kW columns for each height
             result = df_with_temporal.copy()
             for ws_col in ws_cols:
                 energy_col = ws_col.replace("windspeed_", "energy_") + "_kwh"
-                result[energy_col] = power_curve.windspeed_to_kw(result, ws_col)
+                result[energy_col] = selected_power_curve.windspeed_to_kw(
+                    result, ws_col
+                )
 
             if relevant_columns_only:
                 # Build column list: temporal columns + windspeed + power
@@ -395,7 +400,7 @@ class PowerCurveManager:
                         mid_df = self._quantiles_to_kw_midpoints(
                             group_sorted[["probability", ws_col]].copy(),
                             ws_col,
-                            power_curve,
+                            selected_power_curve,
                             use_swi=use_swi_eff,
                         )
                         col_dfs.append(mid_df)
@@ -425,7 +430,7 @@ class PowerCurveManager:
                     mid_df = self._quantiles_to_kw_midpoints(
                         group_sorted[["probability", ws_col]].copy(),
                         ws_col,
-                        power_curve,
+                        selected_power_curve,
                         use_swi=use_swi_eff,
                     )
                     col_dfs.append(mid_df)
@@ -443,7 +448,11 @@ class PowerCurveManager:
             raise ValueError(f"Unknown schema type: {schema}")
 
     def prepare_yearly_production_df(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: PowerCurve,
+        model_name: str,
     ) -> pd.DataFrame:
         """
         Prepares yearly average energy production and windspeed dataframe for dependent methods.
@@ -534,7 +543,11 @@ class PowerCurveManager:
         return res
 
     def calculate_yearly_energy_production(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: PowerCurve,
+        model_name: str,
     ) -> dict:
         """
         Computes yearly average energy production and windspeed.
@@ -570,7 +583,11 @@ class PowerCurveManager:
         return result
 
     def calculate_energy_production_summary(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: PowerCurve,
+        model_name: str,
     ) -> dict:
         """
         Computes yearly average energy production and windspeed summary.
@@ -621,7 +638,11 @@ class PowerCurveManager:
         return res_summary.to_dict(orient="index")
 
     def calculate_monthly_energy_production(
-        self, df: pd.DataFrame, height: int, selected_power_curve: str, model_name: str
+        self,
+        df: pd.DataFrame,
+        height: int,
+        selected_power_curve: PowerCurve,
+        model_name: str,
     ) -> dict:
         """
         Computes monthly average energy production.

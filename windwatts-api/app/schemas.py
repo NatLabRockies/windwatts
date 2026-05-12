@@ -272,14 +272,14 @@ class NearestLocationsResponse(BaseModel):
     }
 
 
-class TimeseriesBatchRequest(BaseModel):
+class TimeseriesBatchRequestPayload(BaseModel):
     locations: List[GridLocation] = Field(
         ...,
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
     years: Optional[List[int]] = Field(
-        None, description="Years to download (defaults to sample years if not provided)"
+        None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
     year_range: Optional[str] = Field(
         None, description="Range of years for download. Format: YYYY-YYYY."
@@ -293,7 +293,7 @@ class TimeseriesBatchRequest(BaseModel):
     )
     period: str = Field(
         "hourly",
-        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm aggregated averages)",
     )
 
     model_config = {
@@ -321,15 +321,27 @@ class TimeseriesBatchRequest(BaseModel):
     }
 
 
-class TimeseriesEnergyBatchRequest(BaseModel):
-    locations: List[GridLocation] = Field(
-        ...,
-        min_length=1,
-        description="List of grid locations to download timeseries data for",
+class PowerCurveData(BaseModel):
+    wind_speed: List[float] = Field(..., min_length=2, description="Wind speeds in m/s")
+    turbine_output: List[float] = Field(
+        ..., min_length=2, description="Turbine output in kW"
     )
-    turbine: str = Field(..., description="Turbine for energy estimate calculations")
+
+
+class TimeseriesEnergyRequestPayload(BaseModel):
+    gridIndex: str = Field(..., description="Grid index identifier")
+    turbine: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=50,
+        description="Turbine name. Use built-in reference turbine names (see the turbines/ endpoint) or leave it None for custom power curve.",
+    )
+    custom_power_curve: Optional[PowerCurveData] = Field(
+        None,
+        description="Power curve data for custom curve (param 'turbine' is optional and ignored)",
+    )
     years: Optional[List[int]] = Field(
-        None, description="Years to download (defaults to sample years if not provided)"
+        None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
     year_range: Optional[str] = Field(
         None, description="Range of years for download. Format: YYYY-YYYY."
@@ -343,30 +355,135 @@ class TimeseriesEnergyBatchRequest(BaseModel):
     )
     period: str = Field(
         "hourly",
-        description="Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm aggregated averages)",
     )
     model_config = {
         "json_schema_extra": {
-            "example": {
-                "locations": [
-                    {
-                        "index": "031233",
-                        "latitude": 43.653,
-                        "longitude": -79.47437700534891,
+            "examples": [
+                {
+                    "gridIndex": "031233",
+                    "turbine": "siva_250kW_30m_rotor_diameter",
+                    "years": [2020, 2021, 2022],
+                    "period": "hourly",
+                },
+                {
+                    "gridIndex": "031233",
+                    "years": [2020, 2021, 2022],
+                    "custom_power_curve": {
+                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output": [
+                            0,
+                            0,
+                            0,
+                            0.07,
+                            0.17,
+                            0.33,
+                            0.56,
+                            0.90,
+                            1.34,
+                            1.90,
+                            2.5,
+                        ],
                     },
-                    {
-                        "index": "031234",
-                        "latitude": 43.653,
-                        "longitude": -79.22437433155213,
+                    "period": "hourly",
+                },
+            ]
+        }
+    }
+
+
+class TimeseriesEnergyBatchRequestPayload(BaseModel):
+    locations: List[GridLocation] = Field(
+        ...,
+        min_length=1,
+        description="List of grid locations to download timeseries data for",
+    )
+    turbine: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=50,
+        description="Turbine name. Use built-in reference turbine names (see the turbines/ endpoint) or leave it None for custom power curve.",
+    )
+    custom_power_curve: Optional[PowerCurveData] = Field(
+        None,
+        description="Power curve data for custom curve (param 'turbine' is optional and ignored)",
+    )
+    years: Optional[List[int]] = Field(
+        None, description="Specific years to include. Example: [2015, 2019, 2022]"
+    )
+    year_range: Optional[str] = Field(
+        None, description="Range of years for download. Format: YYYY-YYYY."
+    )
+    year_set: Optional[str] = Field(
+        None, description="Full or Sample dataset to download."
+    )
+    source: str = Field(
+        "s3",
+        description="Data source: athena or s3 (typically s3 for timeseries downloads)",
+    )
+    period: str = Field(
+        "hourly",
+        description="Time aggregation (hourly for raw data, monthly for yyyy-mm aggregated averages)",
+    )
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "locations": [
+                        {
+                            "index": "031233",
+                            "latitude": 43.653,
+                            "longitude": -79.47437700534891,
+                        },
+                        {
+                            "index": "031234",
+                            "latitude": 43.653,
+                            "longitude": -79.22437433155213,
+                        },
+                    ],
+                    "turbine": "siva_250kW_30m_rotor_diameter",
+                    "years": [2020, 2021, 2022],
+                    "source": "s3",
+                    "period": "hourly",
+                    "year_range": "2013-2015",
+                    "year_set": "sample",
+                },
+                {
+                    "locations": [
+                        {
+                            "index": "031233",
+                            "latitude": 43.653,
+                            "longitude": -79.47437700534891,
+                        },
+                        {
+                            "index": "031234",
+                            "latitude": 43.653,
+                            "longitude": -79.22437433155213,
+                        },
+                    ],
+                    "custom_power_curve": {
+                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output": [
+                            0,
+                            0,
+                            0,
+                            0.07,
+                            0.17,
+                            0.33,
+                            0.56,
+                            0.90,
+                            1.34,
+                            1.90,
+                            2.5,
+                        ],
                     },
-                ],
-                "turbine": "siva_250kW_30m_rotor_diameter",
-                "years": [2020, 2021, 2022],
-                "source": "s3",
-                "period": "hourly",
-                "year_range": "2013-2015",
-                "year_set": "sample",
-            }
+                    "years": [2020, 2021, 2022],
+                    "source": "s3",
+                    "period": "hourly",
+                    "year_range": "2013-2015",
+                    "year_set": "sample",
+                },
+            ]
         }
     }
 
@@ -506,3 +623,58 @@ class RoseResponse(BaseModel):
     bin_data: List[RoseBinData] = Field(
         ..., description="Frequency and data values per (sector, bin) cell"
     )
+
+
+class ProductionRequestPayload(BaseModel):
+    lat: float = Field(..., description="Latitude")
+    lng: float = Field(..., description="Longitude")
+    height: int = Field(..., description="Height in meters")
+    turbine: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=50,
+        description="Turbine name. Use built-in reference turbine names (see the turbines/ endpoint) or leave it None for custom power curve.",
+    )
+    custom_power_curve: Optional[PowerCurveData] = Field(
+        None,
+        description="Power curve data for custom curve (param 'turbine' is optional and ignored)",
+    )
+    period: str = Field(
+        "all",
+        description="Time period: all, summary, annual, monthly [depends on the model]",
+    )
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "lat": 40.0,
+                    "lng": -70.0,
+                    "height": 40,
+                    "turbine": "nlr-reference-100kW",
+                    "period": "all",
+                },
+                {
+                    "lat": 40.0,
+                    "lng": -70.0,
+                    "height": 40,
+                    "period": "all",
+                    "custom_power_curve": {
+                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output": [
+                            0,
+                            0,
+                            0,
+                            0.07,
+                            0.17,
+                            0.33,
+                            0.56,
+                            0.90,
+                            1.34,
+                            1.90,
+                            2.5,
+                        ],
+                    },
+                },
+            ]
+        }
+    }

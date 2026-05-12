@@ -12,7 +12,10 @@ from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.utils.data_fetcher_utils import format_coordinate, chunker
-from app.utils.validation import validate_model_exists, validate_limit
+from app.utils.validation import (
+    validate_model_exists,
+    validate_limit,
+)
 from app.utils.wind_data_core import (
     get_windspeed_core,
     get_production_core,
@@ -22,17 +25,20 @@ from app.utils.wind_data_core import (
 )
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
+
 from app.schemas import (
     AvailableTurbinesResponse,
     WindSpeedResponse,
     AvailablePowerCurvesResponse,
     EnergyProductionResponse,
     NearestLocationsResponse,
-    TimeseriesBatchRequest,
-    TimeseriesEnergyBatchRequest,
+    TimeseriesBatchRequestPayload,
+    TimeseriesEnergyRequestPayload,
+    TimeseriesEnergyBatchRequestPayload,
     ModelInfoResponse,
     AvailableModelsResponse,
     RoseResponse,
+    ProductionRequestPayload,
 )
 
 router = APIRouter()
@@ -154,6 +160,7 @@ def get_windspeed(
 @router.get(
     "/{model}/production",
     summary="Get energy production estimate for a location with a power curve",
+    deprecated=True,
     response_model=EnergyProductionResponse,
     response_model_exclude_none=True,
     responses={
@@ -220,7 +227,15 @@ def get_production(
             source = MODEL_CONFIG.get(model, {}).get("source")
 
         return get_production_core(
-            model, lat, lng, height, turbine, period, source, data_fetcher_router
+            model,
+            lat,
+            lng,
+            height,
+            powercurve=turbine,
+            custom_power_curve=None,
+            period=period,
+            source=source,
+            data_fetcher_router=data_fetcher_router,
         )
     except HTTPException:
         raise
@@ -277,6 +292,48 @@ def get_turbines():
     """
     try:
         return _get_available_turbines("turbines")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/{model}/production",
+    summary="Calculate energy production using reference or custom powercurve",
+    response_model=EnergyProductionResponse,
+    response_model_exclude_none=True,
+    responses={
+        200: {
+            "description": "Energy production data retrieved successfully",
+            "model": EnergyProductionResponse,
+        },
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_post_production(
+    payload: ProductionRequestPayload,
+    model: str = Path(
+        ...,
+        description="Data model: era5-quantiles, wtk-timeseries, or ensemble-quantiles",
+    ),
+):
+    try:
+        source = MODEL_CONFIG.get(model, {}).get("source")
+
+        return get_production_core(
+            model,
+            payload.lat,
+            payload.lng,
+            payload.height,
+            payload.turbine,
+            payload.custom_power_curve,
+            payload.period,
+            source,
+            data_fetcher_router,
+        )
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -450,7 +507,9 @@ def get_model_info(
     },
 )
 def download_timeseries(
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    model: str = Path(
+        ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
+    ),
     gridIndex: str = Query(..., description="Grid index identifier"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
@@ -475,11 +534,11 @@ def download_timeseries(
 
     Returns raw timeseries data for the specified grid index and years.
 
-    - **model**: Data model (era5-timeseries)
+    - **model**: Data model, for example, era5-timeseries or wtk-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
-    - **years**: List of years to include (optional)
+    - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
     - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     - **source**: Data source (defaults to S3)
     """
@@ -521,8 +580,10 @@ def download_timeseries(
     },
 )
 def download_timeseries_batch(
-    payload: TimeseriesBatchRequest,
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    payload: TimeseriesBatchRequestPayload,
+    model: str = Path(
+        ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
+    ),
 ):
     """
     Download timeseries data for multiple grid points as a ZIP archive.
@@ -533,7 +594,7 @@ def download_timeseries_batch(
     - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
-      - **years**: List of years to include (optional, defaults to sample years)
+      - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
       - **year_set**: Full or Sample dataset to download (optional)
       - **source**: Data source (optional, defaults to s3)
@@ -577,6 +638,7 @@ def download_timeseries_batch(
 @router.get(
     "/{model}/timeseries/energy",
     summary="Download timeseries CSV data along with energy estimates for a selected turbine.",
+    deprecated=True,
     responses={
         200: {"description": "CSV file downloaded successfully"},
         400: {"description": "Bad request - invalid parameters"},
@@ -585,7 +647,7 @@ def download_timeseries_batch(
     },
 )
 def download_energy_timeseries(
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    model: str = Path(..., description="Data model, for example, era5-timeseries"),
     gridIndex: str = Query(..., description="Grid index indentifier"),
     turbine: str = Query(..., description="Turbine for energy estimates"),
     year_range: Optional[str] = Query(
@@ -595,7 +657,8 @@ def download_energy_timeseries(
         None, description="Download full or sample dataset"
     ),
     years: Optional[List[int]] = Query(
-        None, description="Years to download (default to sample years)"
+        None,
+        description="Specific years to include (optional). Example: [2015, 2019, 2022]",
     ),
     period: Optional[str] = Query(
         "hourly",
@@ -609,12 +672,14 @@ def download_energy_timeseries(
     """
     Download energy timeseries data as CSV for a specific grid point.
 
-    - **model**: Data model (era5-timeseries)
+    Deprecated: Use POST /{model}/timeseries/energy instead for custom power curve support.
+
+    - **model**: Data model, for example, era5-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
     - **turbine**: Turbine model to use for energy calculations
     - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
     - **year_set**: Full or Sample dataset to download (optional)
-    - **years**: List of years to include (optional)
+    - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
     - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     - **source**: Data source (defaults to S3)
     """
@@ -623,19 +688,67 @@ def download_energy_timeseries(
             model,
             [gridIndex],
             turbine,
-            period,
-            source,
-            data_fetcher_router,
-            years,
-            year_range,
-            year_set,
+            custom_power_curve=None,
+            period=period,
+            source=source,
+            data_fetcher_router=data_fetcher_router,
+            years=years,
+            year_range=year_range,
+            year_set=year_set,
         )
 
         return StreamingResponse(
             iter([csv_content]),
             media_type="text/csv; charset=utf-8",
             headers={
-                "Content-Disposition": f'attachment; filename="wind_&_energy_data_{gridIndex}.csv"'
+                "Content-Disposition": f'attachment; filename="wind_energy_data_{gridIndex}.csv"'
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/{model}/timeseries/energy",
+    summary="Download timeseries CSV data along with energy estimates using reference or custom powercurve.",
+    responses={
+        200: {"description": "CSV file downloaded successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def post_energy_timeseries(
+    payload: TimeseriesEnergyRequestPayload,
+    model: str = Path(..., description="Data model, for example, era5-timeseries"),
+):
+    """
+    Download energy timeseries data as CSV for a specific grid point using reference or custom power curve.
+
+    - **model**: Data model, for example, era5-timeseries
+    - **payload**: Request body containing grid index, turbine info, and optional custom curve data
+    """
+    try:
+        csv_content = get_timeseries_energy_core(
+            model,
+            [payload.gridIndex],
+            payload.turbine,
+            payload.custom_power_curve,
+            payload.period,
+            payload.source,
+            data_fetcher_router,
+            payload.years,
+            payload.year_range,
+            payload.year_set,
+        )
+
+        return StreamingResponse(
+            iter([csv_content]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="wind_energy_data_{payload.gridIndex}.csv"'
             },
         )
     except HTTPException:
@@ -646,7 +759,7 @@ def download_energy_timeseries(
 
 @router.post(
     "/{model}/timeseries/energy/batch",
-    summary="Download multiple timeseries CSV data along with energy estimates for a selected turbine as a ZIP file.",
+    summary="Download multiple timeseries CSV data along with energy estimates using reference or custom powercurve as a ZIP file.",
     responses={
         200: {"description": "ZIP file downloaded successfully"},
         400: {"description": "Bad request - invalid parameters"},
@@ -655,8 +768,8 @@ def download_energy_timeseries(
     },
 )
 def download_timeseries_energy_batch(
-    payload: TimeseriesEnergyBatchRequest,
-    model: str = Path(..., description="Data model: era5-timeseries"),
+    payload: TimeseriesEnergyBatchRequestPayload,
+    model: str = Path(..., description="Data model, for example, era5-timeseries"),
 ):
     """
     Download timeseries data along with energy estimates for multiple grid points as a ZIP archive.
@@ -664,8 +777,9 @@ def download_timeseries_energy_batch(
     - **model**: Data model (era5-timeseries)
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
-      - **turbine**: Turbine model to use for energy calculations
-      - **years**: List of years to include (optional, defaults to sample years)
+      - **turbine**:  Turbine name (built-in reference only), ignored for custom power curve.
+      - **custom_power_curve**: Power curve data (required for custom curve)
+      - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
       - **year_set**: Full or Sample dataset to download (optional)
       - **source**: Data source (optional, defaults to s3)
@@ -681,6 +795,7 @@ def download_timeseries_energy_batch(
                     model,
                     [loc.index],
                     payload.turbine,
+                    payload.custom_power_curve,
                     payload.period,
                     payload.source,
                     data_fetcher_router,
@@ -688,13 +803,13 @@ def download_timeseries_energy_batch(
                     payload.year_range,
                     payload.year_set,
                 )
-                file_name = f"wind_&_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
+                file_name = f"wind_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
 
         spooled.seek(0)
 
         headers = {
-            "Content-Disposition": f'attachment; filename="wind_&_energy_data_{model}_{len(payload.locations)}_points.zip"'
+            "Content-Disposition": f'attachment; filename="wind_energy_data_{model}_{len(payload.locations)}_points.zip"'
         }
 
         return StreamingResponse(

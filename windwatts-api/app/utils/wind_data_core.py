@@ -13,6 +13,7 @@ from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 import pandas as pd
 import numpy as np
 import bisect
+from app.schemas import PowerCurveData
 
 from app.utils.validation import (
     validate_lat,
@@ -78,7 +79,8 @@ def get_production_core(
     lat: float,
     lng: float,
     height: int,
-    powercurve: str,
+    powercurve: Optional[str],
+    custom_power_curve: Optional[PowerCurveData],
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -92,6 +94,7 @@ def get_production_core(
         lng (float): Longitude of the location.
         height (int): Height in meters.
         powercurve (str): Power curve name.
+        custom_power_curve (PowerCurveData): custom power curve data with windspeed and turbine output.
         period (str): Time period to retrieve (all, summary, annual, monthly).
         source (str): Source of the data.
         data_fetcher_router: Router instance for fetching data.
@@ -103,7 +106,7 @@ def get_production_core(
     lng = validate_lng(model, lng)
     model = validate_model_exists(model)
     height = validate_height(model, height, "windspeed")
-    powercurve = validate_powercurve(powercurve)
+    powercurve = validate_powercurve(powercurve, custom_power_curve)
     source = validate_source(model, source)
     period = validate_period_type(model, period, "production")
 
@@ -272,7 +275,8 @@ def get_timeseries_core(
 def get_timeseries_energy_core(
     model: str,
     gridIndices: List[str],
-    turbine: str,
+    turbine: Optional[str],
+    custom_power_curve: Optional[PowerCurveData],
     period: str,
     source: str,
     data_fetcher_router: DataFetcherRouter,
@@ -281,7 +285,7 @@ def get_timeseries_energy_core(
     year_set: Optional[str] = None,
     return_dataframe: bool = False,
 ):
-    turbine = validate_powercurve(turbine)
+    turbine = validate_powercurve(turbine, custom_power_curve)
     heights = MODEL_CONFIG[model].get("heights").get("windspeed")
 
     df = get_timeseries_core(

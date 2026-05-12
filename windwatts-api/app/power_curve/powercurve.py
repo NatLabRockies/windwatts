@@ -1,27 +1,16 @@
 import pandas as pd
 import numpy as np
 from scipy import interpolate
+from typing import List, Dict
 
 
 class PowerCurve(object):
-    def __init__(self, power_curve_path):
+    def __init__(self, data: List[Dict]):
         # Load data and minimal preprocessing
-
-        if ".xslx" in power_curve_path:
-            self.raw_data = pd.read_excel(power_curve_path)
-            self.raw_data.rename(
-                columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
-            )
-        elif ".csv" in power_curve_path:
-            self.raw_data = pd.read_csv(power_curve_path)
-            self.raw_data.rename(
-                columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
-            )
-            # print(self.raw_data.columns)
-        else:
-            raise ValueError(
-                "Unsupported powercurve file format (should be .xslx or .csv)."
-            )
+        self.raw_data = pd.DataFrame(data)
+        self.raw_data.rename(
+            columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
+        )
 
         # Add (0,0) if not there already
         if self.raw_data["ws"].min() > 0:
