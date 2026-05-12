@@ -8,13 +8,13 @@ cd windwatts-ui || exit 1
 FILES="$@"
 if [ -z "$FILES" ]; then
     FILES="."
-    CMD_LINT="yarn lint"
-    CMD_FMT="yarn check-format"
+    CMD_LINT="npm run lint"
+    CMD_FMT="npm run check-format"
 else
-    # Use 'yarn run' to invoke binaries locally
+    # Use npx to invoke binaries locally
     # Note: FILES usually contains absolute paths from lint-staged
-    CMD_LINT="yarn run eslint $FILES"
-    CMD_FMT="yarn run prettier --check $FILES"
+    CMD_LINT="npx eslint $FILES"
+    CMD_FMT="npx prettier --check $FILES"
 fi
 
 echo "Running ESLint..."
@@ -23,7 +23,7 @@ if ! $CMD_LINT; then
     echo "--------------------------------------------------------" >&2
     echo "❌ ESLint check failed!" >&2
     echo "   Please run linting locally before committing:" >&2
-    echo "   cd windwatts-ui && yarn lint" >&2
+    echo "   cd windwatts-ui && npm run lint" >&2
     echo "--------------------------------------------------------" >&2
     exit 1
 fi
@@ -34,7 +34,7 @@ if ! $CMD_FMT; then
     echo "--------------------------------------------------------" >&2
     echo "❌ Prettier check failed!" >&2
     echo "   Please run formatting locally before committing:" >&2
-    echo "   cd windwatts-ui && yarn format" >&2
+    echo "   cd windwatts-ui && npm run format" >&2
     echo "--------------------------------------------------------" >&2
     exit 1
 fi

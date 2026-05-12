@@ -5,13 +5,12 @@ The frontend is a React application built with Vite and Material-UI.
 ## Prerequisites
 
 -   Node.js >= 22.14.0
--   Yarn
 
 ## Setup
 
 ```bash
 cd windwatts-ui
-yarn install
+npm install
 ```
 
 ## Configuration
@@ -31,11 +30,11 @@ For production, create `.env.production`.
 Start the dev server:
 
 ```bash
-yarn dev
+npm run dev
 ```
 
 ## Testing & Linting
 
--   **Lint**: `yarn lint`
--   **Test**: `yarn test`
--   **Format**: `yarn format`
+-   **Lint**: `npm run lint`
+-   **Test**: `npm test`
+-   **Format**: `npm run format`
