@@ -14,6 +14,7 @@ import {
 } from "./SettingsContext";
 import { UnitsContext } from "./UnitsContext";
 import { DataModel } from "../types";
+import type { CustomPowerCurve } from "../types";
 import { percentToFactor } from "../utils";
 import {
   parseUrlParams,
@@ -21,12 +22,31 @@ import {
   hasLaunchParams,
   URL_PARAM_DEFAULTS,
 } from "../utils/urlParams";
+import { idbGetAll, idbDelete, STORES } from "../services/idb";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { updateUnit } = useContext(UnitsContext);
 
   // Parse URL params once and cache the result
   const urlParamsRef = useRef(parseUrlParams());
+
+  const [customCurves, setCustomCurves] = useState<CustomPowerCurve[]>([]);
+
+  useEffect(() => {
+    idbGetAll<CustomPowerCurve>(STORES.CUSTOM_TURBINES)
+      .then((list) => list.sort((a, b) => a.createdAt - b.createdAt))
+      .then(setCustomCurves)
+      .catch(console.error);
+  }, []);
+
+  const addCustomCurve = useCallback((curve: CustomPowerCurve) => {
+    setCustomCurves((prev) => [...prev, curve]);
+  }, []);
+
+  const removeCustomCurve = useCallback((id: string) => {
+    idbDelete(STORES.CUSTOM_TURBINES, id).catch(console.error);
+    setCustomCurves((prev) => prev.filter((c) => c.id !== id));
+  }, []);
 
   const [settings, setSettings] = useState<StoredSettings>(() => {
     const urlParams = urlParamsRef.current;
@@ -190,6 +210,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setTurbine,
       preferredModel: settings.preferredModel,
       setPreferredModel,
+      customCurves,
+      addCustomCurve,
+      removeCustomCurve,
       lossAssumptionFactor:
         settings.lossAssumptionFactor ?? defaultValues.lossAssumptionFactor,
       lossAssumptionPercent: Math.round(
@@ -213,6 +236,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       settings.preferredModel,
       settings.lossAssumptionFactor,
       settings.windspeedUnit,
+      customCurves,
       toggleSettings,
       toggleResults,
       setCurrentPosition,
@@ -220,6 +244,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setHubHeight,
       setTurbine,
       setPreferredModel,
+      addCustomCurve,
+      removeCustomCurve,
       setLossAssumptionFactor,
       setLossAssumptionPercent,
       setWindspeedUnit,
