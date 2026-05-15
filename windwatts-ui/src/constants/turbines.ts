@@ -1,8 +1,8 @@
 export interface TurbineInfo {
   label: string; // Displayed Label
-  minHeight: number; // Preferred/ Allowable min height
-  maxHeight: number; // Preferred/ Allowable max height
-  info: string; // Citation and notes for height range
+  minHeight?: number; // Preferred/ Allowable min height (undefined = no constraint)
+  maxHeight?: number; // Preferred/ Allowable max height (undefined = no constraint)
+  info?: string; // Citation and notes for height range
 }
 
 /**
