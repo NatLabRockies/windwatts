@@ -57,7 +57,7 @@ export const useProductionData = () => {
         lng: lng!,
         hubHeight,
         dataModel,
-        period: "all",
+        period: "full",
         ...(isCustomTurbine && customCurve
           ? { customPowerCurve: customCurve.data }
           : { turbine }),
