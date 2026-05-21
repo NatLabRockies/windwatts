@@ -179,3 +179,11 @@ export const TURBINE_LABEL: Record<string, string> = Object.entries(
 );
 
 export const VALID_TURBINES = Object.keys(TURBINE_DATA);
+
+/** Fallback turbine list used when the API has not yet responded. */
+export const DEFAULT_TURBINES = [
+  "nlr-reference-2.5kW",
+  "nlr-reference-100kW",
+  "nlr-reference-250kW",
+  "nlr-reference-2000kW",
+];
