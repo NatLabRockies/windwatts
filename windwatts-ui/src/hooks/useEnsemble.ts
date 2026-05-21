@@ -14,11 +14,18 @@ export const useEnsemble = () => {
     turbine,
     preferredModel: dataModel,
     lossAssumptionFactor,
+    customCurves,
   } = useContext(SettingsContext);
 
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
+
+  const isCustomTurbine = turbine.startsWith("custom-");
+  const customCurve = isCustomTurbine
+    ? (customCurves.find((c) => c.id === turbine) ?? null)
+    : null;
+
   const shouldFetch = !!(
     lat &&
     lng &&
@@ -26,7 +33,8 @@ export const useEnsemble = () => {
     turbine &&
     dataModel &&
     dataModel === "ensemble-quantiles" &&
-    !outOfBounds
+    !outOfBounds &&
+    (!isCustomTurbine || customCurve !== null)
   );
 
   // Wind data SWR
@@ -72,9 +80,10 @@ export const useEnsemble = () => {
       turbine,
       dataModel,
       period: "all",
+      isCustom: isCustomTurbine,
       type: "production",
     });
-  }, [shouldFetch, lat, lng, hubHeight, turbine, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, turbine, dataModel, isCustomTurbine]);
 
   const {
     isLoading: prodLoading,
@@ -87,9 +96,11 @@ export const useEnsemble = () => {
         lat: lat!,
         lng: lng!,
         hubHeight,
-        turbine: turbine,
         dataModel,
         period: "all",
+        ...(isCustomTurbine && customCurve
+          ? { customPowerCurve: customCurve.data }
+          : { turbine }),
       }),
     {
       revalidateOnFocus: false,
