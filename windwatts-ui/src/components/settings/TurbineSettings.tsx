@@ -13,7 +13,7 @@ import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
 import { getAvailableTurbines } from "../../services/api";
 import { TURBINE_LABEL, TURBINE_DATA, DEFAULT_TURBINES } from "../../constants";
-import { CustomTurbinesManager } from "./CustomTurbinesManager";
+import { CustomTurbineManager } from "./CustomTurbineManager";
 
 export function TurbineSettings() {
   const { turbine, setTurbine, customCurves } = useContext(SettingsContext);
@@ -52,7 +52,7 @@ export function TurbineSettings() {
         }}
       >
         <Typography variant="body2">Select a turbine option:</Typography>
-        <CustomTurbinesManager />
+        <CustomTurbineManager />
       </Box>
 
       <FormControl component="fieldset" sx={{ width: "100%" }}>
