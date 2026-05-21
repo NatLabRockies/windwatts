@@ -12,6 +12,7 @@ export const useProductionData = () => {
     turbine,
     preferredModel,
     lossAssumptionFactor,
+    customCurves,
   } = useContext(SettingsContext);
   // Always use ERA5 for production calculations, even when ensemble is selected
   const dataModel =
@@ -19,8 +20,20 @@ export const useProductionData = () => {
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
+
+  const isCustomTurbine = turbine.startsWith("custom-");
+  const customCurve = isCustomTurbine
+    ? (customCurves.find((c) => c.id === turbine) ?? null)
+    : null;
+
   const shouldFetch =
-    lat && lng && hubHeight && turbine && dataModel && !outOfBounds;
+    lat &&
+    lng &&
+    hubHeight &&
+    turbine &&
+    dataModel &&
+    !outOfBounds &&
+    (!isCustomTurbine || customCurve !== null);
 
   // Memoize the SWR key to prevent unnecessary re-renders
   const swrKey = useMemo(() => {
@@ -32,8 +45,9 @@ export const useProductionData = () => {
       turbine,
       dataModel,
       period: "full",
+      isCustom: isCustomTurbine,
     });
-  }, [shouldFetch, lat, lng, hubHeight, turbine, dataModel]);
+  }, [shouldFetch, lat, lng, hubHeight, turbine, dataModel, isCustomTurbine]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
@@ -42,9 +56,11 @@ export const useProductionData = () => {
         lat: lat!,
         lng: lng!,
         hubHeight,
-        turbine: turbine,
         dataModel,
-        period: "full",
+        period: "all",
+        ...(isCustomTurbine && customCurve
+          ? { customPowerCurve: customCurve.data }
+          : { turbine }),
       }),
     {
       revalidateOnFocus: false,
