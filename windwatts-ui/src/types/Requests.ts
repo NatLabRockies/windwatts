@@ -1,5 +1,6 @@
 import { DataModel } from "./DataModel";
 import { GridLocation } from "./GridLocation";
+import { PowerCurvePoint } from "./CustomPowerCurve";
 
 export type WindspeedPeriod = "all" | "annual" | "monthly" | "hourly";
 
@@ -23,9 +24,23 @@ export interface EnergyProductionRequest {
   lat: number;
   lng: number;
   hubHeight: number;
-  turbine: string;
   dataModel: DataModel;
   period?: string;
+  turbine?: string; // Reference turbine ID
+  customPowerCurve?: PowerCurvePoint[]; // Custom power curve data — takes precedence
+}
+
+/** Serialised body sent to POST /{model}/production */
+export interface ProductionRequestBody {
+  lat: number;
+  lng: number;
+  height: number;
+  period: string;
+  turbine?: string;
+  custom_power_curve?: {
+    wind_speed: number[];
+    turbine_output: number[];
+  };
 }
 
 export interface NearestGridLocationRequest {

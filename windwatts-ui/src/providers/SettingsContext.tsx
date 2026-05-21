@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import { DataModel } from "../types";
+import type { CustomPowerCurve } from "../types";
 
 export interface CurrentPosition {
   lat: number;
@@ -19,6 +20,9 @@ export interface StoredSettings {
 }
 
 export interface Settings extends StoredSettings {
+  customCurves: CustomPowerCurve[];
+  addCustomCurve: (curve: CustomPowerCurve) => void;
+  removeCustomCurve: (id: string) => void;
   lossAssumptionPercent: number;
   toggleSettings: () => void;
   toggleResults: () => void;
@@ -51,6 +55,9 @@ export const defaultValues: StoredSettings = {
 
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
+  customCurves: [],
+  addCustomCurve: () => {},
+  removeCustomCurve: () => {},
   lossAssumptionPercent: 0,
   toggleSettings: () => {},
   toggleResults: () => {},

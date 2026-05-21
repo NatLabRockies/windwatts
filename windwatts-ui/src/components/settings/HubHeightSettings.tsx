@@ -9,7 +9,7 @@ import {
   IconButton,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { HUB_HEIGHTS, TURBINE_DATA, TurbineInfo } from "../../constants";
+import { HUB_HEIGHTS, TURBINE_DATA } from "../../constants";
 
 export function HubHeightSettings() {
   const {
@@ -51,13 +51,17 @@ export function HubHeightSettings() {
     }
   };
 
-  const turbineData: TurbineInfo | undefined = TURBINE_DATA[turbine];
+  const turbineInfo = TURBINE_DATA[turbine];
+  const hasHeightRange =
+    turbineInfo?.minHeight !== undefined &&
+    turbineInfo?.maxHeight !== undefined;
 
-  const isHeightInRange: boolean = turbineData
-    ? hubHeight >= turbineData.minHeight && hubHeight <= turbineData.maxHeight
+  const isHeightInRange: boolean = hasHeightRange
+    ? hubHeight >= turbineInfo!.minHeight! &&
+      hubHeight <= turbineInfo!.maxHeight!
     : true;
 
-  const validationColor: "primary" | "success" | "warning" = turbineData
+  const validationColor: "primary" | "success" | "warning" = hasHeightRange
     ? isHeightInRange
       ? "success"
       : "warning"
@@ -72,7 +76,7 @@ export function HubHeightSettings() {
         Choose nearest hub height (m):
       </Typography>
 
-      {turbineData && (
+      {hasHeightRange && (
         <Paper
           sx={{
             p: 1,
@@ -86,10 +90,10 @@ export function HubHeightSettings() {
             <Typography variant="body2">
               <strong>
                 {isHeightInRange ? "Within" : "Outside"} recommended range - (
-                {turbineData.minHeight}m - {turbineData.maxHeight}m)
+                {turbineInfo!.minHeight}m - {turbineInfo!.maxHeight}m)
               </strong>
             </Typography>
-            <Tooltip title={turbineData.info} arrow placement="right">
+            <Tooltip title={turbineInfo?.info ?? ""} arrow placement="right">
               <IconButton size="small">
                 <InfoOutlinedIcon fontSize="small" />
               </IconButton>

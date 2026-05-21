@@ -1,40 +1,41 @@
-import { Box, FormControl, Typography, Select, MenuItem } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  Typography,
+  Select,
+  MenuItem,
+  Chip,
+  Divider,
+} from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
 import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
 import { getAvailableTurbines } from "../../services/api";
-import { TURBINE_LABEL, TURBINE_DATA } from "../../constants";
-
-const DefaultTurbineOptions = [
-  "nlr-reference-2.5kW",
-  "nlr-reference-100kW",
-  "nlr-reference-250kW",
-  "nlr-reference-2000kW",
-];
+import { TURBINE_LABEL, TURBINE_DATA, DEFAULT_TURBINES } from "../../constants";
+import { CustomTurbineManager } from "./CustomTurbineManager";
 
 export function TurbineSettings() {
-  const { turbine, setTurbine } = useContext(SettingsContext);
+  const { turbine, setTurbine, customCurves } = useContext(SettingsContext);
 
-  // Fetch available turbines from the API
   const { data } = useSWR("/api/v1/turbines", getAvailableTurbines, {
-    fallbackData: { available_turbines: DefaultTurbineOptions },
+    fallbackData: { available_turbines: DEFAULT_TURBINES },
   });
 
-  const turbineOptions: string[] = data?.available_turbines || [];
+  const referenceTurbines: string[] = data?.available_turbines || [];
 
   const handleTurbineChange = (event: SelectChangeEvent<string>) => {
     setTurbine(event.target.value as string);
   };
 
-  const getTurbineLabel = (turbineId: string): string => {
-    const turbineInfo = TURBINE_DATA[turbineId];
-    const baseName = TURBINE_LABEL[turbineId] || turbineId;
-
-    if (turbineInfo) {
-      return `${baseName} (${turbineInfo.minHeight}-${turbineInfo.maxHeight}m)`;
-    }
-    return baseName;
+  const getTurbineLabel = (id: string): string => {
+    const custom = customCurves.find((c) => c.id === id);
+    if (custom) return custom.name;
+    const info = TURBINE_DATA[id];
+    const base = TURBINE_LABEL[id] || id;
+    return info?.minHeight !== undefined && info?.maxHeight !== undefined
+      ? `${base} (${info.minHeight}-${info.maxHeight}m)`
+      : base;
   };
 
   return (
@@ -42,35 +43,55 @@ export function TurbineSettings() {
       <Typography variant="h6" gutterBottom>
         Turbine
       </Typography>
-      <Typography variant="body2" gutterBottom>
-        Select a turbine option:
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 0.5,
+        }}
+      >
+        <Typography variant="body2">Select a turbine option:</Typography>
+        <CustomTurbineManager />
+      </Box>
 
       <FormControl component="fieldset" sx={{ width: "100%" }}>
-        {turbineOptions.length > 0 ? (
-          <>
-            {/* <InputLabel id="power-curve-label">Turbine</InputLabel> */}
-            <Select
-              labelId="power-curve-label"
-              id="power-curve-select"
-              value={turbine}
-              // label="Turbine"
-              onChange={handleTurbineChange}
-              fullWidth
-              size="small"
-            >
-              {turbineOptions.map((option, idx) => (
-                <MenuItem key={"power_curve_option_" + idx} value={option}>
-                  {getTurbineLabel(option)}
+        {referenceTurbines.length > 0 || customCurves.length > 0 ? (
+          <Select
+            labelId="turbine-select-label"
+            id="turbine-select"
+            value={turbine}
+            onChange={handleTurbineChange}
+            fullWidth
+            size="small"
+            renderValue={(selected) => getTurbineLabel(selected)}
+          >
+            {referenceTurbines.map((option, idx) => (
+              <MenuItem key={"reference_turbine_" + idx} value={option}>
+                {getTurbineLabel(option)}
+              </MenuItem>
+            ))}
+            {customCurves.length > 0 && [
+              <Divider key="custom-divider" />,
+              ...customCurves.map((curve) => (
+                <MenuItem key={curve.id} value={curve.id}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {curve.name}
+                    <Chip
+                      label="custom"
+                      size="small"
+                      sx={{ height: 18, fontSize: "0.65rem" }}
+                    />
+                  </Box>
                 </MenuItem>
-              ))}
-            </Select>
-          </>
+              )),
+            ]}
+          </Select>
         ) : (
-          <Typography variant="body2">Loading turbine options...</Typography>
+          <Typography variant="body2">Loading turbine options…</Typography>
         )}
 
-        <Typography variant="caption" marginTop={2} gutterBottom>
+        <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
           * Note: () = Recommended hub height range.
         </Typography>
       </FormControl>

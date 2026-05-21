@@ -1,8 +1,8 @@
 export interface TurbineInfo {
   label: string; // Displayed Label
-  minHeight: number; // Preferred/ Allowable min height
-  maxHeight: number; // Preferred/ Allowable max height
-  info: string; // Citation and notes for height range
+  minHeight?: number; // Preferred/ Allowable min height (undefined = no constraint)
+  maxHeight?: number; // Preferred/ Allowable max height (undefined = no constraint)
+  info?: string; // Citation and notes for height range
 }
 
 /**
@@ -179,3 +179,11 @@ export const TURBINE_LABEL: Record<string, string> = Object.entries(
 );
 
 export const VALID_TURBINES = Object.keys(TURBINE_DATA);
+
+/** Fallback turbine list used when the API has not yet responded. */
+export const DEFAULT_TURBINES = [
+  "nlr-reference-2.5kW",
+  "nlr-reference-100kW",
+  "nlr-reference-250kW",
+  "nlr-reference-2000kW",
+];

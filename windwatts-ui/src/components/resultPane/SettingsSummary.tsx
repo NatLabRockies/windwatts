@@ -12,7 +12,13 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 export const SettingsSummary = () => {
-  const { currentPosition, hubHeight, turbine } = useContext(SettingsContext);
+  const { currentPosition, hubHeight, turbine, customCurves } =
+    useContext(SettingsContext);
+
+  const turbineLabel =
+    customCurves.find((c) => c.id === turbine)?.name ??
+    TURBINE_LABEL[turbine] ??
+    turbine;
 
   const { lat, lng } = currentPosition ?? {};
 
@@ -30,7 +36,7 @@ export const SettingsSummary = () => {
     },
     {
       title: "Turbine",
-      data: turbine ? `${TURBINE_LABEL[turbine]}` : "Not selected",
+      data: turbineLabel,
     },
   ];
 
