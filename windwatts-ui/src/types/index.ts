@@ -6,6 +6,7 @@ export type {
   WindspeedPeriod,
   WindRoseRequest,
   EnergyProductionRequest,
+  ProductionRequestBody,
   NearestGridLocationRequest,
   CSVExportRequest,
   CSVBatchExportRequest,

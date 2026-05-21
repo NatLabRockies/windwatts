@@ -1,5 +1,4 @@
 import {
-  EnergyProductionRequest,
   WindspeedByLatLngRequest,
   WindspeedPeriod,
   WindspeedResponse,
@@ -16,6 +15,8 @@ import {
   NearestGridLocationRequest,
   CSVExportRequest,
   CSVBatchExportRequest,
+  EnergyProductionRequest,
+  ProductionRequestBody,
 } from "../types";
 
 export const fetchWrapper = async <T>(
@@ -125,24 +126,35 @@ export const getWindRose = async ({
   );
 };
 
-// V1 API:
+// V1 API: POST /{model}/production
 // period options: "all" (default), "summary", "annual", "monthly" (varies by model)
+// customPowerCurve takes precedence over reference turbine
 export const getEnergyProduction = async ({
   lat,
   lng,
   hubHeight,
   turbine,
+  customPowerCurve,
   dataModel,
   period = "all",
 }: EnergyProductionRequest): Promise<EnergyProductionResponse> => {
-  const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&turbine=${turbine}&period=${period}`;
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  return fetchWrapper<EnergyProductionResponse>(url, options);
+  const url = `/api/v1/${dataModel}/production`;
+  const body: ProductionRequestBody = { lat, lng, height: hubHeight, period };
+
+  if (customPowerCurve && customPowerCurve.length > 0) {
+    body.custom_power_curve = {
+      wind_speed: customPowerCurve.map((p) => p.ws),
+      turbine_output: customPowerCurve.map((p) => p.kw),
+    };
+  } else if (turbine) {
+    body.turbine = turbine;
+  }
+
+  return fetchWrapper<EnergyProductionResponse>(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 };
 
 // export const getAvailablePowerCurves = async ({
