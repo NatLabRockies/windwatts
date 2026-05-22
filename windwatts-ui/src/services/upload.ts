@@ -31,7 +31,7 @@ export function parsePowerCurveCSV(text: string): PowerCurvePoint[] {
 
   if (lines.length < 2) {
     throw new Error(
-      "CSV file must have a header row and at least one data row."
+      "CSV file must have a header row and at least 2 data rows."
     );
   }
 
@@ -49,7 +49,8 @@ export function parsePowerCurveCSV(text: string): PowerCurvePoint[] {
 
   if (wsIdx === -1 || kwIdx === -1) {
     throw new Error(
-      'CSV must contain columns "Wind Speed (m/s)" and "Turbine Output".'
+      'CSV must contain a wind speed column ("Wind Speed (m/s)", "Wind Speed", or "WS") ' +
+        'and a power column ("Turbine Output", "Power", or "kW").'
     );
   }
 
