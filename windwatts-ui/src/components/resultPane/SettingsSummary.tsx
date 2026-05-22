@@ -2,7 +2,7 @@ import { Typography, Paper, Grid, Divider } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
-import { TURBINE_LABEL } from "../../constants";
+import { getTurbineLabel } from "../../utils";
 
 const Item = styled(Paper)(({ theme }) => ({
   ...theme.typography.body2,
@@ -15,10 +15,7 @@ export const SettingsSummary = () => {
   const { currentPosition, hubHeight, turbine, customCurves } =
     useContext(SettingsContext);
 
-  const turbineLabel =
-    customCurves.find((c) => c.id === turbine)?.name ??
-    TURBINE_LABEL[turbine] ??
-    turbine;
+  const turbineLabel = getTurbineLabel(turbine, customCurves);
 
   const { lat, lng } = currentPosition ?? {};
 

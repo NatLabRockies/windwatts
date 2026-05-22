@@ -2,7 +2,7 @@ import { useContext, useMemo } from "react";
 import useSWR from "swr";
 import { SettingsContext } from "../providers/SettingsContext";
 import { getEnergyProduction } from "../services/api";
-import { isOutOfBounds } from "../utils";
+import { isOutOfBounds, isCustomTurbineId, resolveCustomCurve } from "../utils";
 import { useLossAdjustedProductionData } from ".";
 
 export const useProductionData = () => {
@@ -21,10 +21,8 @@ export const useProductionData = () => {
   const outOfBounds =
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
 
-  const isCustomTurbine = turbine.startsWith("custom-");
-  const customCurve = isCustomTurbine
-    ? (customCurves.find((c) => c.id === turbine) ?? null)
-    : null;
+  const isCustomTurbine = isCustomTurbineId(turbine);
+  const customCurve = resolveCustomCurve(turbine, customCurves);
 
   const shouldFetch =
     lat &&

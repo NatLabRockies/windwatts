@@ -5,7 +5,12 @@ import {
   getEnergyProduction,
   getWindspeedGlobalAverage,
 } from "../services/api";
-import { isOutOfBounds, applyLoss } from "../utils";
+import {
+  isOutOfBounds,
+  applyLoss,
+  isCustomTurbineId,
+  resolveCustomCurve,
+} from "../utils";
 
 export const useEnsemble = () => {
   const {
@@ -21,10 +26,8 @@ export const useEnsemble = () => {
   const outOfBounds =
     lat && lng && dataModel ? isOutOfBounds(lat, lng, dataModel) : false;
 
-  const isCustomTurbine = turbine.startsWith("custom-");
-  const customCurve = isCustomTurbine
-    ? (customCurves.find((c) => c.id === turbine) ?? null)
-    : null;
+  const isCustomTurbine = isCustomTurbineId(turbine);
+  const customCurve = resolveCustomCurve(turbine, customCurves);
 
   const shouldFetch = !!(
     lat &&
