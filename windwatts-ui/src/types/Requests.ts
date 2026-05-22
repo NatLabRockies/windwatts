@@ -30,17 +30,34 @@ export interface EnergyProductionRequest {
   customPowerCurve?: PowerCurvePoint[]; // Custom power curve data — takes precedence
 }
 
-/** Serialised body sent to POST /{model}/production */
+export interface PowerCurveBody {
+  wind_speed: number[];
+  turbine_output: number[];
+}
+
 export interface ProductionRequestBody {
   lat: number;
   lng: number;
   height: number;
   period: string;
   turbine?: string;
-  custom_power_curve?: {
-    wind_speed: number[];
-    turbine_output: number[];
-  };
+  custom_power_curve?: PowerCurveBody;
+}
+
+export interface TimeseriesEnergyRequestBody {
+  gridIndex: string;
+  period: string;
+  year_set?: string;
+  turbine?: string;
+  custom_power_curve?: PowerCurveBody;
+}
+
+export interface TimeseriesEnergyBatchRequestBody {
+  locations: GridLocation[];
+  period: string;
+  year_set?: string;
+  turbine?: string;
+  custom_power_curve?: PowerCurveBody;
 }
 
 export interface NearestGridLocationRequest {
@@ -55,6 +72,7 @@ export interface CSVExportRequest {
   dataModel: DataModel;
   period: "hourly" | "monthly";
   turbine?: string;
+  customPowerCurve?: PowerCurvePoint[];
   yearSet?: "full" | "sample";
 }
 
@@ -63,5 +81,6 @@ export interface CSVBatchExportRequest {
   dataModel: DataModel;
   period: "hourly" | "monthly";
   turbine?: string;
+  customPowerCurve?: PowerCurvePoint[];
   yearSet?: "full" | "sample";
 }
