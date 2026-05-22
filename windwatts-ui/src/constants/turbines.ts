@@ -187,3 +187,5 @@ export const DEFAULT_TURBINES = [
   "nlr-reference-250kW",
   "nlr-reference-2000kW",
 ];
+
+export const DEFAULT_TURBINE = "nlr-reference-100kW";
