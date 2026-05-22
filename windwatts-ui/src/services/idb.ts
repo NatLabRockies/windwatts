@@ -14,14 +14,16 @@ export const STORES = {
 
 export type StoreName = (typeof STORES)[keyof typeof STORES];
 
-function openDB(storeName: StoreName): Promise<IDBDatabase> {
+function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(storeName)) {
-        db.createObjectStore(storeName, { keyPath: "id" });
+      for (const storeName of Object.values(STORES)) {
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName, { keyPath: "id" });
+        }
       }
     };
 
@@ -31,7 +33,7 @@ function openDB(storeName: StoreName): Promise<IDBDatabase> {
 }
 
 export async function idbGetAll<T>(storeName: StoreName): Promise<T[]> {
-  const db = await openDB(storeName);
+  const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readonly");
     const req = tx.objectStore(storeName).getAll();
@@ -44,7 +46,7 @@ export async function idbGet<T>(
   storeName: StoreName,
   id: string
 ): Promise<T | undefined> {
-  const db = await openDB(storeName);
+  const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readonly");
     const req = tx.objectStore(storeName).get(id);
@@ -57,7 +59,7 @@ export async function idbPut<T extends { id: string }>(
   storeName: StoreName,
   value: T
 ): Promise<void> {
-  const db = await openDB(storeName);
+  const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readwrite");
     const req = tx.objectStore(storeName).put(value);
@@ -70,7 +72,7 @@ export async function idbDelete(
   storeName: StoreName,
   id: string
 ): Promise<void> {
-  const db = await openDB(storeName);
+  const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, "readwrite");
     const req = tx.objectStore(storeName).delete(id);
