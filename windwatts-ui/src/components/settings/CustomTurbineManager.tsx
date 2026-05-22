@@ -15,7 +15,7 @@ import { Add, Close, DeleteOutline } from "@mui/icons-material";
 import { useContext, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { ImportPowerCurveDialog } from "./ImportPowerCurveDialog";
-import { DEFAULT_TURBINES } from "../../constants";
+import { DEFAULT_TURBINE } from "../../constants";
 
 export function CustomTurbineManager() {
   const { turbine, setTurbine, customCurves, removeCustomCurve } =
@@ -26,8 +26,13 @@ export function CustomTurbineManager() {
   const handleDelete = (id: string) => {
     removeCustomCurve(id);
     if (turbine === id) {
-      setTurbine(DEFAULT_TURBINES[1]);
+      setTurbine(DEFAULT_TURBINE);
     }
+  };
+
+  const handleManagerClose = () => {
+    setModalOpen(false);
+    setImportOpen(false);
   };
 
   return (
@@ -50,7 +55,7 @@ export function CustomTurbineManager() {
 
       <Dialog
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleManagerClose}
         maxWidth="xs"
         fullWidth
       >
@@ -58,7 +63,7 @@ export function CustomTurbineManager() {
           Custom Turbines
           <IconButton
             aria-label="close"
-            onClick={() => setModalOpen(false)}
+            onClick={handleManagerClose}
             sx={{ position: "absolute", right: 8, top: 8 }}
           >
             <Close />
