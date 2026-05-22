@@ -112,7 +112,10 @@ export function CustomTurbineManager() {
           <Button
             size="small"
             startIcon={<Add />}
-            onClick={() => setImportOpen(true)}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              setImportOpen(true);
+            }}
           >
             Import turbine power curve
           </Button>
