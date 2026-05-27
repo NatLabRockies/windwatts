@@ -9,6 +9,7 @@ import {
   IconButton,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { resolveCustomCurve } from "../../utils";
 import { HUB_HEIGHTS, TURBINE_DATA } from "../../constants";
 
 export function HubHeightSettings() {
@@ -17,6 +18,7 @@ export function HubHeightSettings() {
     setHubHeight,
     preferredModel: dataModel,
     turbine,
+    customCurves,
   } = useContext(SettingsContext);
 
   const { values: availableHeights, interpolation: step } = useMemo(() => {
@@ -51,14 +53,16 @@ export function HubHeightSettings() {
     }
   };
 
+  const customCurve = resolveCustomCurve(turbine, customCurves);
   const turbineInfo = TURBINE_DATA[turbine];
-  const hasHeightRange =
-    turbineInfo?.minHeight !== undefined &&
-    turbineInfo?.maxHeight !== undefined;
+
+  const minHeight = customCurve?.minHeight ?? turbineInfo?.minHeight;
+  const maxHeight = customCurve?.maxHeight ?? turbineInfo?.maxHeight;
+  const hasHeightRange = minHeight !== undefined && maxHeight !== undefined;
+  const heightRangeInfo = turbineInfo?.info ?? "";
 
   const isHeightInRange: boolean = hasHeightRange
-    ? hubHeight >= turbineInfo!.minHeight! &&
-      hubHeight <= turbineInfo!.maxHeight!
+    ? hubHeight >= minHeight! && hubHeight <= maxHeight!
     : true;
 
   const validationColor: "primary" | "success" | "warning" = hasHeightRange
@@ -90,14 +94,16 @@ export function HubHeightSettings() {
             <Typography variant="body2">
               <strong>
                 {isHeightInRange ? "Within" : "Outside"} recommended range - (
-                {turbineInfo!.minHeight}m - {turbineInfo!.maxHeight}m)
+                {minHeight}m - {maxHeight}m)
               </strong>
             </Typography>
-            <Tooltip title={turbineInfo?.info ?? ""} arrow placement="right">
-              <IconButton size="small">
-                <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {heightRangeInfo && (
+              <Tooltip title={heightRangeInfo} arrow placement="right">
+                <IconButton size="small">
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Paper>
       )}
