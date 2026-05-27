@@ -13,6 +13,7 @@ import { UploadFile } from "@mui/icons-material";
 import { useRef, useState, useContext } from "react";
 import { parsePowerCurveCSV, readFileAsText } from "../../services/upload";
 import { idbPut, STORES } from "../../services/idb";
+import { parseOptionalHeight, validateHubHeightRange } from "../../utils";
 import type { CustomPowerCurve } from "../../types";
 import { SettingsContext } from "../../providers/SettingsContext";
 
@@ -29,6 +30,8 @@ export function ImportPowerCurveDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [curveName, setCurveName] = useState("");
+  const [minHeight, setMinHeight] = useState("");
+  const [maxHeight, setMaxHeight] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -46,6 +49,8 @@ export function ImportPowerCurveDialog({
   const handleClose = () => {
     setSelectedFile(null);
     setCurveName("");
+    setMinHeight("");
+    setMaxHeight("");
     setError(null);
     setSaving(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -66,6 +71,15 @@ export function ImportPowerCurveDialog({
     setSaving(true);
     setError(null);
 
+    const parsedMin = parseOptionalHeight(minHeight);
+    const parsedMax = parseOptionalHeight(maxHeight);
+    const heightError = validateHubHeightRange(parsedMin, parsedMax);
+    if (heightError) {
+      setError(heightError);
+      setSaving(false);
+      return;
+    }
+
     try {
       // 1. read file as text
       const text = await readFileAsText(selectedFile);
@@ -77,6 +91,9 @@ export function ImportPowerCurveDialog({
         name: trimmedName,
         data,
         createdAt: Date.now(),
+        ...(parsedMin !== undefined && parsedMax !== undefined
+          ? { minHeight: parsedMin, maxHeight: parsedMax }
+          : {}),
       };
       // 4. save to IndexedDB and update context
       await idbPut(STORES.CUSTOM_TURBINES, curve);
@@ -131,6 +148,32 @@ export function ImportPowerCurveDialog({
           disabled={!selectedFile}
           helperText="This name will appear in the turbine selector."
         />
+
+        {/* Optional Hub Height Range */}
+        <Box sx={{ display: "flex", gap: 1.5, mt: 2 }}>
+          <TextField
+            label="Min hub height (m)"
+            value={minHeight}
+            onChange={(e) => setMinHeight(e.target.value)}
+            size="small"
+            type="number"
+            disabled={!selectedFile}
+            slotProps={{ htmlInput: { min: 1 } }}
+            helperText="Optional"
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            label="Max hub height (m)"
+            value={maxHeight}
+            onChange={(e) => setMaxHeight(e.target.value)}
+            size="small"
+            type="number"
+            disabled={!selectedFile}
+            slotProps={{ htmlInput: { min: 1 } }}
+            helperText="Optional"
+            sx={{ flex: 1 }}
+          />
+        </Box>
 
         {/* Error Message */}
         {error && (
