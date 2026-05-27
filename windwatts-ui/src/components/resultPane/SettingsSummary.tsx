@@ -15,7 +15,7 @@ export const SettingsSummary = () => {
   const { currentPosition, hubHeight, turbine, customCurves } =
     useContext(SettingsContext);
 
-  const turbineLabel = getTurbineLabel(turbine, customCurves);
+  const turbineLabel = getTurbineLabel(turbine, customCurves, false);
 
   const { lat, lng } = currentPosition ?? {};
 

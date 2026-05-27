@@ -1,5 +1,5 @@
 import type { CustomPowerCurve } from "../types";
-import { TURBINE_LABEL } from "../constants";
+import { TURBINE_LABEL, TURBINE_DATA } from "../constants";
 
 /** Custom turbine IDs always start with "custom-" */
 export const isCustomTurbineId = (id: string): boolean =>
@@ -17,15 +17,29 @@ export const resolveCustomCurve = (
 };
 
 /**
- * Returns the display name for reference/ custom turbine ID.
+ * Returns the display label for a reference or custom turbine ID,
+ * appending the recommended hub height range when available.
  */
 export const getTurbineLabel = (
   turbineId: string,
-  customCurves: CustomPowerCurve[]
+  customCurves: CustomPowerCurve[],
+  includeRange = true
 ): string => {
   const custom = customCurves.find((c) => c.id === turbineId);
-  if (custom) return custom.name;
-  return TURBINE_LABEL[turbineId] ?? turbineId;
+  if (custom) {
+    return includeRange &&
+      custom.minHeight !== undefined &&
+      custom.maxHeight !== undefined
+      ? `${custom.name} (${custom.minHeight}-${custom.maxHeight}m)`
+      : custom.name;
+  }
+  const info = TURBINE_DATA[turbineId];
+  const base = TURBINE_LABEL[turbineId] ?? turbineId;
+  return includeRange &&
+    info?.minHeight !== undefined &&
+    info?.maxHeight !== undefined
+    ? `${base} (${info.minHeight}-${info.maxHeight}m)`
+    : base;
 };
 
 /**

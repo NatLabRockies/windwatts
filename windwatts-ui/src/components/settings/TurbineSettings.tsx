@@ -12,7 +12,8 @@ import useSWR from "swr";
 import { SettingsContext } from "../../providers/SettingsContext";
 import { useContext } from "react";
 import { getAvailableTurbines } from "../../services/api";
-import { TURBINE_LABEL, TURBINE_DATA, DEFAULT_TURBINES } from "../../constants";
+import { DEFAULT_TURBINES } from "../../constants";
+import { getTurbineLabel } from "../../utils";
 import { CustomTurbineManager } from "./CustomTurbineManager";
 
 export function TurbineSettings() {
@@ -26,16 +27,6 @@ export function TurbineSettings() {
 
   const handleTurbineChange = (event: SelectChangeEvent<string>) => {
     setTurbine(event.target.value as string);
-  };
-
-  const getTurbineLabel = (id: string): string => {
-    const custom = customCurves.find((c) => c.id === id);
-    if (custom) return custom.name;
-    const info = TURBINE_DATA[id];
-    const base = TURBINE_LABEL[id] || id;
-    return info?.minHeight !== undefined && info?.maxHeight !== undefined
-      ? `${base} (${info.minHeight}-${info.maxHeight}m)`
-      : base;
   };
 
   return (
@@ -64,11 +55,11 @@ export function TurbineSettings() {
             onChange={handleTurbineChange}
             fullWidth
             size="small"
-            renderValue={(selected) => getTurbineLabel(selected)}
+            renderValue={(selected) => getTurbineLabel(selected, customCurves)}
           >
             {referenceTurbines.map((option, idx) => (
               <MenuItem key={"reference_turbine_" + idx} value={option}>
-                {getTurbineLabel(option)}
+                {getTurbineLabel(option, customCurves)}
               </MenuItem>
             ))}
             {customCurves.length > 0 && [
@@ -76,7 +67,7 @@ export function TurbineSettings() {
               ...customCurves.map((curve) => (
                 <MenuItem key={curve.id} value={curve.id}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {curve.name}
+                    {getTurbineLabel(curve.id, customCurves)}
                     <Chip
                       label="custom"
                       size="small"
