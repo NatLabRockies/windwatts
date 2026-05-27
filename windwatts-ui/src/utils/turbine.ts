@@ -27,3 +27,37 @@ export const getTurbineLabel = (
   if (custom) return custom.name;
   return TURBINE_LABEL[turbineId] ?? turbineId;
 };
+
+/**
+ * Parses an optional hub height string input into a number.
+ * Returns undefined when the input is blank.
+ */
+export const parseOptionalHeight = (value: string): number | undefined => {
+  const trimmed = value.trim();
+  return trimmed ? Number(trimmed) : undefined;
+};
+
+/**
+ * Validates an optional hub height range.
+ * Returns an error message string, or null when the values are valid.
+ */
+export const validateHubHeightRange = (
+  min: number | undefined,
+  max: number | undefined
+): string | null => {
+  if ((min !== undefined) !== (max !== undefined)) {
+    return "Please enter both min and max hub heights, or leave both empty.";
+  }
+  if (min !== undefined && max !== undefined) {
+    if (!Number.isFinite(min) || min <= 0) {
+      return "Min hub height must be a positive number.";
+    }
+    if (!Number.isFinite(max) || max <= 0) {
+      return "Max hub height must be a positive number.";
+    }
+    if (min >= max) {
+      return "Min hub height must be less than max hub height.";
+    }
+  }
+  return null;
+};
