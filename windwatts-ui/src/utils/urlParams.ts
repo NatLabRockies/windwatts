@@ -1,5 +1,9 @@
 import { DataModel, DATA_MODELS } from "../types";
-import { MODEL_COORDINATES_BOUNDS, VALID_TURBINES } from "../constants";
+import {
+  MODEL_COORDINATES_BOUNDS,
+  VALID_TURBINES,
+  DEFAULT_TURBINE,
+} from "../constants";
 
 export interface UrlParams {
   lat?: number;
@@ -16,7 +20,7 @@ export interface UrlParams {
 export const URL_PARAM_DEFAULTS = {
   zoom: 12,
   hubHeight: 40,
-  turbine: "nlr-reference-100kW",
+  turbine: DEFAULT_TURBINE,
   dataModel: "ensemble-quantiles" as DataModel,
   lossAssumption: 0,
   windspeedUnit: "mph",

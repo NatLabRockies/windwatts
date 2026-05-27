@@ -1,5 +1,6 @@
 import { DataModel } from "./DataModel";
 import { GridLocation } from "./GridLocation";
+import { PowerCurvePoint } from "./CustomPowerCurve";
 
 export type WindspeedPeriod = "all" | "annual" | "monthly" | "hourly";
 
@@ -23,9 +24,40 @@ export interface EnergyProductionRequest {
   lat: number;
   lng: number;
   hubHeight: number;
-  turbine: string;
   dataModel: DataModel;
   period?: string;
+  turbine?: string; // Reference turbine ID
+  customPowerCurve?: PowerCurvePoint[]; // Custom power curve data — takes precedence
+}
+
+export interface PowerCurveBody {
+  wind_speed: number[];
+  turbine_output: number[];
+}
+
+export interface ProductionRequestBody {
+  lat: number;
+  lng: number;
+  height: number;
+  period: string;
+  turbine?: string;
+  custom_power_curve?: PowerCurveBody;
+}
+
+export interface TimeseriesEnergyRequestBody {
+  gridIndex: string;
+  period: string;
+  year_set?: string;
+  turbine?: string;
+  custom_power_curve?: PowerCurveBody;
+}
+
+export interface TimeseriesEnergyBatchRequestBody {
+  locations: GridLocation[];
+  period: string;
+  year_set?: string;
+  turbine?: string;
+  custom_power_curve?: PowerCurveBody;
 }
 
 export interface NearestGridLocationRequest {
@@ -40,6 +72,7 @@ export interface CSVExportRequest {
   dataModel: DataModel;
   period: "hourly" | "monthly";
   turbine?: string;
+  customPowerCurve?: PowerCurvePoint[];
   yearSet?: "full" | "sample";
 }
 
@@ -48,5 +81,6 @@ export interface CSVBatchExportRequest {
   dataModel: DataModel;
   period: "hourly" | "monthly";
   turbine?: string;
+  customPowerCurve?: PowerCurvePoint[];
   yearSet?: "full" | "sample";
 }

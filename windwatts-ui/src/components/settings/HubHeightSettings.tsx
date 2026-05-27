@@ -9,7 +9,8 @@ import {
   IconButton,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { HUB_HEIGHTS, TURBINE_DATA, TurbineInfo } from "../../constants";
+import { resolveCustomCurve } from "../../utils";
+import { HUB_HEIGHTS, TURBINE_DATA } from "../../constants";
 
 export function HubHeightSettings() {
   const {
@@ -17,6 +18,7 @@ export function HubHeightSettings() {
     setHubHeight,
     preferredModel: dataModel,
     turbine,
+    customCurves,
   } = useContext(SettingsContext);
 
   const { values: availableHeights, interpolation: step } = useMemo(() => {
@@ -51,13 +53,19 @@ export function HubHeightSettings() {
     }
   };
 
-  const turbineData: TurbineInfo | undefined = TURBINE_DATA[turbine];
+  const customCurve = resolveCustomCurve(turbine, customCurves);
+  const turbineInfo = TURBINE_DATA[turbine];
 
-  const isHeightInRange: boolean = turbineData
-    ? hubHeight >= turbineData.minHeight && hubHeight <= turbineData.maxHeight
+  const minHeight = customCurve?.minHeight ?? turbineInfo?.minHeight;
+  const maxHeight = customCurve?.maxHeight ?? turbineInfo?.maxHeight;
+  const hasHeightRange = minHeight !== undefined && maxHeight !== undefined;
+  const heightRangeInfo = turbineInfo?.info ?? "";
+
+  const isHeightInRange: boolean = hasHeightRange
+    ? hubHeight >= minHeight! && hubHeight <= maxHeight!
     : true;
 
-  const validationColor: "primary" | "success" | "warning" = turbineData
+  const validationColor: "primary" | "success" | "warning" = hasHeightRange
     ? isHeightInRange
       ? "success"
       : "warning"
@@ -72,7 +80,7 @@ export function HubHeightSettings() {
         Choose nearest hub height (m):
       </Typography>
 
-      {turbineData && (
+      {hasHeightRange && (
         <Paper
           sx={{
             p: 1,
@@ -86,14 +94,16 @@ export function HubHeightSettings() {
             <Typography variant="body2">
               <strong>
                 {isHeightInRange ? "Within" : "Outside"} recommended range - (
-                {turbineData.minHeight}m - {turbineData.maxHeight}m)
+                {minHeight}m - {maxHeight}m)
               </strong>
             </Typography>
-            <Tooltip title={turbineData.info} arrow placement="right">
-              <IconButton size="small">
-                <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {heightRangeInfo && (
+              <Tooltip title={heightRangeInfo} arrow placement="right">
+                <IconButton size="small">
+                  <InfoOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         </Paper>
       )}

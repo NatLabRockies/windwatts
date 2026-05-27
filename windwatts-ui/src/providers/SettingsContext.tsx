@@ -1,5 +1,7 @@
 import { createContext } from "react";
 import { DataModel } from "../types";
+import type { CustomPowerCurve } from "../types";
+import { DEFAULT_TURBINE } from "../constants";
 
 export interface CurrentPosition {
   lat: number;
@@ -19,6 +21,9 @@ export interface StoredSettings {
 }
 
 export interface Settings extends StoredSettings {
+  customCurves: CustomPowerCurve[];
+  addCustomCurve: (curve: CustomPowerCurve) => void;
+  removeCustomCurve: (id: string) => void;
   lossAssumptionPercent: number;
   toggleSettings: () => void;
   toggleResults: () => void;
@@ -43,7 +48,7 @@ export const defaultValues: StoredSettings = {
   currentPosition: null,
   zoom: 12,
   hubHeight: 40,
-  turbine: "nlr-reference-100kW",
+  turbine: DEFAULT_TURBINE,
   preferredModel: "ensemble-quantiles",
   lossAssumptionFactor: 1.0, // 1.0 = 0% loss, 0.83 = 17% loss defaulted to 0% loss
   windspeedUnit: "mph",
@@ -51,6 +56,9 @@ export const defaultValues: StoredSettings = {
 
 export const SettingsContext = createContext<Settings>({
   ...defaultValues,
+  customCurves: [],
+  addCustomCurve: () => {},
+  removeCustomCurve: () => {},
   lossAssumptionPercent: 0,
   toggleSettings: () => {},
   toggleResults: () => {},
