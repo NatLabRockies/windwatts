@@ -1,5 +1,4 @@
 import {
-  EnergyProductionRequest,
   WindspeedByLatLngRequest,
   WindspeedPeriod,
   WindspeedResponse,
@@ -16,6 +15,10 @@ import {
   NearestGridLocationRequest,
   CSVExportRequest,
   CSVBatchExportRequest,
+  EnergyProductionRequest,
+  ProductionRequestBody,
+  TimeseriesEnergyRequestBody,
+  TimeseriesEnergyBatchRequestBody,
 } from "../types";
 
 export const fetchWrapper = async <T>(
@@ -125,24 +128,35 @@ export const getWindRose = async ({
   );
 };
 
-// V1 API:
+// V1 API: POST /{model}/production
 // period options: "all" (default), "summary", "annual", "monthly" (varies by model)
+// customPowerCurve takes precedence over reference turbine
 export const getEnergyProduction = async ({
   lat,
   lng,
   hubHeight,
   turbine,
+  customPowerCurve,
   dataModel,
   period = "all",
 }: EnergyProductionRequest): Promise<EnergyProductionResponse> => {
-  const url = `/api/v1/${dataModel}/production?lat=${lat}&lng=${lng}&height=${hubHeight}&turbine=${turbine}&period=${period}`;
-  const options = {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  return fetchWrapper<EnergyProductionResponse>(url, options);
+  const url = `/api/v1/${dataModel}/production`;
+  const body: ProductionRequestBody = { lat, lng, height: hubHeight, period };
+
+  if (customPowerCurve && customPowerCurve.length > 0) {
+    body.custom_power_curve = {
+      wind_speed: customPowerCurve.map((p) => p.ws),
+      turbine_output: customPowerCurve.map((p) => p.kw),
+    };
+  } else if (turbine) {
+    body.turbine = turbine;
+  }
+
+  return fetchWrapper<EnergyProductionResponse>(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 };
 
 // export const getAvailablePowerCurves = async ({
@@ -211,32 +225,35 @@ export const getExportCSV = async (
     dataModel,
     period = "hourly",
     turbine,
+    customPowerCurve,
     yearSet,
   }: CSVExportRequest,
   includeEnergy: boolean
 ): Promise<Response> => {
   if (includeEnergy) {
-    if (!turbine) {
-      throw new Error("Turbine must be specified for energy export");
+    if (!turbine && !customPowerCurve?.length) {
+      throw new Error(
+        "Turbine or custom power curve must be specified for energy export"
+      );
     }
     // Energy export
-    const params = new URLSearchParams({
-      gridIndex: gridIndex,
-      period: period,
-      turbine: turbine,
-    });
-    if (yearSet) {
-      params.append("year_set", yearSet);
-    }
     dataModel = "era5-timeseries"; // Hardcode timeseries model
-    const url = `/api/v1/${dataModel}/timeseries/energy?${params.toString()}`;
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    return fetchBlobWrapper(url, options);
+    const url = `/api/v1/${dataModel}/timeseries/energy`;
+    const body: TimeseriesEnergyRequestBody = { gridIndex, period };
+    if (yearSet) body.year_set = yearSet;
+    if (customPowerCurve && customPowerCurve.length > 0) {
+      body.custom_power_curve = {
+        wind_speed: customPowerCurve.map((p) => p.ws),
+        turbine_output: customPowerCurve.map((p) => p.kw),
+      };
+    } else if (turbine) {
+      body.turbine = turbine;
+    }
+    return fetchBlobWrapper(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
   } else {
     // Timeseries export
     const params = new URLSearchParams({
@@ -265,35 +282,38 @@ export const getBatchExportCSV = async (
     dataModel,
     period = "hourly",
     turbine,
+    customPowerCurve,
     yearSet,
   }: CSVBatchExportRequest,
   includeEnergy: boolean
 ): Promise<Response> => {
   if (includeEnergy) {
-    if (!turbine) {
-      throw new Error("Turbine must be specified for energy export");
+    if (!turbine && !customPowerCurve?.length) {
+      throw new Error(
+        "Turbine or custom power curve must be specified for energy export"
+      );
     }
     // Batch energy export
-    const params = new URLSearchParams({
-      period: period,
-      turbine: turbine,
-    });
-    if (yearSet) {
-      params.append("year_set", yearSet);
-    }
     dataModel = "era5-timeseries"; // Hardcode timeseries model
-    const url = `/api/v1/${dataModel}/timeseries/energy/batch?${params.toString()}`;
-    const body = {
+    const url = `/api/v1/${dataModel}/timeseries/energy/batch`;
+    const body: TimeseriesEnergyBatchRequestBody = {
       locations: gridLocations,
+      period,
     };
-    const options = {
+    if (yearSet) body.year_set = yearSet;
+    if (customPowerCurve && customPowerCurve.length > 0) {
+      body.custom_power_curve = {
+        wind_speed: customPowerCurve.map((p) => p.ws),
+        turbine_output: customPowerCurve.map((p) => p.kw),
+      };
+    } else if (turbine) {
+      body.turbine = turbine;
+    }
+    return fetchBlobWrapper(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    };
-    return fetchBlobWrapper(url, options);
+    });
   } else {
     // Batch timeseries export
     const params = new URLSearchParams({

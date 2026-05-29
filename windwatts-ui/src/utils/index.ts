@@ -3,6 +3,7 @@ import { DataModel } from "../types";
 
 // Export URL parameter utilities
 export * from "./urlParams";
+export * from "./turbine";
 
 export const getWindResource = (speed: number) => {
   return speed > 5 ? "High" : speed >= 3 ? "Moderate" : "Low";

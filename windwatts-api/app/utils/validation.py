@@ -4,8 +4,11 @@ Validation functions for WindWatts API.
 
 import re
 from fastapi import HTTPException
+from typing import Optional
 
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+from app.schemas import PowerCurveData
+from app.power_curve.powercurve import PowerCurve
 
 
 def validate_model_exists(model: str) -> str:
@@ -81,33 +84,70 @@ def validate_height(model: str, height: int, height_type: str) -> int:
     return height
 
 
-def validate_powercurve(powercurve: str) -> str:
-    """Validate power curve name"""
+def validate_powercurve(
+    powercurve: Optional[str], custom_power_curve: Optional[PowerCurveData] = None
+) -> PowerCurve:
+    """
+    Validate reference power curve name or custom power curve data.
+    Returns PowerCurve object.
+    """
     # Import here to avoid circular dependency
     from app.power_curve.global_power_curve_manager import power_curve_manager
 
-    if not re.match(r"^[\w\-.]+$", powercurve):
+    # Custom power curve provided — no turbine name needed
+    if custom_power_curve is not None:
+        parsed_data = [
+            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            for ws, to in zip(
+                custom_power_curve.wind_speed, custom_power_curve.turbine_output
+            )
+        ]
+        if len(parsed_data) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Power curve data must have at least 2 data points.",
+            )
+
+        if len(custom_power_curve.wind_speed) != len(custom_power_curve.turbine_output):
+            raise HTTPException(
+                status_code=400,
+                detail="wind_speed and turbine_output must have same number of values.",
+            )
+
+        parsed_data = sorted(parsed_data, key=lambda d: d["Wind Speed (m/s)"])
+
+        wind_speeds = [d["Wind Speed (m/s)"] for d in parsed_data]
+        turbine_outputs = [d["Turbine Output"] for d in parsed_data]
+
+        # wind speeds must be unique (no duplicates after sorting)
+        for i in range(1, len(wind_speeds)):
+            if wind_speeds[i] == wind_speeds[i - 1]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Duplicate wind_speed value: {wind_speeds[i]} found.",
+                )
+
+        # Must have at least one positive output
+        if max(turbine_outputs) <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Power curve must have at least one positive turbine output value.",
+            )
+        return PowerCurve(data=parsed_data)
+
+    # No custom curve — turbine name is required
+    if not powercurve:
+        raise HTTPException(
+            status_code=400,
+            detail="Either 'turbine' for reference turbine or 'custom_power_curve' must be provided.",
+        )
+
+    if not re.match(r"^[\w\-.\s]+$", powercurve):
         raise HTTPException(status_code=400, detail="Invalid power curve name.")
     if powercurve not in power_curve_manager.power_curves:
         raise HTTPException(status_code=400, detail="Power curve not found.")
-    return powercurve
 
-
-def validate_turbine(turbine: str) -> str:
-    """Validate turbine name (alias for validate_powercurve for clarity)"""
-    return validate_powercurve(turbine)
-
-
-def validate_year(year: int, model: str) -> int:
-    """Validate year for given model"""
-    valid_years = MODEL_CONFIG[model]["years"].get("full", [])
-    if valid_years and year not in valid_years:
-        year_range = f"{min(valid_years)}-{max(valid_years)}"
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid year for {model}. Currently supporting years {year_range}",
-        )
-    return year
+    return power_curve_manager.power_curves[powercurve]
 
 
 def validate_limit(limit: int) -> int:

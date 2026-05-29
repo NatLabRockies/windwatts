@@ -3,6 +3,11 @@ import useSWR from "swr";
 import { getExportCSV, getBatchExportCSV, getModelInfo } from "../services/api";
 import { downloadWindDataCSV, downloadWindDataZIP } from "../services/download";
 import { SettingsContext } from "../providers/SettingsContext";
+import {
+  isCustomTurbineId,
+  resolveCustomCurve,
+  getTurbineLabel,
+} from "../utils";
 import { GridLocation } from "../types";
 
 export const useDownloadCSVFile = () => {
@@ -10,11 +15,16 @@ export const useDownloadCSVFile = () => {
   const [includeEnergy, setIncludeEnergy] = useState(false);
   const [period, setPeriod] = useState<"hourly" | "monthly">("hourly");
   const [yearSet, setYearSet] = useState<"full" | "sample">("full");
-  const { currentPosition, preferredModel, turbine } =
+  const { currentPosition, preferredModel, turbine, customCurves } =
     useContext(SettingsContext);
   const dataModel =
     preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
+
+  const isCustomTurbine = isCustomTurbineId(turbine);
+  const customCurve = resolveCustomCurve(turbine, customCurves);
+
+  const turbineLabel = getTurbineLabel(turbine, customCurves);
 
   const canDownload = !!(lat && lng && dataModel);
 
@@ -53,7 +63,11 @@ export const useDownloadCSVFile = () => {
           gridIndex: gridIndex,
           dataModel: dataModel!,
           period: period,
-          turbine: includeEnergy ? turbine : undefined,
+          ...(includeEnergy
+            ? isCustomTurbine && customCurve
+              ? { customPowerCurve: customCurve.data }
+              : { turbine }
+            : {}),
           yearSet: yearSet,
         },
         includeEnergy
@@ -78,7 +92,11 @@ export const useDownloadCSVFile = () => {
           gridLocations: gridLocations,
           dataModel: dataModel!,
           period: period,
-          turbine: includeEnergy ? turbine : undefined,
+          ...(includeEnergy
+            ? isCustomTurbine && customCurve
+              ? { customPowerCurve: customCurve.data }
+              : { turbine }
+            : {}),
           yearSet: yearSet,
         },
         includeEnergy
@@ -99,7 +117,7 @@ export const useDownloadCSVFile = () => {
     isDownloading,
     downloadFile,
     downloadBatchFiles,
-    turbine,
+    turbine: turbineLabel,
     includeEnergy,
     setIncludeEnergy,
     period,

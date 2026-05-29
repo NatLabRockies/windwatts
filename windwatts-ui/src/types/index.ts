@@ -6,6 +6,10 @@ export type {
   WindspeedPeriod,
   WindRoseRequest,
   EnergyProductionRequest,
+  ProductionRequestBody,
+  PowerCurveBody,
+  TimeseriesEnergyRequestBody,
+  TimeseriesEnergyBatchRequestBody,
   NearestGridLocationRequest,
   CSVExportRequest,
   CSVBatchExportRequest,
@@ -31,3 +35,4 @@ export type {
   GridPointsResponse,
   AvailableTurbinesResponse,
 } from "./Responses";
+export type { CustomPowerCurve, PowerCurvePoint } from "./CustomPowerCurve";
