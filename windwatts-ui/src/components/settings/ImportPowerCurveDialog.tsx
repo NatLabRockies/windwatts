@@ -115,8 +115,8 @@ export function ImportPowerCurveDialog({
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Upload a CSV file with two columns: <strong>Wind Speed (m/s)</strong>{" "}
-          and <strong>Turbine Output</strong>. The curve data is stored locally
-          in your browser only.
+          and <strong>Turbine Output (kW)</strong>. The curve data is stored
+          locally in your browser only.
         </Typography>
 
         {/* File Picker */}
