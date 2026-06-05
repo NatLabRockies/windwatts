@@ -31,8 +31,8 @@ export interface EnergyProductionRequest {
 }
 
 export interface PowerCurveBody {
-  wind_speed: number[];
-  turbine_output: number[];
+  wind_speed_ms: number[];
+  turbine_output_kw: number[];
 }
 
 export interface ProductionRequestBody {
