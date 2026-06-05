@@ -145,8 +145,7 @@ export function ImportPowerCurveDialog({
                 &ldquo;{importedCurve.name}&rdquo; imported!
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                You can select it from the <strong>turbine list</strong> in
-                Turbine Settings
+                You can select it from the <strong>turbine selector</strong>
                 <br />
                 or click <strong>"SELECT"</strong> now below.
               </Typography>
