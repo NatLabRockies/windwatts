@@ -125,6 +125,7 @@ export function CustomTurbineManager() {
       <ImportPowerCurveDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
+        onSelectNow={handleManagerClose}
       />
     </>
   );

@@ -9,7 +9,7 @@ import {
   Box,
   Alert,
 } from "@mui/material";
-import { UploadFile } from "@mui/icons-material";
+import { CheckCircleOutline, UploadFile } from "@mui/icons-material";
 import { useRef, useState, useContext } from "react";
 import { parsePowerCurveCSV, readFileAsText } from "../../services/upload";
 import { idbPut, STORES } from "../../services/idb";
@@ -20,13 +20,15 @@ import { SettingsContext } from "../../providers/SettingsContext";
 interface ImportPowerCurveDialogProps {
   open: boolean;
   onClose: () => void;
+  onSelectNow: () => void;
 }
 
 export function ImportPowerCurveDialog({
   open,
   onClose,
+  onSelectNow,
 }: ImportPowerCurveDialogProps) {
-  const { addCustomCurve } = useContext(SettingsContext);
+  const { addCustomCurve, setTurbine } = useContext(SettingsContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [curveName, setCurveName] = useState("");
@@ -34,6 +36,9 @@ export function ImportPowerCurveDialog({
   const [maxHeight, setMaxHeight] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [importedCurve, setImportedCurve] = useState<CustomPowerCurve | null>(
+    null
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -53,8 +58,17 @@ export function ImportPowerCurveDialog({
     setMaxHeight("");
     setError(null);
     setSaving(false);
+    setImportedCurve(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     onClose();
+  };
+
+  const handleSelectNow = () => {
+    if (importedCurve) {
+      setTurbine(importedCurve.id);
+    }
+    handleClose();
+    onSelectNow();
   };
 
   const handleImport = async () => {
@@ -98,8 +112,8 @@ export function ImportPowerCurveDialog({
       // 4. save to IndexedDB and update context
       await idbPut(STORES.CUSTOM_TURBINES, curve);
       addCustomCurve(curve);
-      // 5. close dialog
-      handleClose();
+      // 5. show success view
+      setImportedCurve(curve);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to import power curve."
@@ -112,88 +126,125 @@ export function ImportPowerCurveDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Import Custom Power Curve</DialogTitle>
-      <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Upload a CSV file with two columns: <strong>Wind Speed (m/s)</strong>{" "}
-          and <strong>Turbine Output (kW)</strong>. The curve data is stored
-          locally in your browser only.
-        </Typography>
 
-        {/* File Picker */}
-        <Box sx={{ mb: 2 }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-          <Button
-            variant="outlined"
-            startIcon={<UploadFile />}
-            onClick={() => fileInputRef.current?.click()}
-            size="small"
-          >
-            {selectedFile ? selectedFile.name : "Choose CSV file"}
-          </Button>
-        </Box>
+      {importedCurve ? (
+        <>
+          <DialogContent>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                py: 2,
+                gap: 1.5,
+              }}
+            >
+              <CheckCircleOutline color="success" sx={{ fontSize: 48 }} />
+              <Typography variant="subtitle1" fontWeight={600}>
+                &ldquo;{importedCurve.name}&rdquo; imported!
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                You can select it from the <strong>turbine selector</strong>
+                <br />
+                or click <strong>"SELECT"</strong> now below.
+              </Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Close</Button>
+            <Button variant="contained" onClick={handleSelectNow}>
+              Select
+            </Button>
+          </DialogActions>
+        </>
+      ) : (
+        <>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Upload a CSV file with two columns:{" "}
+              <strong>Wind Speed (m/s)</strong> and{" "}
+              <strong>Turbine Output (kW)</strong>. The curve data is stored
+              locally in your browser only.
+            </Typography>
 
-        {/* Curve Name Input */}
-        <TextField
-          label="Power curve name"
-          value={curveName}
-          onChange={(e) => setCurveName(e.target.value)}
-          fullWidth
-          size="small"
-          disabled={!selectedFile}
-          helperText="This name will appear in the turbine selector."
-        />
+            {/* File Picker */}
+            <Box sx={{ mb: 2 }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+              <Button
+                variant="outlined"
+                startIcon={<UploadFile />}
+                onClick={() => fileInputRef.current?.click()}
+                size="small"
+              >
+                {selectedFile ? selectedFile.name : "Choose CSV file"}
+              </Button>
+            </Box>
 
-        {/* Optional Hub Height Range */}
-        <Box sx={{ display: "flex", gap: 1.5, mt: 2 }}>
-          <TextField
-            label="Min hub height (m)"
-            value={minHeight}
-            onChange={(e) => setMinHeight(e.target.value)}
-            size="small"
-            type="number"
-            disabled={!selectedFile}
-            slotProps={{ htmlInput: { min: 1 } }}
-            helperText="Optional"
-            sx={{ flex: 1 }}
-          />
-          <TextField
-            label="Max hub height (m)"
-            value={maxHeight}
-            onChange={(e) => setMaxHeight(e.target.value)}
-            size="small"
-            type="number"
-            disabled={!selectedFile}
-            slotProps={{ htmlInput: { min: 1 } }}
-            helperText="Optional"
-            sx={{ flex: 1 }}
-          />
-        </Box>
+            {/* Curve Name Input */}
+            <TextField
+              label="Power curve name"
+              value={curveName}
+              onChange={(e) => setCurveName(e.target.value)}
+              fullWidth
+              size="small"
+              disabled={!selectedFile}
+              helperText="This name will appear in the turbine selector."
+            />
 
-        {/* Error Message */}
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={saving}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleImport}
-          disabled={!selectedFile || !curveName.trim() || saving}
-        >
-          {saving ? "Importing…" : "Import"}
-        </Button>
-      </DialogActions>
+            {/* Optional Hub Height Range */}
+            <Box sx={{ display: "flex", gap: 1.5, mt: 2 }}>
+              <TextField
+                label="Min hub height (m)"
+                value={minHeight}
+                onChange={(e) => setMinHeight(e.target.value)}
+                size="small"
+                type="number"
+                disabled={!selectedFile}
+                slotProps={{ htmlInput: { min: 1 } }}
+                helperText="Optional"
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                label="Max hub height (m)"
+                value={maxHeight}
+                onChange={(e) => setMaxHeight(e.target.value)}
+                size="small"
+                type="number"
+                disabled={!selectedFile}
+                slotProps={{ htmlInput: { min: 1 } }}
+                helperText="Optional"
+                sx={{ flex: 1 }}
+              />
+            </Box>
+
+            {/* Error Message */}
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} disabled={saving}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleImport}
+              disabled={!selectedFile || !curveName.trim() || saving}
+            >
+              {saving ? "Importing…" : "Import"}
+            </Button>
+          </DialogActions>
+        </>
+      )}
     </Dialog>
   );
 }

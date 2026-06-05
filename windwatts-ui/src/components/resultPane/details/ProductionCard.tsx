@@ -20,8 +20,7 @@ import {
   DATA_MODEL_INFO,
 } from "../../../constants";
 import { convertOutput, getOutOfBoundsMessage } from "../../../utils";
-import { OutOfBoundsWarning } from "../../shared";
-import { ModelSourceChip } from "../../shared";
+import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 import { useProductionData } from "../../../hooks";
 
 interface ProductionCardProps {
