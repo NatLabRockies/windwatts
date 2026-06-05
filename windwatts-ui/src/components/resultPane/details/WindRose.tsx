@@ -20,8 +20,7 @@ import {
   getWindRoseLayout,
   getWindRoseRadialAxisMax,
 } from "../../../plots/windRosePlot";
-import { OutOfBoundsWarning } from "../../shared";
-import { ModelSourceChip } from "../../shared";
+import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 
 interface WindRoseProps {
   toggle?: boolean;

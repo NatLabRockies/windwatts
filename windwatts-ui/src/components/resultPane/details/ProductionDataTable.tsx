@@ -22,8 +22,7 @@ import {
   KEY_KWH_PRODUCED,
   MONTH_NAMES,
 } from "../../../constants";
-import { OutOfBoundsWarning } from "../../shared";
-import { ModelSourceChip } from "../../shared";
+import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 import { DataModel } from "../../../types";
 
 interface ProductionDataTableProps {
