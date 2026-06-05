@@ -145,8 +145,8 @@ export const getEnergyProduction = async ({
 
   if (customPowerCurve && customPowerCurve.length > 0) {
     body.custom_power_curve = {
-      wind_speed: customPowerCurve.map((p) => p.ws),
-      turbine_output: customPowerCurve.map((p) => p.kw),
+      wind_speed_ms: customPowerCurve.map((p) => p.ws),
+      turbine_output_kw: customPowerCurve.map((p) => p.kw),
     };
   } else if (turbine) {
     body.turbine = turbine;
@@ -243,8 +243,8 @@ export const getExportCSV = async (
     if (yearSet) body.year_set = yearSet;
     if (customPowerCurve && customPowerCurve.length > 0) {
       body.custom_power_curve = {
-        wind_speed: customPowerCurve.map((p) => p.ws),
-        turbine_output: customPowerCurve.map((p) => p.kw),
+        wind_speed_ms: customPowerCurve.map((p) => p.ws),
+        turbine_output_kw: customPowerCurve.map((p) => p.kw),
       };
     } else if (turbine) {
       body.turbine = turbine;
@@ -303,8 +303,8 @@ export const getBatchExportCSV = async (
     if (yearSet) body.year_set = yearSet;
     if (customPowerCurve && customPowerCurve.length > 0) {
       body.custom_power_curve = {
-        wind_speed: customPowerCurve.map((p) => p.ws),
-        turbine_output: customPowerCurve.map((p) => p.kw),
+        wind_speed_ms: customPowerCurve.map((p) => p.ws),
+        turbine_output_kw: customPowerCurve.map((p) => p.kw),
       };
     } else if (turbine) {
       body.turbine = turbine;
