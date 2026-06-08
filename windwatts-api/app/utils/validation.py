@@ -97,9 +97,9 @@ def validate_powercurve(
     # Custom power curve provided — no turbine name needed
     if custom_power_curve is not None:
         parsed_data = [
-            {"Wind Speed (m/s)": ws, "Turbine Output": to}
+            {"Wind Speed (m/s)": ws, "Turbine Output (kW)": to}
             for ws, to in zip(
-                custom_power_curve.wind_speed, custom_power_curve.turbine_output
+                custom_power_curve.wind_speed_ms, custom_power_curve.turbine_output_kw
             )
         ]
         if len(parsed_data) < 2:
@@ -108,16 +108,18 @@ def validate_powercurve(
                 detail="Power curve data must have at least 2 data points.",
             )
 
-        if len(custom_power_curve.wind_speed) != len(custom_power_curve.turbine_output):
+        if len(custom_power_curve.wind_speed_ms) != len(
+            custom_power_curve.turbine_output_kw
+        ):
             raise HTTPException(
                 status_code=400,
-                detail="wind_speed and turbine_output must have same number of values.",
+                detail="wind_speed_ms and turbine_output_kw must have same number of values.",
             )
 
         parsed_data = sorted(parsed_data, key=lambda d: d["Wind Speed (m/s)"])
 
         wind_speeds = [d["Wind Speed (m/s)"] for d in parsed_data]
-        turbine_outputs = [d["Turbine Output"] for d in parsed_data]
+        turbine_outputs = [d["Turbine Output (kW)"] for d in parsed_data]
 
         # wind speeds must be unique (no duplicates after sorting)
         for i in range(1, len(wind_speeds)):

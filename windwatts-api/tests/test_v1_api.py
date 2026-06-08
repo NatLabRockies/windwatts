@@ -536,8 +536,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "all",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -575,8 +575,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "all",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -620,8 +620,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "summary",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -689,8 +689,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "annual",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -797,8 +797,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "all",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -818,8 +818,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "summary",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -845,8 +845,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "annual",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -870,8 +870,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "full",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 10, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 10, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -890,8 +890,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "all",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 7, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 7, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )
@@ -905,7 +905,7 @@ class TestV1PostProductionEndpoints:
                 "lng": -70.0,
                 "height": 40,
                 "period": "all",
-                "custom_power_curve": {"wind_speed": [3], "turbine_output": [34]},
+                "custom_power_curve": {"wind_speed_ms": [3], "turbine_output_kw": [34]},
             },
         )
         assert response.status_code == 422
@@ -919,8 +919,8 @@ class TestV1PostProductionEndpoints:
                 "height": 40,
                 "period": "all",
                 "custom_power_curve": {
-                    "wind_speed": [0, 3, 5, 7, 13, 15, 25],
-                    "turbine_output": [0, 0, 50, 70, 80, 85, 95, 100],
+                    "wind_speed_ms": [0, 3, 5, 7, 13, 15, 25],
+                    "turbine_output_kw": [0, 0, 50, 70, 80, 85, 95, 100],
                 },
             },
         )

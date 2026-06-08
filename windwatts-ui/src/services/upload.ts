@@ -17,7 +17,7 @@ export function readFileAsText(file: File): Promise<string> {
  *
  * Expected columns (case-insensitive):
  *  - "Wind Speed (m/s)", "Wind Speed", or "WS" for the wind speed column
- *  - "Turbine Output", "Power", or "kw" for the turbine output column
+ *  - "Turbine Output (kW)", "Turbine Output", "Power", or "kw" for the turbine output column
  * Rows with non-numeric values are silently skipped. Result is sorted ascending by wind speed.
  *
  * Throws if the header columns are missing or fewer than 2 valid rows
@@ -50,7 +50,7 @@ export function parsePowerCurveCSV(text: string): PowerCurvePoint[] {
   if (wsIdx === -1 || kwIdx === -1) {
     throw new Error(
       'CSV must contain a wind speed column ("Wind Speed (m/s)", "Wind Speed", or "WS") ' +
-        'and a power column ("Turbine Output", "Power", or "kW").'
+        'and a power column ("Turbine Output (kW)", "Turbine Output", "Power", or "kW").'
     );
   }
 
