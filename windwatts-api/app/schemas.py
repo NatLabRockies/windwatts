@@ -322,8 +322,10 @@ class TimeseriesBatchRequestPayload(BaseModel):
 
 
 class PowerCurveData(BaseModel):
-    wind_speed: List[float] = Field(..., min_length=2, description="Wind speeds in m/s")
-    turbine_output: List[float] = Field(
+    wind_speed_ms: List[float] = Field(
+        ..., min_length=2, description="Wind speeds in m/s"
+    )
+    turbine_output_kw: List[float] = Field(
         ..., min_length=2, description="Turbine output in kW"
     )
 
@@ -370,8 +372,8 @@ class TimeseriesEnergyRequestPayload(BaseModel):
                     "gridIndex": "031233",
                     "years": [2020, 2021, 2022],
                     "custom_power_curve": {
-                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                        "turbine_output": [
+                        "wind_speed_ms": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output_kw": [
                             0,
                             0,
                             0,
@@ -462,8 +464,8 @@ class TimeseriesEnergyBatchRequestPayload(BaseModel):
                         },
                     ],
                     "custom_power_curve": {
-                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                        "turbine_output": [
+                        "wind_speed_ms": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output_kw": [
                             0,
                             0,
                             0,
@@ -659,8 +661,8 @@ class ProductionRequestPayload(BaseModel):
                     "height": 40,
                     "period": "all",
                     "custom_power_curve": {
-                        "wind_speed": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                        "turbine_output": [
+                        "wind_speed_ms": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        "turbine_output_kw": [
                             0,
                             0,
                             0,

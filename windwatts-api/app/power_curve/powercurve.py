@@ -9,7 +9,8 @@ class PowerCurve(object):
         # Load data and minimal preprocessing
         self.raw_data = pd.DataFrame(data)
         self.raw_data.rename(
-            columns={"Wind Speed (m/s)": "ws", "Turbine Output": "kw"}, inplace=True
+            columns={"Wind Speed (m/s)": "ws", "Turbine Output (kW)": "kw"},
+            inplace=True,
         )
 
         # Add (0,0) if not there already
