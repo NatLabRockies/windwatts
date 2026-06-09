@@ -32,7 +32,7 @@ jobs:
           
       - name: Create sync branch
         run: |
-          git checkout -b sync/main-to-develop-${{ github.run_number }} origin/develop
+          git checkout -b sync/main-to-develop origin/develop
           
       - name: Merge main into sync branch
         id: merge
@@ -48,7 +48,7 @@ jobs:
       - name: Push sync branch
         if: steps.merge.outputs.merge_success == 'true'
         run: |
-          git push origin sync/main-to-develop-${{ github.run_number }}
+          git push origin sync/main-to-develop --force
           
       - name: Create Pull Request
         if: steps.merge.outputs.merge_success == 'true'
@@ -56,7 +56,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: sync/main-to-develop-${{ github.run_number }}
+          branch: sync/main-to-develop
           base: develop
           title: "Sync develop with main"
           body: |
