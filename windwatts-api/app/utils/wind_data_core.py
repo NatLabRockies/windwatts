@@ -409,7 +409,9 @@ def get_windrose_core(
     if rose_type == "energy":
         # Apply power curve: wind speed (m/s) → power output (kW)
         ws_df = pd.DataFrame({"ws-adjusted": ws})
-        values = np.array(power_curve.windspeed_to_kw(ws_df), dtype=float)
+        values = np.array(
+            power_curve.windspeed_to_kw(ws_df, ws_column="ws-adjusted"), dtype=float
+        )
         bin_edge_decimals = 0
     elif rose_type == "wind_speed":
         values = ws
