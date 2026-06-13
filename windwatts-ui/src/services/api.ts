@@ -100,32 +100,46 @@ export const getWindspeedHourlyAverage = async (
   return fetchWindspeedByPeriod<HourlyWindspeedResponse>(request, "hourly");
 };
 
-export const getWindRose = async ({
-  gridIndex,
-  height,
-  dataModel,
-  sectors = 16,
-  bin = 5,
-  calmThreshold,
-}: WindRoseRequest): Promise<WindRoseResponse> => {
-  dataModel = "era5-timeseries"; // Hardcode timeseries model
-  const headers = { "Content-Type": "application/json" };
-
-  const params = new URLSearchParams({
+export const getWindRose = async (
+  request: WindRoseRequest
+): Promise<WindRoseResponse> => {
+  const {
     gridIndex,
-    height: String(height),
-    sectors: String(sectors),
-    bin: String(bin),
-  });
+    height,
+    rose_type = "wind_speed",
+    sectors = 16,
+    bin = 5,
+    calmThreshold,
+    turbine,
+    customPowerCurve,
+  } = request;
+  const dataModel = "era5-timeseries"; // timeseries model
+  const body: Record<string, unknown> = {
+    gridIndex,
+    height,
+    rose_type,
+    sectors,
+    bin,
+  };
 
   if (calmThreshold !== undefined) {
-    params.append("calm_threshold", String(calmThreshold));
+    body.calm_threshold = calmThreshold;
   }
 
-  return fetchWrapper<WindRoseResponse>(
-    `/api/v1/${dataModel}/windrose?${params.toString()}`,
-    { method: "GET", headers }
-  );
+  if (customPowerCurve && customPowerCurve.length > 0) {
+    body.custom_power_curve = {
+      wind_speed_ms: customPowerCurve.map((p) => p.ws),
+      turbine_output_kw: customPowerCurve.map((p) => p.kw),
+    };
+  } else if (turbine) {
+    body.turbine = turbine;
+  }
+
+  return fetchWrapper<WindRoseResponse>(`/api/v1/${dataModel}/windrose`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 };
 
 // V1 API: POST /{model}/production
