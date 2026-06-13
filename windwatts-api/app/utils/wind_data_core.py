@@ -27,6 +27,7 @@ from app.utils.validation import (
     validate_year_set,
     validate_years,
     validate_sectors,
+    validate_rose_type,
     validate_calm_threshold,
     validate_bin,
     validate_model_for_timeseries,
@@ -368,20 +369,27 @@ def get_windrose_core(
     calm_threshold: float,
     year_set: str,
     year_range: Optional[str],
+    turbine: Optional[str] = None,
+    custom_power_curve: Optional[PowerCurveData] = None,
+    rose_type: str = "wind_speed",
 ):
-    # Validate model and ensure the requested height has wind direction data available
     model = validate_model_exists(model)
     height = validate_height(model, height, "windspeed")
     height = validate_height(model, height, "winddirection")
     sectors = validate_sectors(sectors)
-    calm_threshold = validate_calm_threshold(calm_threshold)
+    rose_type = validate_rose_type(rose_type)
+    calm_threshold = validate_calm_threshold(calm_threshold, rose_type)
     bin = validate_bin(bin)
+    power_curve = None
+    if rose_type == "energy":
+        power_curve = validate_powercurve(turbine, custom_power_curve)
+
     source = MODEL_CONFIG.get(model, {}).get("source")
 
     ws_col = f"windspeed_{height}m"
     wd_col = f"winddirection_{height}m"
 
-    # Fetch raw hourly timeseries; wind rose requires full per-hour records
+    # Fetch raw hourly timeseries; rose requires full per-hour records
     df = get_timeseries_core(
         model,
         gridIndices,
@@ -398,10 +406,19 @@ def get_windrose_core(
     wd = df[wd_col].to_numpy(dtype=float)
     total = len(ws)
 
-    # Separate calm rows (speed below threshold) from active rows used in sector assignment
-    calm_mask = ws < calm_threshold
+    if rose_type == "energy":
+        # Apply power curve: wind speed (m/s) → power output (kW)
+        ws_df = pd.DataFrame({"ws-adjusted": ws})
+        values = np.array(power_curve.windspeed_to_kw(ws_df), dtype=float)
+        bin_edge_decimals = 0
+    elif rose_type == "wind_speed":
+        values = ws
+        bin_edge_decimals = 1
+
+    calm_mask = values <= calm_threshold
+
     calm_fraction = round(float(calm_mask.sum()) / total, 3)
-    active_ws = ws[~calm_mask]
+    active_values = values[~calm_mask]
     active_wd = wd[~calm_mask]
 
     # Divide the compass into equal sectors and assign each active observation to one
@@ -409,10 +426,15 @@ def get_windrose_core(
     sector_idx = (
         np.floor((active_wd + sector_width_deg / 2) % 360 / sector_width_deg)
     ).astype(int)
-    raw_max_ws = float(np.ceil(active_ws.max()))
-    # Round up to the nearest multiple of bin count for clean integer edges
-    max_ws = float(np.ceil(raw_max_ws / bin) * bin)
-    bin_edges = [round(float(e), 1) for e in np.linspace(0, max_ws, bin + 1)]
+
+    raw_max = (
+        float(np.ceil(active_values.max())) if len(active_values) > 0 else float(bin)
+    )
+    # Round up to the nearest multiple of bin count for clean edges
+    max_val = float(np.ceil(raw_max / bin) * bin)
+    bin_edges = [
+        round(float(e), bin_edge_decimals) for e in np.linspace(0, max_val, bin + 1)
+    ]
 
     bin_info = [
         {
@@ -437,15 +459,14 @@ def get_windrose_core(
         "no_of_sectors": sectors,
         "no_of_bins": bin,
         "calm_info": {"calm_threshold": calm_threshold, "calm_fraction": calm_fraction},
-        "calm_data": ws[calm_mask].round(2).tolist(),
+        "calm_data": np.round(values[calm_mask], 2).tolist(),
         "sector_info": sector_info,
     }
 
     bin_data = []
     for i in range(sectors):
-        sector_ws = sorted(active_ws[sector_idx == i].round(2).tolist())
-        # skip binning computation if sector_ws is empty
-        if not sector_ws:
+        sector_values = sorted(active_values[sector_idx == i].round(2).tolist())
+        if not sector_values:
             for j in range(bin):
                 bin_data.append(
                     {
@@ -457,10 +478,12 @@ def get_windrose_core(
                 )
             continue
 
-        right_boundaries = [bisect.bisect_right(sector_ws, e) for e in bin_edges[1:]]
+        right_boundaries = [
+            bisect.bisect_right(sector_values, e) for e in bin_edges[1:]
+        ]
         prev = 0
         for j in range(bin):
-            data = sector_ws[prev : right_boundaries[j]]
+            data = sector_values[prev : right_boundaries[j]]
             prev = right_boundaries[j]
             freq = round(len(data) / total, 4)
             bin_data.append(
