@@ -102,7 +102,7 @@ export const EnsembleTiles = memo(() => {
           Wind Speed
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          {convertWindspeed(windData?.global_avg ?? 0, units.windspeed)}
+          {convertWindspeed(windData?.global_avg ?? 0, "m/s", units.windspeed)}
         </Typography>
       </Paper>
 

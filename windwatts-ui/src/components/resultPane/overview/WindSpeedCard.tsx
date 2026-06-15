@@ -47,6 +47,7 @@ export const WindSpeedCard = memo(() => {
 
   const windSpeedData = convertWindspeed(
     windData?.global_avg ?? 0,
+    "m/s",
     units.windspeed
   );
 

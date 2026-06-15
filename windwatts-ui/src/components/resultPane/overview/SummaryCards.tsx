@@ -116,6 +116,7 @@ export const SummaryCards = memo(() => {
     isEnsemble
       ? (ensembleTiles.windData?.global_avg ?? 0)
       : (eraWind.windData?.global_avg ?? 0),
+    "m/s",
     units.windspeed
   );
 

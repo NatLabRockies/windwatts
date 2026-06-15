@@ -160,9 +160,11 @@ const ProductionDisplay = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {convertWindspeed(windSpeed, units.windspeed).replace(
-                        /\s\w+\/?\w*$/,
-                        ""
+                      {convertWindspeed(
+                        windSpeed,
+                        "m/s",
+                        units.windspeed,
+                        true
                       )}
                     </Box>
                   </Box>

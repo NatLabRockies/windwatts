@@ -9,15 +9,21 @@ export const getWindResource = (speed: number) => {
   return speed > 5 ? "High" : speed >= 3 ? "Moderate" : "Low";
 };
 
-export const convertWindspeed = (speed = 0, units = "mph") => {
-  const value =
-    units === "mph" ? (speed * 2.2369).toFixed(1) : speed.toFixed(1);
-  return `${value} ${units === "mph" ? "mph" : "m/s"}`;
+export const convertWindspeed = (
+  speed: number = 0,
+  from: string = "m/s",
+  to: string = "m/s",
+  valueOnly: boolean = false
+): string => {
+  const toMs = from === "mph" ? speed / 2.2369 : speed;
+  const converted = to === "mph" ? toMs * 2.2369 : toMs;
+  const value = converted.toFixed(1);
+  return valueOnly ? value : `${value} ${to}`;
 };
 
-export const convertOutput = (output = 0, units = "kWh") => {
-  const value = units === "MWh" ? output / 1000 : output;
-  return `${formatNumber(value, 1)} ${units}`;
+export const convertOutput = (output = 0, unit = "kWh") => {
+  const value = unit === "MWh" ? output / 1000 : output;
+  return `${formatNumber(value, 1)} ${unit}`;
 };
 
 // Loss helpers
