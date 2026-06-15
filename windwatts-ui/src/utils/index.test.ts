@@ -1,12 +1,32 @@
 import { describe, expect, test } from "vitest";
 import {
-  convertOutput,
-  convertWindspeed,
+  convertUnit,
   getWindResource,
   percentToFactor,
   applyLoss,
   roundToSignificantDigits,
 } from ".";
+
+describe("convertUnit", () => {
+  test("windspeed: m/s to mph", () => {
+    expect(convertUnit(10, "windspeed", "mph")).toBe("22.4 mph");
+  });
+  test("windspeed: m/s to m/s (identity)", () => {
+    expect(convertUnit(10, "windspeed", "m/s")).toBe("10.0 m/s");
+  });
+  test("windspeed: mph to m/s via fromUnit", () => {
+    expect(convertUnit(22.369, "windspeed", "m/s", "mph")).toBe("10.0 m/s");
+  });
+  test("energy: kWh identity with locale formatting", () => {
+    expect(convertUnit(1000, "energy", "kWh")).toBe("1,000.0 kWh");
+  });
+  test("energy: kWh to MWh", () => {
+    expect(convertUnit(1000, "energy", "MWh")).toBe("1.0 MWh");
+  });
+  test("valueOnly omits unit label", () => {
+    expect(convertUnit(1000, "energy", "kWh", undefined, true)).toBe("1,000.0");
+  });
+});
 
 describe("getWindResource", () => {
   test("with high wind speed", () => {

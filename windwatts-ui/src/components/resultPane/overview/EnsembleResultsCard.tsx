@@ -3,11 +3,7 @@ import { Box, Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../../providers/UnitsContext";
 import { SettingsContext } from "../../../providers/SettingsContext";
 import { useEnsemble } from "../../../hooks";
-import {
-  convertWindspeed,
-  convertOutput,
-  getWindResource,
-} from "../../../utils";
+import { convertUnit, convertUnit, getWindResource } from "../../../utils";
 
 // Compact, card-less variant for embedding in the top row - using ensemble model
 export const EnsembleTiles = memo(() => {
@@ -102,7 +98,7 @@ export const EnsembleTiles = memo(() => {
           Wind Speed
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          {convertWindspeed(windData?.global_avg ?? 0, "m/s", units.windspeed)}
+          {convertUnit(windData?.global_avg ?? 0, "windspeed", units.windspeed)}
         </Typography>
       </Paper>
 
@@ -138,10 +134,13 @@ export const EnsembleTiles = memo(() => {
           Production
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          {convertOutput(
+          {convertUnit(
             Number(productionData?.energy_production || 0),
-            units.energy
-          ).replace(/\s\w+$/, "")}
+            "energy",
+            units.energy,
+            undefined,
+            true
+          )}
         </Typography>
         <Typography variant="caption">{units.energy}</Typography>
       </Paper>

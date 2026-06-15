@@ -16,7 +16,7 @@ import {
 import { useContext, useState, type SyntheticEvent } from "react";
 import { ExpandMore } from "@mui/icons-material";
 import { UnitsContext } from "../../../providers/UnitsContext";
-import { convertOutput, convertWindspeed } from "../../../utils";
+import { convertUnit } from "../../../utils";
 import {
   KEY_AVG_WIND_SPEED,
   KEY_KWH_PRODUCED,
@@ -160,10 +160,11 @@ const ProductionDisplay = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {convertWindspeed(
+                      {convertUnit(
                         windSpeed,
-                        "m/s",
+                        "windspeed",
                         units.windspeed,
+                        undefined,
                         true
                       )}
                     </Box>
@@ -214,9 +215,12 @@ const ProductionDisplay = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {convertOutput(production, units.energy).replace(
-                        /\s\w+$/,
-                        ""
+                      {convertUnit(
+                        production,
+                        "energy",
+                        units.energy,
+                        undefined,
+                        true
                       )}
                     </Box>
                   </Box>

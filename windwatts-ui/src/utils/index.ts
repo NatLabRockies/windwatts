@@ -9,21 +9,36 @@ export const getWindResource = (speed: number) => {
   return speed > 5 ? "High" : speed >= 3 ? "Moderate" : "Low";
 };
 
-export const convertWindspeed = (
-  speed: number = 0,
-  from: string = "m/s",
-  to: string = "m/s",
-  valueOnly: boolean = false
-): string => {
-  const toMs = from === "mph" ? speed / 2.2369 : speed;
-  const converted = to === "mph" ? toMs * 2.2369 : toMs;
-  const value = converted.toFixed(1);
-  return valueOnly ? value : `${value} ${to}`;
+// Base units matching API output
+const BASE_UNITS: Record<string, string> = {
+  windspeed: "m/s",
+  energy: "kWh",
 };
 
-export const convertOutput = (output = 0, unit = "kWh") => {
-  const value = unit === "MWh" ? output / 1000 : output;
-  return `${formatNumber(value, 1)} ${unit}`;
+// Unit Converter
+export const convertUnit = (
+  value: number,
+  type: string,
+  toUnit: string,
+  fromUnit?: string,
+  valueOnly?: boolean,
+  locale?: string
+): string => {
+  const baseUnit = BASE_UNITS[type] ?? toUnit;
+  const from = fromUnit ?? baseUnit; // fallback to base unit
+
+  let converted: number;
+  if (type === "windspeed") {
+    const toMs = from === "mph" ? value / 2.2369 : value;
+    converted = toUnit === "mph" ? toMs * 2.2369 : toMs;
+  } else if (type === "energy") {
+    converted = toUnit === "MWh" ? value / 1000 : value;
+  } else {
+    converted = value;
+  }
+
+  const result = formatNumber(converted, 1, locale ?? "en-US");
+  return valueOnly ? result : `${result} ${toUnit}`;
 };
 
 // Loss helpers
