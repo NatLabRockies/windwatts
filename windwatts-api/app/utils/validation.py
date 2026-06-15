@@ -257,7 +257,7 @@ def validate_sectors(sectors: int) -> int:
     return sectors
 
 
-VALID_ROSE_TYPES = ("wind_speed", "energy")
+VALID_ROSE_TYPES = ("windspeed", "energy")
 
 
 def validate_rose_type(rose_type: str) -> str:
@@ -280,7 +280,7 @@ def validate_calm_threshold(
                 status_code=400,
                 detail="calm_threshold must be >= 0 kW.",
             )
-    elif rose_type == "wind_speed":
+    elif rose_type == "windspeed":
         if not (0 <= calm_threshold < 3):
             raise HTTPException(
                 status_code=400,

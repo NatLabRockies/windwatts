@@ -371,7 +371,7 @@ def get_windrose_core(
     year_range: Optional[str],
     turbine: Optional[str] = None,
     custom_power_curve: Optional[PowerCurveData] = None,
-    rose_type: str = "wind_speed",
+    rose_type: str = "windspeed",
 ):
     model = validate_model_exists(model)
     height = validate_height(model, height, "windspeed")
@@ -413,7 +413,7 @@ def get_windrose_core(
             power_curve.windspeed_to_kw(ws_df, ws_column="ws-adjusted"), dtype=float
         )
         bin_edge_decimals = 0
-    elif rose_type == "wind_speed":
+    elif rose_type == "windspeed":
         values = ws
         bin_edge_decimals = 1
 

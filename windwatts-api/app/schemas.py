@@ -631,8 +631,8 @@ class RoseRequestPayload(BaseModel):
     gridIndex: str = Field(..., description="Grid index identifier")
     height: int = Field(..., description="Height in meters")
     rose_type: str = Field(
-        "wind_speed",
-        description="Type of rose to compute: 'wind_speed' (default) or 'energy'",
+        "windspeed",
+        description="Type of rose to compute: 'windspeed' (default) or 'energy'",
     )
     bin: int = Field(5, description="Number of equal-width bins. Valid range: [1, 10].")
     sectors: int = Field(16, description="Directional sectors: 4, 8 or 16")
