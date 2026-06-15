@@ -1,3 +1,5 @@
 export interface StoredUnits {
-  [key: string]: string;
+  windspeed: string;
+  energy: string;
+  [key: string]: string; // allow extension without breaking existing spread/merge patterns
 }
