@@ -140,10 +140,10 @@ export const EnsembleTiles = memo(() => {
         <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {convertOutput(
             Number(productionData?.energy_production || 0),
-            units.output
+            units.energy
           ).replace(/\s\w+$/, "")}
         </Typography>
-        <Typography variant="caption">{units.output}</Typography>
+        <Typography variant="caption">{units.energy}</Typography>
       </Paper>
     </Box>
   );

@@ -257,7 +257,7 @@ export const ProductionCard = memo(
                       mb: 0.75,
                     }}
                   >
-                    {convertOutput(metric.value, units.output)}
+                    {convertOutput(metric.value, units.energy)}
                   </Typography>
 
                   <Box

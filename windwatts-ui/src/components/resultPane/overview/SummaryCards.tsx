@@ -128,7 +128,7 @@ export const SummaryCards = memo(() => {
           KEY_AVERAGE_YEAR
         ]?.[KEY_KWH_PRODUCED] || 0
       );
-  const prodFormatted = convertOutput(rawProdValue, units.output);
+  const prodFormatted = convertOutput(rawProdValue, units.energy);
   // Split "1,200.0 kWh" → number part + unit part
   const prodParts = prodFormatted.split(/\s+/);
   const prodNumber = prodParts.slice(0, -1).join(" ");

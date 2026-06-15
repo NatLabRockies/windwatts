@@ -92,7 +92,7 @@ const ProductionDisplay = ({
               Wind Speed ({units.windspeed})
             </TableCell>
             <TableCell align="right" sx={{ fontWeight: "bold", width: "40%" }}>
-              Energy ({units.output})
+              Energy ({units.energy})
             </TableCell>
           </TableRow>
         </TableHead>
@@ -214,7 +214,7 @@ const ProductionDisplay = ({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {convertOutput(production, units.output).replace(
+                      {convertOutput(production, units.energy).replace(
                         /\s\w+$/,
                         ""
                       )}

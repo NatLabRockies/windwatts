@@ -10,7 +10,7 @@ export interface Units {
 
 export const defaultUnitValues: StoredUnits = {
   windspeed: "mph",
-  output: "kWh",
+  energy: "kWh",
 };
 
 export const defaultValues: Units = {
