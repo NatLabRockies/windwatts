@@ -9,7 +9,7 @@ import type { WindRoseType } from "../types/WindRose";
 
 export const useWindRoseData = (
   gridIndex?: string,
-  roseType: WindRoseType = "wind_speed"
+  roseType: WindRoseType = "windspeed"
 ) => {
   const { hubHeight, preferredModel, turbine, customCurves } =
     useContext(SettingsContext);
