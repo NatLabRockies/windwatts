@@ -37,7 +37,7 @@ export const useWindRoseData = (
       dataModel,
       endpoint: "windrose",
       roseType,
-      ...(roseType === "energy" && {
+      ...(roseType === "power" && {
         turbine: isCustomTurbine ? customCurve?.id : turbine,
       }),
     });
@@ -60,7 +60,7 @@ export const useWindRoseData = (
         height: windRoseHeight,
         dataModel,
         rose_type: roseType,
-        ...(roseType === "energy"
+        ...(roseType === "power"
           ? isCustomTurbine && customCurve
             ? { customPowerCurve: customCurve.data }
             : { turbine }

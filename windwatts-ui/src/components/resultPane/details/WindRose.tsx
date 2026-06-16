@@ -29,6 +29,7 @@ import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 interface WindRoseProps {
   toggle?: boolean;
   onToggleChange?: (toggle: boolean) => void;
+  roseType: WindRoseType;
 }
 
 export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
@@ -156,8 +157,8 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
         <MenuItem value="windspeed" sx={{ fontSize: "0.75rem" }}>
           Wind Speed
         </MenuItem>
-        <MenuItem value="energy" sx={{ fontSize: "0.75rem" }}>
-          Energy
+        <MenuItem value="power" sx={{ fontSize: "0.75rem" }}>
+          Power
         </MenuItem>
       </Select>
     </Box>

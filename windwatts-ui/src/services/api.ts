@@ -106,7 +106,7 @@ export const getWindRose = async (
   const {
     gridIndex,
     height,
-    rose_type = "wind_speed",
+    rose_type = "windspeed",
     sectors = 16,
     bin = 5,
     calmThreshold,

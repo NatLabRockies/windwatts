@@ -13,6 +13,7 @@ export const getWindResource = (speed: number) => {
 const BASE_UNITS: Record<string, string> = {
   windspeed: "m/s",
   energy: "kWh",
+  power: "kW",
 };
 
 // Unit Converter
@@ -33,6 +34,8 @@ export const convertUnit = (
     converted = toUnit === "mph" ? toMs * 2.2369 : toMs;
   } else if (type === "energy") {
     converted = toUnit === "MWh" ? value / 1000 : value;
+  } else if (type === "power") {
+    converted = toUnit === "MW" ? value / 1000 : value;
   } else {
     converted = value;
   }

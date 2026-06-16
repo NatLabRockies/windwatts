@@ -1,1 +1,1 @@
-export type WindRoseType = "windspeed" | "energy";
+export type WindRoseType = "windspeed" | "power";
