@@ -381,7 +381,7 @@ def get_windrose_core(
     calm_threshold = validate_calm_threshold(calm_threshold, rose_type)
     bin = validate_bin(bin)
     power_curve = None
-    if rose_type == "energy":
+    if rose_type == "power":
         power_curve = validate_powercurve(turbine, custom_power_curve)
 
     source = MODEL_CONFIG.get(model, {}).get("source")
@@ -406,7 +406,7 @@ def get_windrose_core(
     wd = df[wd_col].to_numpy(dtype=float)
     total = len(ws)
 
-    if rose_type == "energy":
+    if rose_type == "power":
         # Apply power curve: wind speed (m/s) → power output (kW)
         ws_df = pd.DataFrame({"ws-adjusted": ws})
         values = np.array(

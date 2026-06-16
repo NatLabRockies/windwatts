@@ -632,7 +632,7 @@ class RoseRequestPayload(BaseModel):
     height: int = Field(..., description="Height in meters")
     rose_type: str = Field(
         "windspeed",
-        description="Type of rose to compute: 'windspeed' (default) or 'energy'",
+        description="Type of rose to compute: 'windspeed' (default) or 'power'",
     )
     bin: int = Field(5, description="Number of equal-width bins. Valid range: [1, 10].")
     sectors: int = Field(16, description="Directional sectors: 4, 8 or 16")

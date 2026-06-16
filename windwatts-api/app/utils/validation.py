@@ -257,7 +257,7 @@ def validate_sectors(sectors: int) -> int:
     return sectors
 
 
-VALID_ROSE_TYPES = ("windspeed", "energy")
+VALID_ROSE_TYPES = ("windspeed", "power")
 
 
 def validate_rose_type(rose_type: str) -> str:
@@ -271,10 +271,10 @@ def validate_rose_type(rose_type: str) -> str:
 
 
 def validate_calm_threshold(
-    calm_threshold: float, rose_type: str = "wind_speed"
+    calm_threshold: float, rose_type: str = "windspeed"
 ) -> float:
     """Validate calm threshold for Wind Rose."""
-    if rose_type == "energy":
+    if rose_type == "power":
         if calm_threshold < 0:
             raise HTTPException(
                 status_code=400,
