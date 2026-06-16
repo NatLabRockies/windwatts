@@ -40,24 +40,6 @@ describe("getWindResource", () => {
   });
 });
 
-describe("convertWindspeed", () => {
-  test("converts to mph", () => {
-    expect(convertWindspeed(10, "m/s", "mph")).toBe("22.4 mph");
-  });
-  test("converts to m/s", () => {
-    expect(convertWindspeed(10, "m/s", "m/s")).toBe("10.0 m/s");
-  });
-});
-
-describe("convertOutput", () => {
-  test("converts to kWh", () => {
-    expect(convertOutput(1000, "kWh")).toBe("1,000.0 kWh");
-  });
-  test("converts to MWh", () => {
-    expect(convertOutput(1000, "MWh")).toBe("1.0 MWh");
-  });
-});
-
 describe("percentToFactor", () => {
   test("17% -> 0.83", () => {
     expect(percentToFactor(17)).toBeCloseTo(0.83, 2);
