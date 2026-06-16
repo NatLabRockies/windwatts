@@ -3,7 +3,7 @@ import { Box, Paper, Typography, Skeleton } from "@mui/material";
 import { UnitsContext } from "../../../providers/UnitsContext";
 import { SettingsContext } from "../../../providers/SettingsContext";
 import { useEnsemble } from "../../../hooks";
-import { convertUnit, convertUnit, getWindResource } from "../../../utils";
+import { convertUnit, getWindResource } from "../../../utils";
 
 // Compact, card-less variant for embedding in the top row - using ensemble model
 export const EnsembleTiles = memo(() => {

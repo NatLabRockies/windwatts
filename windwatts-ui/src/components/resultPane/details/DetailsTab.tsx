@@ -1,4 +1,4 @@
-import type { WindRoseType } from "../../types";
+import type { WindRoseType } from "../../../types";
 import { Stack } from "@mui/material";
 import { getOutOfBoundsMessage } from "../../../utils";
 import { useOutputUnit, useProductionData } from "../../../hooks";
