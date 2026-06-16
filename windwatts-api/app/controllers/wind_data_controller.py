@@ -873,7 +873,7 @@ def get_windrose(
 
 @router.post(
     "/{model}/windrose",
-    summary="Wind rose from hourly timeseries (wind speed or energy)",
+    summary="Wind rose from hourly timeseries (wind speed or power)",
     response_model=RoseResponse,
     responses={
         200: {"description": "Wind rose data retrieved successfully"},
