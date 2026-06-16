@@ -33,9 +33,11 @@ export const convertUnit = (
     const toMs = from === "mph" ? value / 2.2369 : value;
     converted = toUnit === "mph" ? toMs * 2.2369 : toMs;
   } else if (type === "energy") {
-    converted = toUnit === "MWh" ? value / 1000 : value;
+    const toMWh = from === "MWh" ? value * 1000 : value;
+    converted = toUnit === "MWh" ? toMWh / 1000 : toMWh;
   } else if (type === "power") {
-    converted = toUnit === "MW" ? value / 1000 : value;
+    const toMW = from === "MW" ? value * 1000 : value;
+    converted = toUnit === "MW" ? toMW / 1000 : toMW;
   } else {
     converted = value;
   }
