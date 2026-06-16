@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState, type SyntheticEvent } from "react";
+import { useContext, useMemo, type SyntheticEvent } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -29,20 +29,22 @@ import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 interface WindRoseProps {
   toggle?: boolean;
   onToggleChange?: (toggle: boolean) => void;
-  roseType: WindRoseType;
+  roseType?: WindRoseType;
+  onRoseTypeChange?: (roseType: WindRoseType) => void;
 }
 
-export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
-  const [expanded, setExpanded] = useState(toggle);
-  const [roseType, setRoseType] = useState<WindRoseType>("windspeed");
-
+export const WindRose = ({
+  toggle = true,
+  onToggleChange,
+  roseType = "windspeed",
+  onRoseTypeChange,
+}: WindRoseProps) => {
   const handleExpandChange = (_event: SyntheticEvent, isExpanded: boolean) => {
-    setExpanded(isExpanded);
     onToggleChange?.(isExpanded);
   };
 
   const handleRoseTypeChange = (event: SelectChangeEvent<WindRoseType>) => {
-    setRoseType(event.target.value as WindRoseType);
+    onRoseTypeChange?.(event.target.value as WindRoseType);
   };
 
   const {
@@ -167,7 +169,7 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
   return (
     <Accordion
       variant="outlined"
-      expanded={expanded}
+      expanded={toggle}
       onChange={handleExpandChange}
     >
       <AccordionSummary expandIcon={<ExpandMore />}>
@@ -198,7 +200,7 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
             color="text.secondary"
             sx={{ flexShrink: 0, ml: 1 }}
           >
-            {expanded ? "Hide" : "Show"}
+            {toggle ? "Hide" : "Show"}
           </Typography>
         </Box>
       </AccordionSummary>
