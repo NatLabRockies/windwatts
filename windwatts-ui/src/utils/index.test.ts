@@ -1,12 +1,32 @@
 import { describe, expect, test } from "vitest";
 import {
-  convertOutput,
-  convertWindspeed,
+  convertUnit,
   getWindResource,
   percentToFactor,
   applyLoss,
   roundToSignificantDigits,
 } from ".";
+
+describe("convertUnit", () => {
+  test("windspeed: m/s to mph", () => {
+    expect(convertUnit(10, "windspeed", "mph")).toBe("22.4 mph");
+  });
+  test("windspeed: m/s to m/s (identity)", () => {
+    expect(convertUnit(10, "windspeed", "m/s")).toBe("10.0 m/s");
+  });
+  test("windspeed: mph to m/s via fromUnit", () => {
+    expect(convertUnit(22.369, "windspeed", "m/s", "mph")).toBe("10.0 m/s");
+  });
+  test("energy: kWh identity with locale formatting", () => {
+    expect(convertUnit(1000, "energy", "kWh")).toBe("1,000.0 kWh");
+  });
+  test("energy: kWh to MWh", () => {
+    expect(convertUnit(1000, "energy", "MWh")).toBe("1.0 MWh");
+  });
+  test("valueOnly omits unit label", () => {
+    expect(convertUnit(1000, "energy", "kWh", undefined, true)).toBe("1,000.0");
+  });
+});
 
 describe("getWindResource", () => {
   test("with high wind speed", () => {
@@ -17,24 +37,6 @@ describe("getWindResource", () => {
   });
   test("with low wind speed", () => {
     expect(getWindResource(2)).toBe("Low");
-  });
-});
-
-describe("convertWindspeed", () => {
-  test("converts to mph", () => {
-    expect(convertWindspeed(10, "mph")).toBe("22.4 mph");
-  });
-  test("converts to m/s", () => {
-    expect(convertWindspeed(10, "m/s")).toBe("10.0 m/s");
-  });
-});
-
-describe("convertOutput", () => {
-  test("converts to kWh", () => {
-    expect(convertOutput(1000, "kWh")).toBe("1,000.0 kWh");
-  });
-  test("converts to MWh", () => {
-    expect(convertOutput(1000, "MWh")).toBe("1.0 MWh");
   });
 });
 

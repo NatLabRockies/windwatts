@@ -1,7 +1,7 @@
 import { useContext, memo } from "react";
 import { Typography } from "@mui/material";
 import { UnitsContext } from "../../../providers/UnitsContext";
-import { convertWindspeed, getOutOfBoundsMessage } from "../../../utils";
+import { convertUnit, getOutOfBoundsMessage } from "../../../utils";
 import { useWindData } from "../../../hooks";
 import {
   OutOfBoundsCard,
@@ -45,8 +45,9 @@ export const WindSpeedCard = memo(() => {
     return <EmptyCard title={title} />;
   }
 
-  const windSpeedData = convertWindspeed(
+  const windSpeedData = convertUnit(
     windData?.global_avg ?? 0,
+    "windspeed",
     units.windspeed
   );
 

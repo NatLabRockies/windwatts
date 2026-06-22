@@ -1,3 +1,4 @@
+import type { WindRoseType } from "../../../types";
 import { Stack } from "@mui/material";
 import { getOutOfBoundsMessage } from "../../../utils";
 import { useOutputUnit, useProductionData } from "../../../hooks";
@@ -8,6 +9,8 @@ import { ProductionCard } from "./ProductionCard";
 interface DetailsTabProps {
   windRoseToggle?: boolean;
   onWindRoseToggleChange?: (toggle: boolean) => void;
+  windRoseType?: WindRoseType;
+  onWindRoseTypeChange?: (roseType: WindRoseType) => void;
   prodCardOpen?: boolean;
   onProdCardOpenChange?: (open: boolean) => void;
   prodTableOpen?: boolean;
@@ -17,6 +20,8 @@ interface DetailsTabProps {
 export const DetailsTab = ({
   windRoseToggle = true,
   onWindRoseToggleChange,
+  windRoseType,
+  onWindRoseTypeChange,
   prodCardOpen = true,
   onProdCardOpenChange,
   prodTableOpen = true,
@@ -55,6 +60,8 @@ export const DetailsTab = ({
       <WindRose
         toggle={windRoseToggle}
         onToggleChange={onWindRoseToggleChange}
+        roseType={windRoseType}
+        onRoseTypeChange={onWindRoseTypeChange}
       />
 
       <ProductionDataTable
