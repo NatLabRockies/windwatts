@@ -627,6 +627,35 @@ class RoseResponse(BaseModel):
     )
 
 
+class RoseRequestPayload(BaseModel):
+    gridIndex: str = Field(..., description="Grid index identifier")
+    height: int = Field(..., description="Height in meters")
+    rose_type: str = Field(
+        "windspeed",
+        description="Type of rose to compute: 'windspeed' (default) or 'power'",
+    )
+    bin: int = Field(5, description="Number of equal-width bins. Valid range: [1, 10].")
+    sectors: int = Field(16, description="Directional sectors: 4, 8 or 16")
+    calm_threshold: float = Field(
+        0.0,
+        description="Value at or below which a row is calm. Defaults to 0.",
+    )
+    year_set: str = Field("sample", description="Dataset size: full or sample")
+    year_range: Optional[str] = Field(
+        None, description="Range of years for download. Format: YYYY-YYYY"
+    )
+    turbine: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=50,
+        description="Reference turbine name (see /turbines endpoint).",
+    )
+    custom_power_curve: Optional[PowerCurveData] = Field(
+        None,
+        description="Custom power curve data. Takes precedence over 'turbine'.",
+    )
+
+
 class ProductionRequestPayload(BaseModel):
     lat: float = Field(..., description="Latitude")
     lng: float = Field(..., description="Longitude")

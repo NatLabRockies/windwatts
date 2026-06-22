@@ -1,11 +1,13 @@
 import { Stack, Tabs, Tab } from "@mui/material";
 import { useState } from "react";
+import type { WindRoseType } from "../../types";
 import { OverviewTab } from "./overview/OverviewTab";
 import { DetailsTab } from "./details/DetailsTab";
 
 export const AnalysisResults = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [windRoseToggle, setWindRoseToggle] = useState(true);
+  const [windRoseType, setWindRoseType] = useState<WindRoseType>("windspeed");
   const [prodCardOpen, setProdCardOpen] = useState(true);
   const [prodTableOpen, setProdTableOpen] = useState(true);
 
@@ -37,6 +39,8 @@ export const AnalysisResults = () => {
         <DetailsTab
           windRoseToggle={windRoseToggle}
           onWindRoseToggleChange={setWindRoseToggle}
+          windRoseType={windRoseType}
+          onWindRoseTypeChange={setWindRoseType}
           prodCardOpen={prodCardOpen}
           onProdCardOpenChange={setProdCardOpen}
           prodTableOpen={prodTableOpen}

@@ -19,7 +19,7 @@ import {
   KEY_LOWEST_YEAR,
   DATA_MODEL_INFO,
 } from "../../../constants";
-import { convertOutput, getOutOfBoundsMessage } from "../../../utils";
+import { convertUnit, getOutOfBoundsMessage } from "../../../utils";
 import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 import { useProductionData } from "../../../hooks";
 
@@ -257,7 +257,7 @@ export const ProductionCard = memo(
                       mb: 0.75,
                     }}
                   >
-                    {convertOutput(metric.value, units.output)}
+                    {convertUnit(metric.value, "energy", units.energy)}
                   </Typography>
 
                   <Box

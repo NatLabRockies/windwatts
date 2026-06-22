@@ -1,6 +1,6 @@
 import type { Config, Data, Layout } from "plotly.js";
-import type { WindRoseResponse } from "../types";
-import { convertWindspeed } from "../utils";
+import type { StoredUnits, WindRoseResponse, WindRoseType } from "../types";
+import { convertUnit } from "../utils";
 import { getWindRoseDirectionLabel, toPercent } from "../utils/windRose";
 import {
   WIND_ROSE_DIRECTIONS_16,
@@ -12,7 +12,8 @@ const TRACE_COLORS = ["#D8E6FF", "#9FC2FF", "#5F96F4", "#2E6BD9", "#123E91"];
 
 export function buildWindRosePlotData(
   windRoseData: WindRoseResponse,
-  windspeedUnit: string = "m/s"
+  units: StoredUnits,
+  roseType: WindRoseType = "windspeed"
 ): Data[] {
   const sectorInfo = [...windRoseData.sector_info].sort(
     (a, b) => a.sector_index - b.sector_index
@@ -34,19 +35,14 @@ export function buildWindRosePlotData(
   }
 
   return binInfo.map((bin, index) => {
-    const unitLabel = windspeedUnit === "mph" ? "mph" : "m/s";
-    const minSpeed = convertWindspeed(bin.bin_min, unitLabel).replace(
-      /\s\w+\/?\w*$/,
-      ""
-    );
-    const maxSpeed = convertWindspeed(bin.bin_max, unitLabel).replace(
-      /\s\w+\/?\w*$/,
-      ""
-    );
+    const unit = units[roseType] ?? "m/s";
+    const minV = convertUnit(bin.bin_min, roseType, unit, undefined, true);
+    const maxV = convertUnit(bin.bin_max, roseType, unit, undefined, true);
+    const label: string = `${minV}-${maxV} ${unit}`;
 
     return {
       type: "barpolar",
-      name: `${minSpeed}-${maxSpeed} ${unitLabel}`,
+      name: label,
       theta,
       r: sectorInfo.map((sector) =>
         toPercent(
@@ -61,8 +57,7 @@ export function buildWindRosePlotData(
           width: 1,
         },
       },
-      hovertemplate:
-        "%{theta}<br>Speed bin: %{fullData.name}<br>Frequency: %{r:.1f}%<extra></extra>",
+      hovertemplate: `%{theta}<br>${roseType} bin: %{fullData.name}<br>Frequency: %{r:.1f}%<extra></extra>`,
     };
   });
 }

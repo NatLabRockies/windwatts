@@ -257,20 +257,40 @@ def validate_sectors(sectors: int) -> int:
     return sectors
 
 
-def validate_calm_threshold(calm_threshold: float) -> float:
-    "Validate calm threshold for Rose"
-    # TODO update the upper threshold based on windrose type for example power/energy rose.
-    if not (0 <= calm_threshold < 3):
+VALID_ROSE_TYPES = ("windspeed", "power")
+
+
+def validate_rose_type(rose_type: str) -> str:
+    """Validate rose_type parameter"""
+    if rose_type not in VALID_ROSE_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="calm_threshold must be between 0 and 3.",
+            detail=f"Invalid rose_type '{rose_type}'. Must be one of: {list(VALID_ROSE_TYPES)}.",
         )
+    return rose_type
+
+
+def validate_calm_threshold(
+    calm_threshold: float, rose_type: str = "windspeed"
+) -> float:
+    """Validate calm threshold for Wind Rose."""
+    if rose_type == "power":
+        if calm_threshold < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="calm_threshold must be >= 0 kW.",
+            )
+    elif rose_type == "windspeed":
+        if not (0 <= calm_threshold < 3):
+            raise HTTPException(
+                status_code=400,
+                detail="calm_threshold must be between 0 and 3 m/s.",
+            )
     return calm_threshold
 
 
 def validate_bin(bin: int) -> int:
     """Validate bin parameter for Rose"""
-    # TODO update the valid bin range based on rose type for example power/energy rose.
     if bin <= 0 or bin > 10:
         raise HTTPException(
             status_code=400,

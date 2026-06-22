@@ -4,9 +4,15 @@ import { SettingsContext } from "../providers/SettingsContext";
 import { getWindRose } from "../services/api";
 import { DATA_MODEL_INFO } from "../constants";
 import { findNearestWindDirectionHeight } from "../utils";
+import { isCustomTurbineId, resolveCustomCurve } from "../utils/turbine";
+import type { WindRoseType } from "../types/WindRose";
 
-export const useWindRoseData = (gridIndex?: string) => {
-  const { hubHeight, preferredModel } = useContext(SettingsContext);
+export const useWindRoseData = (
+  gridIndex?: string,
+  roseType: WindRoseType = "windspeed"
+) => {
+  const { hubHeight, preferredModel, turbine, customCurves } =
+    useContext(SettingsContext);
 
   const dataModel =
     preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
@@ -18,6 +24,9 @@ export const useWindRoseData = (gridIndex?: string) => {
     hubHeight
   );
 
+  const isCustomTurbine = isCustomTurbineId(turbine);
+  const customCurve = resolveCustomCurve(turbine, customCurves);
+
   const shouldFetch = !!(gridIndex && hubHeight && dataModel);
 
   const swrKey = useMemo(() => {
@@ -27,13 +36,36 @@ export const useWindRoseData = (gridIndex?: string) => {
       height: windRoseHeight,
       dataModel,
       endpoint: "windrose",
+      roseType,
+      ...(roseType === "power" && {
+        turbine: isCustomTurbine ? customCurve?.id : turbine,
+      }),
     });
-  }, [shouldFetch, gridIndex, windRoseHeight, dataModel]);
+  }, [
+    shouldFetch,
+    gridIndex,
+    windRoseHeight,
+    dataModel,
+    roseType,
+    turbine,
+    isCustomTurbine,
+    customCurve,
+  ]);
 
   const { isLoading, data, error } = useSWR(
     swrKey,
     () =>
-      getWindRose({ gridIndex: gridIndex!, height: windRoseHeight, dataModel }),
+      getWindRose({
+        gridIndex: gridIndex!,
+        height: windRoseHeight,
+        dataModel,
+        rose_type: roseType,
+        ...(roseType === "power"
+          ? isCustomTurbine && customCurve
+            ? { customPowerCurve: customCurve.data }
+            : { turbine }
+          : {}),
+      }),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,

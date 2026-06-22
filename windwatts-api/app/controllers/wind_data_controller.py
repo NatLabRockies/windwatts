@@ -28,6 +28,7 @@ from app.power_curve.global_power_curve_manager import power_curve_manager
 
 from app.schemas import (
     AvailableTurbinesResponse,
+    RoseRequestPayload,
     WindSpeedResponse,
     AvailablePowerCurvesResponse,
     EnergyProductionResponse,
@@ -824,7 +825,8 @@ def download_timeseries_energy_batch(
 
 @router.get(
     "/{model}/windrose",
-    summary="Wind rose from hourly timeseries",
+    summary="Wind speed rose from hourly timeseries",
+    deprecated=True,
     response_model=RoseResponse,
     responses={
         200: {"description": "Wind rose data retrieved successfully"},
@@ -850,6 +852,7 @@ def get_windrose(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
 ):
+    """Deprecated: use POST /{model}/windrose instead."""
     try:
         return get_windrose_core(
             model,
@@ -862,6 +865,46 @@ def get_windrose(
             year_set,
             year_range,
         )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post(
+    "/{model}/windrose",
+    summary="Wind rose from hourly timeseries (wind speed or power)",
+    response_model=RoseResponse,
+    responses={
+        200: {"description": "Wind rose data retrieved successfully"},
+        400: {"description": "Bad request - invalid parameters"},
+        404: {"description": "Data not found"},
+        500: {"description": "Internal server error"},
+    },
+)
+def post_windrose(
+    payload: RoseRequestPayload,
+    model: str = Path(..., description="Data model: era5-timeseries"),
+):
+    """
+    Compute a wind rose from hourly timeseries data.
+    """
+    try:
+        result = get_windrose_core(
+            model,
+            [payload.gridIndex],
+            payload.height,
+            data_fetcher_router,
+            payload.bin,
+            payload.sectors,
+            payload.calm_threshold,
+            payload.year_set,
+            payload.year_range,
+            turbine=payload.turbine,
+            custom_power_curve=payload.custom_power_curve,
+            rose_type=payload.rose_type,
+        )
+        return result
     except HTTPException:
         raise
     except Exception:
