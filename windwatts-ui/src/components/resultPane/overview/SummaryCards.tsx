@@ -12,8 +12,7 @@ import { UnitsContext } from "../../../providers/UnitsContext";
 import { SettingsContext } from "../../../providers/SettingsContext";
 import { useWindData, useProductionData, useEnsemble } from "../../../hooks";
 import {
-  convertWindspeed,
-  convertOutput,
+  convertUnit,
   getWindResource,
   getOutOfBoundsMessage,
 } from "../../../utils";
@@ -112,10 +111,11 @@ export const SummaryCards = memo(() => {
       : (eraWind.windData?.global_avg ?? 0)
   );
   const windInfo = getWindResourceInfo(windResource);
-  const windSpeedDisplay = convertWindspeed(
+  const windSpeedDisplay = convertUnit(
     isEnsemble
       ? (ensembleTiles.windData?.global_avg ?? 0)
       : (eraWind.windData?.global_avg ?? 0),
+    "windspeed",
     units.windspeed
   );
 
@@ -127,7 +127,7 @@ export const SummaryCards = memo(() => {
           KEY_AVERAGE_YEAR
         ]?.[KEY_KWH_PRODUCED] || 0
       );
-  const prodFormatted = convertOutput(rawProdValue, units.output);
+  const prodFormatted = convertUnit(rawProdValue, "energy", units.energy);
   // Split "1,200.0 kWh" → number part + unit part
   const prodParts = prodFormatted.split(/\s+/);
   const prodNumber = prodParts.slice(0, -1).join(" ");

@@ -1,6 +1,7 @@
 import { DataModel } from "./DataModel";
 import { GridLocation } from "./GridLocation";
 import { PowerCurvePoint } from "./CustomPowerCurve";
+import type { WindRoseType } from "./WindRose";
 
 export type WindspeedPeriod = "all" | "annual" | "monthly" | "hourly";
 
@@ -15,9 +16,12 @@ export interface WindRoseRequest {
   gridIndex: string;
   height: number;
   dataModel: DataModel;
+  rose_type?: WindRoseType;
   sectors?: 4 | 8 | 16;
   bin?: number;
   calmThreshold?: number;
+  turbine?: string;
+  customPowerCurve?: PowerCurvePoint[];
 }
 
 export interface EnergyProductionRequest {

@@ -29,6 +29,6 @@ export const useOutputUnit = () => {
       shouldUseMWh = prodAvg >= 10000;
     }
 
-    updateUnit("output", shouldUseMWh ? "MWh" : "kWh");
+    updateUnit("energy", shouldUseMWh ? "MWh" : "kWh");
   }, [preferredModel, prodData, ensembleData, updateUnit]);
 };

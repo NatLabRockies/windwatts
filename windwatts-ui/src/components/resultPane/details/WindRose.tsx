@@ -1,16 +1,20 @@
-import { useContext, useMemo, useState, type SyntheticEvent } from "react";
+import { useContext, useMemo, type SyntheticEvent } from "react";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
+  MenuItem,
+  Select,
   Skeleton,
   Stack,
   Typography,
 } from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
 import { ExpandMore } from "@mui/icons-material";
 import Plot from "react-plotly.js";
 import { useNearestGridLocation, useWindRoseData } from "../../../hooks";
+import type { WindRoseType } from "../../../types/WindRose";
 import { SettingsContext } from "../../../providers/SettingsContext";
 import { UnitsContext } from "../../../providers/UnitsContext";
 import { getOutOfBoundsMessage, isOutOfBounds } from "../../../utils";
@@ -25,13 +29,22 @@ import { OutOfBoundsWarning, ModelSourceChip } from "../../shared";
 interface WindRoseProps {
   toggle?: boolean;
   onToggleChange?: (toggle: boolean) => void;
+  roseType?: WindRoseType;
+  onRoseTypeChange?: (roseType: WindRoseType) => void;
 }
 
-export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
-  const [expanded, setExpanded] = useState(toggle);
+export const WindRose = ({
+  toggle = true,
+  onToggleChange,
+  roseType = "windspeed",
+  onRoseTypeChange,
+}: WindRoseProps) => {
   const handleExpandChange = (_event: SyntheticEvent, isExpanded: boolean) => {
-    setExpanded(isExpanded);
     onToggleChange?.(isExpanded);
+  };
+
+  const handleRoseTypeChange = (event: SelectChangeEvent<WindRoseType>) => {
+    onRoseTypeChange?.(event.target.value as WindRoseType);
   };
 
   const {
@@ -52,13 +65,15 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
       ? isOutOfBounds(lat, lng, dataModel)
       : false;
 
-  const { windRoseData, windRoseHeight, isLoading, error, hasData } =
-    useWindRoseData(outOfBounds ? undefined : gridIndex);
+  const { windRoseData, windRoseHeight, isLoading, error } = useWindRoseData(
+    outOfBounds ? undefined : gridIndex,
+    roseType
+  );
 
   const plotData = useMemo(
     () =>
-      windRoseData ? buildWindRosePlotData(windRoseData, units.windspeed) : [],
-    [windRoseData, units.windspeed]
+      windRoseData ? buildWindRosePlotData(windRoseData, units, roseType) : [],
+    [windRoseData, units, roseType]
   );
 
   const radialAxisMax = useMemo(() => {
@@ -88,13 +103,13 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
     <Typography color="error" variant="body2">
       Unable to load wind rose data. Please check your settings.
     </Typography>
-  ) : !hasData || !windRoseData ? (
+  ) : !windRoseData ? (
     <Typography variant="body2" color="text.secondary">
-      Select a location and hub height to see wind direction and speed
+      Select a location and hub height to see wind direction and data
       distribution.
     </Typography>
   ) : (
-    <Stack spacing={2}>
+    <>
       {windRoseHeight !== undefined && windRoseHeight !== hubHeight && (
         <Typography variant="caption" color="text.secondary">
           Showing closest available height for wind direction: {windRoseHeight}m
@@ -124,13 +139,37 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
           />
         </Box>
       </Box>
-    </Stack>
+    </>
+  );
+
+  const roseSelector = !outOfBounds && (
+    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+      <Select
+        value={roseType}
+        onChange={handleRoseTypeChange}
+        variant="standard"
+        disableUnderline
+        disabled={isLoading || isGridLoading}
+        sx={{
+          fontSize: "0.75rem",
+          color: "text.secondary",
+          ".MuiSelect-icon": { fontSize: "1rem" },
+        }}
+      >
+        <MenuItem value="windspeed" sx={{ fontSize: "0.75rem" }}>
+          Wind Speed
+        </MenuItem>
+        <MenuItem value="power" sx={{ fontSize: "0.75rem" }}>
+          Power
+        </MenuItem>
+      </Select>
+    </Box>
   );
 
   return (
     <Accordion
       variant="outlined"
-      expanded={expanded}
+      expanded={toggle}
       onChange={handleExpandChange}
     >
       <AccordionSummary expandIcon={<ExpandMore />}>
@@ -161,11 +200,16 @@ export const WindRose = ({ toggle = true, onToggleChange }: WindRoseProps) => {
             color="text.secondary"
             sx={{ flexShrink: 0, ml: 1 }}
           >
-            {expanded ? "Hide" : "Show"}
+            {toggle ? "Hide" : "Show"}
           </Typography>
         </Box>
       </AccordionSummary>
-      <AccordionDetails>{content}</AccordionDetails>
+      <AccordionDetails>
+        <Stack spacing={1}>
+          {roseSelector}
+          {content}
+        </Stack>
+      </AccordionDetails>
     </Accordion>
   );
 };

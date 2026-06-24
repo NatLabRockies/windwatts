@@ -1,12 +1,16 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { UnitsContext, defaultUnitValues } from "./UnitsContext";
 import { StoredUnits } from "../types";
 import { useLocalStorage } from "../hooks";
 
 export function UnitsProvider({ children }: { children: React.ReactNode }) {
-  const [units, setUnits] = useLocalStorage<StoredUnits>(
+  const [storedUnits, setUnits] = useLocalStorage<StoredUnits>(
     "units",
     defaultUnitValues
+  );
+  const units = useMemo(
+    () => ({ ...defaultUnitValues, ...storedUnits }),
+    [storedUnits]
   );
 
   const updateUnit = useCallback(
