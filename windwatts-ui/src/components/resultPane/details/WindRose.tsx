@@ -148,8 +148,8 @@ export const WindRose = ({
         value={roseType}
         onChange={handleRoseTypeChange}
         variant="standard"
+        size="small"
         disableUnderline
-        disabled={isLoading || isGridLoading}
         sx={{
           fontSize: "0.75rem",
           color: "text.secondary",
