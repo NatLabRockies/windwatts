@@ -76,11 +76,17 @@ def validate_height(model: str, height: int, height_type: str) -> int:
             status_code=400,
             detail=f"Model {model} doesn't support heights for {height_type}.",
         )
-    if height not in valid_heights:
+    if height in valid_heights:
+        return height
+    if not MODEL_CONFIG[model].get("interpolation", False):
         raise HTTPException(
             status_code=400,
             detail=f"Invalid height for {model}. Must be one of: {valid_heights} for {height_type}",
         )
+    # Interpolation check
+    min_h, max_h = min(valid_heights), max(valid_heights)
+    if not (min_h <= height <= max_h):
+        raise HTTPException(400, f"Height must be between {min_h}m and {max_h}m")
     return height
 
 
