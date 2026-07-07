@@ -1,5 +1,4 @@
-import gzip
-import pickle
+import numpy as np
 from scipy.spatial import cKDTree
 
 
@@ -7,15 +6,16 @@ class CKDTreeLookup:
     """Nearest-neighbor on a point cloud. For WTK and ERA5."""
 
     def __init__(self, index_path: str):
-        with gzip.open(index_path, "rb") as f:
-            self.location_data = pickle.load(f)
-        coords = self.location_data[["latitude", "longitude"]].values
+        data = np.load(index_path)
+        self._index = data["index"]
+        self._latitude = data["latitude"]
+        self._longitude = data["longitude"]
+        coords = np.column_stack((self._latitude, self._longitude))
         self.tree = cKDTree(coords)
 
     def find_nearest(self, lat: float, lng: float) -> tuple[str, float, float]:
         _, idx = self.tree.query([lat, lng])
-        row = self.location_data.iloc[idx]
-        return (str(row["index"]), float(row["latitude"]), float(row["longitude"]))
+        return (str(self._index[idx]), float(self._latitude[idx]), float(self._longitude[idx]))
 
     def find_n_nearest(
         self, lat: float, lng: float, n: int
@@ -25,9 +25,9 @@ class CKDTreeLookup:
             indices = [indices]
         return [
             (
-                str(self.location_data.iloc[i]["index"]),
-                float(self.location_data.iloc[i]["latitude"]),
-                float(self.location_data.iloc[i]["longitude"]),
+                str(self._index[i]),
+                float(self._latitude[i]),
+                float(self._longitude[i]),
             )
             for i in indices
         ]
