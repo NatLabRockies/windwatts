@@ -1,50 +1,71 @@
+import boto3
+import time
+import pandas as pd
+from io import StringIO
+from collections import OrderedDict
+
 from .abstract_data_fetcher import AbstractDataFetcher
-from windwatts_data import (
-    WindwattsWTKClient,
-    WindwattsERA5Client,
-    WindwattsEnsembleClient,
+from app.spatial import find_nearest, find_n_nearest
+from app.utils.wind_processing import (
+    resolve_heights,
+    interpolate_windspeed,
+    aggregate,
+    aggregate_quantile,
 )
+from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 
 
 class AthenaDataFetcher(AbstractDataFetcher):
-    def __init__(self, athena_config: str, source_key: str):
+    def __init__(self, athena_config: dict, model_key: str):
         """
-        Initializes the AthenaDataFetcher with a single source_key like 'wtk', 'era5', or 'era5_bc'.
-        We infer the base family ('wtk' or 'era5') from the part before the first underscore.
+        Initializes the AthenaDataFetcher with a single model_key like 'wtk-timeseries', 'era5-quantiles', or 'ensemble-quantiles' with its respective Athena config.
 
         Args:
-            athena_config (str): Path to the Athena configuration file.
-            source_key (str): Key in the config that specifies which athena source.
+            athena_config (str): Full athena config dict from ConfigManager.get_config()
+            model_key (str): Key into config["sources"], e.g. "wtk-timeseries", "era5-quantiles", "ensemble-quantiles". Same as MODEL_CONFIG keys.
         """
-        # self.data_type = data_type.lower()
-        self.source_key = source_key.lower()
-        self.base_type = self.source_key.split("_", 1)[
-            0
-        ]  # 'wtk' or 'era5' (from 'era5_bc' too)
+        print(f"Initializing Athene Data Fetcher for '{model_key}'")
+        self.model_key = model_key
+        source = athena_config["sources"][model_key]
 
-        if self.base_type == "wtk":
-            print(f"Initializing WTK Client with Source Key: {self.source_key}")
-            self.client = WindwattsWTKClient(
-                config_path=athena_config, source_key=self.source_key
-            )  # source_key  "wtk"
-        elif self.base_type == "era5":
-            print(f"Initializing ERA5 Client with Source Key: {self.source_key}")
-            self.client = WindwattsERA5Client(
-                config_path=athena_config, source_key=self.source_key
-            )  # source_key  "era5" or "era5_bc"
-        elif self.base_type == "ensemble":
-            print(f"Initializing Ensemble Client with Source Key: {self.source_key}")
-            self.client = WindwattsEnsembleClient(
-                config_path=athena_config, source_key=self.source_key
-            )  # source_key  "ensemble"
-        else:
-            raise ValueError(f"Unsupported base dataset: {self.base_type}")
+        self.database = athena_config["database"]
+        self.workgroup = athena_config["athena_workgroup"]
+        self.output_bucket = athena_config["output_bucket"]
+        self.output_location = athena_config["output_location"]
+        self.table = source["athena_table_name"]
+        self.alt_table = source.get("alt_athena_table_name", "")
+
+        self.athena = boto3.client("athena", region_name=athena_config["region_name"])
+        self.s3 = boto3.client("s3", region_name=athena_config["region_name"])
+
+        self._df_cache: OrderedDict[str, pd.DataFrame] = OrderedDict()
+        self._df_cache_maxsize = 100
+
+    def _schema(self) -> str:
+        return MODEL_CONFIG[self.model_key]["schema"]
+
+    def _available_heights(self) -> list[int]:
+        return MODEL_CONFIG[self.model_key]["heights"]["windspeed"]
+
+    def _cache_df(self, grid_idx: str) -> pd.DataFrame:
+        if grid_idx in self._df_cache:
+            self._df_cache.move_to_end(grid_idx)
+            return self._df_cache[grid_idx].copy()
+        query = f"SELECT * FROM {self.table} WHERE index = '{grid_idx}'"
+        df = self._execute_athena(query)
+        self._df_cache[grid_idx] = df
+        if len(self._df_cache) > self._df_cache_maxsize:
+            self._df_cache.popitem(last=False)
+        return df.copy()
 
     def fetch_data(
         self, lat: float, lng: float, height: int, period: str = "all"
     ) -> dict:
         """
-        Fetch aggregated wind data using the configured client.
+        Fetch aggregated wind data for a location.
+        Selects only the columns needed for the requested height and period.
+        Applies interpolation if height is not natively in the dataset.
+        Routes to the appropriate aggregation strategy (timeseries vs quantile).
 
         Args:
             lat (float): Latitude of the location.
@@ -56,28 +77,21 @@ class AthenaDataFetcher(AbstractDataFetcher):
 
         Returns:
             dict: Fetched aggregated wind data.
-
-        Raises:
-            ValueError: If the period is not supported for the selected client.
         """
-        if period == "all":
-            return self.client.fetch_global_avg_at_height(
-                lat=lat, long=lng, height=height
+        grid_idx, _, _ = find_nearest(lat, lng, self.model_key)
+        height_info = resolve_heights(height, self._available_heights())
+        df = self._cache_df(grid_idx)
+
+        if not height_info["exact"]:
+            df = interpolate_windspeed(
+                df, height, height_info["lower"], height_info["upper"]
             )
-        elif period == "annual":
-            return self.client.fetch_yearly_avg_at_height(
-                lat=lat, long=lng, height=height
-            )
-        elif period == "monthly":
-            return self.client.fetch_monthly_avg_at_height(
-                lat=lat, long=lng, height=height
-            )
-        elif period == "hourly":
-            return self.client.fetch_hourly_avg_at_height(
-                lat=lat, long=lng, height=height
-            )
-        else:
-            raise ValueError(f"Invalid period: {period}")
+
+        schema = self._schema()
+        if schema in ("quantile_yearly", "quantile_atemporal"):
+            use_swi = TEMPORAL_SCHEMAS[schema]["processing"]["use_swi"]
+            return aggregate_quantile(df, height, period, use_swi=use_swi)
+        return aggregate(df, height, period)
 
     def fetch_raw(self, lat: float, lng: float, height: int):
         """
@@ -91,7 +105,16 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Returns:
             DataFrame: Raw wind data without aggregation.
         """
-        return self.client.fetch_df(lat=lat, long=lng, height=height)
+        grid_idx, _, _ = find_nearest(lat, lng, self.model_key)
+        height_info = resolve_heights(height, self._available_heights())
+        df = self._cache_df(grid_idx)
+
+        if not height_info["exact"]:
+            df = interpolate_windspeed(
+                df, height, height_info["lower"], height_info["upper"]
+            )
+
+        return df
 
     def find_nearest_locations(self, lat: float, lng: float, n_neighbors: int = 1):
         """
@@ -112,5 +135,56 @@ class AthenaDataFetcher(AbstractDataFetcher):
             :rtype: list[tuple[str, float, float]]
         """
         # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
-        tuples = self.client.find_n_nearest_locations(lat, lng, n_neighbors)
+        tuples = find_n_nearest(lat, lng, self.model_key, n_neighbors)
         return tuples
+
+    def _execute_athena(
+        self, query: str, params: list[str] | None = None
+    ) -> pd.DataFrame:
+        """Execute an Athena query and return results as a DataFrame.
+
+        Uses 7-day result reuse so repeated queries for the same location
+        resolve from cache server-side. Polls with exponential backoff,
+        checking immediately on the first attempt for fast cache hits.
+
+        Args:
+            query: SQL query string to execute.
+
+        Returns:
+            DataFrame parsed from the CSV result stored in S3.
+
+        Raises:
+            RuntimeError: If the query fails or is cancelled.
+        """
+        execution_id = self.athena.start_query_execution(
+            QueryString=query,
+            QueryExecutionContext={"Database": self.database},
+            ResultConfiguration={"OutputLocation": self.output_location},
+            ResultReuseConfiguration={
+                "ResultReuseByAgeConfiguration": {
+                    "Enabled": True,
+                    "MaxAgeInMinutes": 10080,
+                }
+            },
+            WorkGroup=self.workgroup,
+        )["QueryExecutionId"]
+
+        delay = 0
+        while True:
+            resp = self.athena.get_query_execution(QueryExecutionId=execution_id)
+            state = resp["QueryExecution"]["Status"]["State"]
+            if state == "SUCCEEDED":
+                break
+            if state in ("FAILED", "CANCELLED"):
+                reason = resp["QueryExecution"]["Status"].get("StateChangeReason", "")
+                raise RuntimeError(f"Athena query {state}: {reason}")
+            if delay == 0:
+                delay = 0.15
+            else:
+                delay = min(delay * 2, 5.0)
+            time.sleep(delay)
+
+        output = resp["QueryExecution"]["ResultConfiguration"]["OutputLocation"]
+        bucket, key = output.replace("s3://", "").split("/", 1)
+        obj = self.s3.get_object(Bucket=bucket, Key=key)
+        return pd.read_csv(StringIO(obj["Body"].read().decode("utf-8")))
