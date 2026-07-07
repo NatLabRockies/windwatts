@@ -64,9 +64,7 @@ if not _skip_data_init:
     athena_config = config_manager.get_config()
 
     # Register spatial lookups
-    wtk_lookup = CKDTreeLookup(
-        "./app/spatial/grid_lookup_files/wtk_location_data.npz"
-    )
+    wtk_lookup = CKDTreeLookup("./app/spatial/grid_lookup_files/wtk_location_data.npz")
     era5_lookup = CKDTreeLookup(
         "./app/spatial/grid_lookup_files/era5_location_data.npz"
     )

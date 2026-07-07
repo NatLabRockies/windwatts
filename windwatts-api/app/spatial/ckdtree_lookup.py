@@ -15,7 +15,11 @@ class CKDTreeLookup:
 
     def find_nearest(self, lat: float, lng: float) -> tuple[str, float, float]:
         _, idx = self.tree.query([lat, lng])
-        return (str(self._index[idx]), float(self._latitude[idx]), float(self._longitude[idx]))
+        return (
+            str(self._index[idx]),
+            float(self._latitude[idx]),
+            float(self._longitude[idx]),
+        )
 
     def find_n_nearest(
         self, lat: float, lng: float, n: int

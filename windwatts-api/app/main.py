@@ -67,6 +67,7 @@ app.add_middleware(
 # API v1
 app.include_router(wind_data_router, prefix="/v1", tags=["v1-wind-data"])
 
+
 @app.get("/healthcheck", response_model=HealthCheckResponse)
 def healthcheck():
     return JSONResponse({"status": "up"}, status_code=200)
