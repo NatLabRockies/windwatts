@@ -4,8 +4,7 @@ from app.schemas import HealthCheckResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
-from app.controllers.wtk_data_controller import router as wtk_data_router
-from app.controllers.era5_data_controller import router as era5_data_router
+
 from app.controllers.wind_data_controller import router as wind_data_router
 from app.middleware import AuditMiddleware, LoggingMiddleware
 from app.exception_handlers import log_unhandled_exceptions, log_validation_errors
@@ -67,16 +66,6 @@ app.add_middleware(
 
 # API v1
 app.include_router(wind_data_router, prefix="/v1", tags=["v1-wind-data"])
-
-# Legacy routes - Deprecated
-# TODO: Remove these routes
-app.include_router(
-    wtk_data_router, prefix="/wtk", tags=["wtk-data (deprecated)"], deprecated=True
-)
-app.include_router(
-    era5_data_router, prefix="/era5", tags=["era5-data (deprecated)"], deprecated=True
-)
-
 
 @app.get("/healthcheck", response_model=HealthCheckResponse)
 def healthcheck():
