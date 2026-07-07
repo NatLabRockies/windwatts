@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 # from unittest.mock import patch
@@ -26,6 +27,7 @@ def test_get_wtk_data_failure():
 """
 
 
+@pytest.mark.skip(reason="Legacy /wtk/ routes removed during migration")
 def test_get_wtk_data_success():
     response = client.get(
         "/wtk/windspeed?lat=40.0&lng=-70.0&height=10&source=athena_wtk"
@@ -35,6 +37,7 @@ def test_get_wtk_data_success():
     assert "global_avg" in json
 
 
+@pytest.mark.skip(reason="Legacy /wtk/ routes removed during migration")
 def test_get_available_power_curves():
     response = client.get("/wtk/available-powercurves")
     assert response.status_code == 200

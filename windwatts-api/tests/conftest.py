@@ -3,6 +3,7 @@ Pytest configuration and fixtures for mocking external AWS dependencies.
 """
 
 import os
+import numpy as np
 import pandas as pd
 from unittest.mock import MagicMock, patch
 
@@ -16,217 +17,31 @@ _windwatts_patches = []
 def pytest_configure(config):
     """
     Pytest hook that runs very early, before any test collection.
-    Patch windwatts_data clients and boto3 to prevent real AWS calls during module imports.
+    Patch fetchers and boto3 to prevent real AWS calls during module imports.
     """
     global _boto3_patch, _mock_clients, _windwatts_patches
 
-    # Add ensemble configuration to environment variables
-    os.environ["SOURCES_ENSEMBLE_BUCKET_NAME"] = "windwatts-era5"
-    os.environ["SOURCES_ENSEMBLE_ATHENA_TABLE_NAME"] = "ensemble_101"
-    os.environ["SOURCES_ENSEMBLE_ALT_ATHENA_TABLE_NAME"] = ""
+    # Top-level config env vars (needed by ConfigManager._get_config_from_env)
+    # Use clearly fake values so accidental real AWS calls are impossible
+    os.environ["REGION_NAME"] = "us-east-1"
+    os.environ["OUTPUT_LOCATION"] = "s3://test-fake-bucket/"
+    os.environ["OUTPUT_BUCKET"] = "test-fake-bucket"
+    os.environ["DATABASE"] = "test_fake_database"
+    os.environ["ATHENA_WORKGROUP"] = "test_fake_workgroup"
 
-    # Mock the windwatts_data client classes to return realistic data
-    def create_mock_windwatts_client():
-        """Create a mock windwatts client that returns realistic wind data"""
-        mock_client = MagicMock()
+    # Source-specific env vars using model keys
+    os.environ["SOURCES_ENSEMBLE-QUANTILES_BUCKET_NAME"] = "test-fake-era5"
+    os.environ["SOURCES_ENSEMBLE-QUANTILES_ATHENA_TABLE_NAME"] = "test_ensemble"
+    os.environ["SOURCES_ENSEMBLE-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
+    os.environ["SOURCES_ERA5-QUANTILES_BUCKET_NAME"] = "test-fake-era5"
+    os.environ["SOURCES_ERA5-QUANTILES_ATHENA_TABLE_NAME"] = "test_era5"
+    os.environ["SOURCES_ERA5-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
+    os.environ["SOURCES_WTK-TIMESERIES_BUCKET_NAME"] = "test-fake-wtk"
+    os.environ["SOURCES_WTK-TIMESERIES_ATHENA_TABLE_NAME"] = "test_wtk_1224"
+    os.environ["SOURCES_WTK-TIMESERIES_ALT_ATHENA_TABLE_NAME"] = ""
 
-        # Mock different fetch methods that return data in the format the API expects
-        mock_client.fetch_global_avg_at_height = MagicMock(
-            return_value={"global_avg": 8.60}
-        )
-
-        mock_client.fetch_yearly_avg_at_height = MagicMock(
-            return_value={
-                "yearly_avg": [
-                    {"year": 2013, "windspeed_40m": 8.93},
-                    {"year": 2014, "windspeed_40m": 8.61},
-                    {"year": 2015, "windspeed_40m": 8.34},
-                    {"year": 2016, "windspeed_40m": 8.72},
-                    {"year": 2017, "windspeed_40m": 8.85},
-                ]
-            }
-        )
-
-        mock_client.fetch_monthly_avg_at_height = MagicMock(
-            return_value={
-                "monthly_avg": [
-                    {"month": 1, "windspeed_40m": 8.5},
-                    {"month": 2, "windspeed_40m": 8.7},
-                ]
-            }
-        )
-
-        mock_client.fetch_hourly_avg_at_height = MagicMock(
-            return_value={
-                "hourly_avg": [
-                    {"hour": 0, "windspeed_40m": 8.5},
-                    {"hour": 1, "windspeed_40m": 8.6},
-                ]
-            }
-        )
-
-        # Mock production/energy calculation methods
-        mock_client.calculate_global_energy = MagicMock(return_value=539072)
-
-        mock_client.calculate_summary_energy = MagicMock(
-            return_value={
-                "Lowest year": {
-                    "year": 2023.0,
-                    "Average wind speed (m/s)": "8.12",
-                    "kWh produced": 504212,
-                },
-                "Average year": {
-                    "year": None,
-                    "Average wind speed (m/s)": "8.60",
-                    "kWh produced": 539072,
-                },
-                "Highest year": {
-                    "year": 2013.0,
-                    "Average wind speed (m/s)": "8.93",
-                    "kWh produced": 579146,
-                },
-            }
-        )
-
-        mock_client.calculate_yearly_energy = MagicMock(
-            return_value={
-                "2013": {"Average wind speed (m/s)": "8.93", "kWh produced": 579146},
-                "2014": {"Average wind speed (m/s)": "8.61", "kWh produced": 552516},
-                "2015": {"Average wind speed (m/s)": "8.34", "kWh produced": 521722},
-            }
-        )
-
-        mock_client.calculate_monthly_energy = MagicMock(
-            return_value={
-                "Jan": {"Average wind speed, m/s": "8.5", "kWh produced": "45000"},
-                "Feb": {"Average wind speed, m/s": "8.7", "kWh produced": "43000"},
-            }
-        )
-
-        # Mock the query_athena method for raw queries
-        def mock_query_athena(query, convert_to_dataframe=True, *args, **kwargs):
-            if convert_to_dataframe:
-                return pd.DataFrame(
-                    {
-                        "wind_speed_40m": [8.93, 8.61, 8.34, 8.72, 8.85],
-                        "wind_speed_80m": [9.5, 9.2, 8.9, 9.3, 9.4],
-                        "year": [2013, 2014, 2015, 2016, 2017],
-                        "month": [1, 2, 3, 4, 5],
-                    }
-                )
-            else:
-                return [
-                    [
-                        "wind_speed_30m",
-                        "wind_speed_40m",
-                        "wind_speed_50m",
-                        "wind_speed_60m",
-                        "wind_speed_80m",
-                        "wind_speed_100m",
-                    ]
-                ]
-
-        mock_client.query_athena = mock_query_athena
-
-        # Mock find_n_nearest_locations for grid-points endpoint
-        def mock_find_n_nearest(lat, lon, limit=1):
-            # Mock locations data - returns tuples of (index, lat, lon)
-            locations = [
-                ("046271", 39.903, -69.97427540107105),
-                ("046272", 39.904, -69.98),
-                ("046273", 39.905, -69.99),
-                ("046274", 39.906, -70.00),
-            ]
-            return locations[:limit]
-
-        mock_client.find_n_nearest_locations = MagicMock(
-            side_effect=mock_find_n_nearest
-        )
-
-        # Set available heights (including 10m for legacy WTK endpoints)
-        mock_client.available_heights = [
-            10,
-            30,
-            40,
-            50,
-            60,
-            80,
-            100,
-            120,
-            140,
-            160,
-            200,
-        ]
-        mock_client.column_names = [
-            "wind_speed_10m",
-            "wind_speed_30m",
-            "wind_speed_40m",
-            "wind_speed_50m",
-            "wind_speed_60m",
-            "wind_speed_80m",
-            "wind_speed_100m",
-            "wind_speed_120m",
-            "wind_speed_140m",
-            "wind_speed_160m",
-            "wind_speed_200m",
-        ]
-
-        return mock_client
-
-    # Create separate mock clients for different data sources
-    wtk_mock = create_mock_windwatts_client()
-    era5_mock = create_mock_windwatts_client()
-    ensemble_mock = create_mock_windwatts_client()
-
-    # WTK returns timeseries data with timestamp/year/month/hour
-    def mock_fetch_df_wtk(lat, long, height, *args, **kwargs):
-        timestamps = pd.date_range("2020-01-01", periods=5, freq="h")
-        return pd.DataFrame(
-            {
-                f"windspeed_{height}m": [8.5, 8.7, 8.3, 8.6, 8.4],
-                "timestamp": timestamps,
-                "year": timestamps.year,
-                "month": timestamps.month,
-                "hour": timestamps.hour,
-                "mohr": timestamps.month * 100 + timestamps.hour,
-            }
-        )
-
-    wtk_mock.fetch_df = MagicMock(side_effect=mock_fetch_df_wtk)
-
-    # ERA5 returns quantile data with probability column and year
-    def mock_fetch_df_era5(lat, long, height, *args, **kwargs):
-        return pd.DataFrame(
-            {
-                f"windspeed_{height}m": [6.2, 7.1, 7.8, 8.5, 9.2, 10.1],
-                "probability": [0.1, 0.25, 0.5, 0.75, 0.9, 0.95],
-                "year": [2020, 2020, 2020, 2020, 2020, 2020],
-            }
-        )
-
-    era5_mock.fetch_df = MagicMock(side_effect=mock_fetch_df_era5)
-
-    # Ensemble returns quantile data without year (atemporal)
-    def mock_fetch_df_ensemble(lat, long, height, *args, **kwargs):
-        return pd.DataFrame(
-            {
-                f"windspeed_{height}m": [6.5, 7.3, 8.0, 8.7, 9.4, 10.2],
-                "probability": [0.1, 0.25, 0.5, 0.75, 0.9, 0.95],
-            }
-        )
-
-    ensemble_mock.fetch_df = MagicMock(side_effect=mock_fetch_df_ensemble)
-
-    # Patch the windwatts_data client classes with appropriate mocks
-    wtk_patch = patch("windwatts_data.WindwattsWTKClient", return_value=wtk_mock)
-    era5_patch = patch("windwatts_data.WindwattsERA5Client", return_value=era5_mock)
-    ensemble_patch = patch(
-        "windwatts_data.WindwattsEnsembleClient", return_value=ensemble_mock
-    )
-
-    _windwatts_patches = [wtk_patch, era5_patch, ensemble_patch]
-    for p in _windwatts_patches:
-        p.start()
+    # Skip real data initialization (spatial lookups, AWS clients)
+    os.environ["SKIP_DATA_INIT"] = "1"
 
     # Still need boto3 mocks for other AWS services (like secrets manager in config_manager)
     mock_s3_client = MagicMock()
@@ -245,6 +60,135 @@ def pytest_configure(config):
 
     _boto3_patch = patch("boto3.client", side_effect=mock_boto3_client)
     _boto3_patch.start()
+
+
+def pytest_collection_finish(session):
+    """
+    After all modules are imported and tests collected, inject mock fetchers
+    into the controller's module-level dicts (which are empty due to SKIP_DATA_INIT=1).
+    """
+    from app.controllers import wind_data_controller as wdc
+
+    mock_athena_fetcher = MagicMock()
+
+    def mock_fetch_data(lat, lng, height, period="all"):
+        col = f"windspeed_{height}m"
+        if period == "all":
+            return {"global_avg": 8.60}
+        elif period == "annual":
+            return {
+                "yearly_avg": [
+                    {"year": 2020, col: 8.50},
+                    {"year": 2021, col: 8.70},
+                ]
+            }
+        elif period == "monthly":
+            return {
+                "monthly_avg": [
+                    {"month": "Jan", col: 8.5},
+                    {"month": "Feb", col: 8.7},
+                ]
+            }
+        elif period == "hourly":
+            return {
+                "hourly_avg": [
+                    {"hour": 0, col: 8.5},
+                    {"hour": 1, col: 8.6},
+                ]
+            }
+        return {"global_avg": 8.60}
+
+    mock_athena_fetcher.fetch_data = MagicMock(side_effect=mock_fetch_data)
+
+    # Realistic mock DataFrames for fetch_raw per model schema
+    n_quantiles = 101
+    probs = np.linspace(0.0, 1.0, n_quantiles)
+    heights_data = {
+        "windspeed_40m": np.linspace(2.0, 14.0, n_quantiles),
+        "windspeed_60m": np.linspace(2.5, 15.0, n_quantiles),
+        "windspeed_80m": np.linspace(3.0, 16.0, n_quantiles),
+        "windspeed_100m": np.linspace(3.5, 17.0, n_quantiles),
+        "probability": probs,
+    }
+
+    # ERA5: quantile_yearly — has year column
+    era5_raw_df = pd.DataFrame({**heights_data, "year": [2020] * n_quantiles})
+
+    # Ensemble: quantile_atemporal — NO year or mohr columns
+    ensemble_raw_df = pd.DataFrame(heights_data)
+
+    # WTK: aggregated_mohr — has mohr and year, no probability
+    n_wtk = 288  # 12 months * 24 hours
+    wtk_raw_df = pd.DataFrame(
+        {
+            "windspeed_40m": np.random.uniform(5, 12, n_wtk),
+            "windspeed_80m": np.random.uniform(6, 14, n_wtk),
+            "windspeed_100m": np.random.uniform(7, 15, n_wtk),
+            "mohr": [m * 100 + h for m in range(1, 13) for h in range(24)],
+            "year": [2020] * n_wtk,
+        }
+    )
+
+    mock_athena_fetcher.fetch_raw = MagicMock(return_value=era5_raw_df)
+
+    def mock_find_n_nearest(lat, lng, n_neighbors=1):
+        locations = [
+            ("046271", 39.903, -69.974),
+            ("046272", 39.904, -69.98),
+            ("046273", 39.905, -69.99),
+            ("046274", 39.906, -70.00),
+        ]
+        return locations[:n_neighbors]
+
+    mock_athena_fetcher.find_nearest_locations = MagicMock(
+        side_effect=mock_find_n_nearest
+    )
+
+    # Create per-model fetchers with correct DataFrames
+    mock_era5_fetcher = MagicMock()
+    mock_era5_fetcher.fetch_data = MagicMock(side_effect=mock_fetch_data)
+    mock_era5_fetcher.fetch_raw = MagicMock(return_value=era5_raw_df)
+    mock_era5_fetcher.find_nearest_locations = MagicMock(
+        side_effect=mock_find_n_nearest
+    )
+
+    mock_ensemble_fetcher = MagicMock()
+    mock_ensemble_fetcher.fetch_data = MagicMock(side_effect=mock_fetch_data)
+    mock_ensemble_fetcher.fetch_raw = MagicMock(return_value=ensemble_raw_df)
+    mock_ensemble_fetcher.find_nearest_locations = MagicMock(
+        side_effect=mock_find_n_nearest
+    )
+
+    mock_wtk_fetcher = MagicMock()
+    mock_wtk_fetcher.fetch_data = MagicMock(side_effect=mock_fetch_data)
+    mock_wtk_fetcher.fetch_raw = MagicMock(return_value=wtk_raw_df)
+    mock_wtk_fetcher.find_nearest_locations = MagicMock(side_effect=mock_find_n_nearest)
+
+    # Inject into the controller's module-level dicts
+    wdc.athena_data_fetchers["era5-quantiles"] = mock_era5_fetcher
+    wdc.athena_data_fetchers["ensemble-quantiles"] = mock_ensemble_fetcher
+    wdc.athena_data_fetchers["wtk-timeseries"] = mock_wtk_fetcher
+    wdc.data_fetcher_router.register_fetcher("athena_era5-quantiles", mock_era5_fetcher)
+    wdc.data_fetcher_router.register_fetcher(
+        "athena_ensemble-quantiles", mock_ensemble_fetcher
+    )
+    wdc.data_fetcher_router.register_fetcher("athena_wtk-timeseries", mock_wtk_fetcher)
+
+    # Mock S3 fetcher for timeseries endpoints
+    mock_s3_fetcher = MagicMock()
+    mock_s3_fetcher.fetch_data = MagicMock(
+        return_value=pd.DataFrame(
+            {
+                "windspeed_40m": [8.5, 8.7, 8.3, 8.6, 8.4],
+                "windspeed_100m": [10.5, 10.2, 9.9, 10.3, 10.4],
+                "winddirection_100m": [180, 190, 200, 210, 220],
+                "time": pd.date_range("2020-01-01", periods=5, freq="h"),
+            }
+        )
+    )
+    for model_key in ["era5-timeseries", "wtk-timeseries"]:
+        wdc.s3_data_fetchers[model_key] = mock_s3_fetcher
+        wdc.data_fetcher_router.register_fetcher(f"s3_{model_key}", mock_s3_fetcher)
 
 
 def pytest_unconfigure(config):
