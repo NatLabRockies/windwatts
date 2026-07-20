@@ -52,6 +52,25 @@ export const parseOptionalHeight = (value: string): number | undefined => {
 };
 
 /**
+ * Resolves a raw hub height value to a valid value for the given model.
+ * - Interpolable model: clamps to [min, max] — no extrapolation.
+ * - Non-interpolable model: clamps then snaps to the nearest available height.
+ */
+export const resolveHubHeight = (
+  value: number,
+  availableHeights: number[],
+  interpolable: boolean
+): number => {
+  const min = Math.min(...availableHeights);
+  const max = Math.max(...availableHeights);
+  const clamped = Math.max(min, Math.min(max, value));
+  if (interpolable) return clamped;
+  return availableHeights.reduce((prev, curr) =>
+    Math.abs(curr - clamped) < Math.abs(prev - clamped) ? curr : prev
+  );
+};
+
+/**
  * Validates an optional hub height range.
  * Returns an error message string, or null when the values are valid.
  */

@@ -1,15 +1,16 @@
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
 import {
   Box,
-  Slider,
-  Typography,
-  Paper,
-  Tooltip,
   IconButton,
+  InputAdornment,
+  Slider,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { resolveCustomCurve } from "../../utils";
+import { resolveCustomCurve, resolveHubHeight } from "../../utils";
 import { HUB_HEIGHTS, TURBINE_DATA } from "../../constants";
 
 export function HubHeightSettings() {
@@ -21,48 +22,78 @@ export function HubHeightSettings() {
     customCurves,
   } = useContext(SettingsContext);
 
-  const { values: availableHeights, interpolation: step } = useMemo(() => {
-    if (dataModel && HUB_HEIGHTS[dataModel]) {
-      return HUB_HEIGHTS[dataModel];
-    }
-    return HUB_HEIGHTS.default;
-  }, [dataModel]);
+  const { values: availableHeights, interpolation: interpolable } =
+    useMemo(() => {
+      if (dataModel && HUB_HEIGHTS[dataModel]) {
+        return HUB_HEIGHTS[dataModel];
+      }
+      return HUB_HEIGHTS.default;
+    }, [dataModel]);
 
-  // ensure slider compatibility with model switching and available heights changes
+  const modelMin = Math.min(...availableHeights);
+  const modelMax = Math.max(...availableHeights);
+
+  const [inputValue, setInputValue] = useState(String(hubHeight));
+
+  // keep text field in sync when hubHeight changes externally (slider, model switch)
   useEffect(() => {
-    if (!availableHeights.includes(hubHeight)) {
-      // if current height not available, set to the closest available height
-      const closestHeight = availableHeights.reduce((prev, curr) =>
-        Math.abs(curr - hubHeight) < Math.abs(prev - hubHeight) ? curr : prev
-      );
-      setHubHeight(closestHeight);
-    }
-  }, [availableHeights, hubHeight, setHubHeight]);
+    setInputValue(String(hubHeight));
+  }, [hubHeight]);
+
+  // clamp or snap on model switch / available heights change
+  useEffect(() => {
+    const resolved = resolveHubHeight(
+      hubHeight,
+      availableHeights,
+      interpolable
+    );
+    if (resolved !== hubHeight) setHubHeight(resolved);
+  }, [availableHeights, interpolable, hubHeight, setHubHeight]);
 
   const hubHeightMarks = availableHeights.map((value: number) => ({
-    value: value,
+    value,
     label: `${value}m`,
   }));
 
-  const handleHubHeightChange = (
-    _: Event,
-    newHubHeight: number | number[] | null
-  ) => {
-    if (newHubHeight !== null && typeof newHubHeight === "number") {
-      setHubHeight(newHubHeight);
+  const handleSliderChange = (_: Event, newValue: number | number[]) => {
+    if (typeof newValue === "number") {
+      setHubHeight(newValue);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const commitInput = () => {
+    const parsed = parseInt(inputValue, 10);
+    if (!isNaN(parsed)) {
+      const resolvedHubHeight = resolveHubHeight(
+        parsed,
+        availableHeights,
+        interpolable
+      );
+      setHubHeight(resolvedHubHeight);
+    } else {
+      setInputValue(String(hubHeight));
+    }
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") commitInput();
   };
 
   const customCurve = resolveCustomCurve(turbine, customCurves);
   const turbineInfo = TURBINE_DATA[turbine];
 
-  const minHeight = customCurve?.minHeight ?? turbineInfo?.minHeight;
-  const maxHeight = customCurve?.maxHeight ?? turbineInfo?.maxHeight;
-  const hasHeightRange = minHeight !== undefined && maxHeight !== undefined;
+  const turbineMinHeight = customCurve?.minHeight ?? turbineInfo?.minHeight;
+  const turbineMaxHeight = customCurve?.maxHeight ?? turbineInfo?.maxHeight;
+  const hasHeightRange =
+    turbineMinHeight !== undefined && turbineMaxHeight !== undefined;
   const heightRangeInfo = turbineInfo?.info ?? "";
 
   const isHeightInRange: boolean = hasHeightRange
-    ? hubHeight >= minHeight! && hubHeight <= maxHeight!
+    ? hubHeight >= turbineMinHeight! && hubHeight <= turbineMaxHeight!
     : true;
 
   const validationColor: "primary" | "success" | "warning" = hasHeightRange
@@ -76,50 +107,76 @@ export function HubHeightSettings() {
       <Typography variant="h6" gutterBottom>
         Hub Height
       </Typography>
-      <Typography variant="body2" gutterBottom>
-        Choose nearest hub height (m):
-      </Typography>
 
-      {hasHeightRange && (
-        <Paper
-          sx={{
-            p: 1,
-            mb: 2,
-            backgroundColor: `${validationColor}.light`,
-            borderLeft: `4px solid`,
-            borderLeftColor: `${validationColor}.main`,
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography variant="body2">Set hub height:</Typography>
+        <TextField
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={commitInput}
+          onKeyDown={handleInputKeyDown}
+          size="small"
+          type="number"
+          disabled={!interpolable}
+          slotProps={{
+            input: {
+              endAdornment: <InputAdornment position="end">m</InputAdornment>,
+            },
+            htmlInput: {
+              min: modelMin,
+              max: modelMax,
+              step: 1,
+              "aria-label": "hub height input",
+            },
           }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Typography variant="body2">
-              <strong>
-                {isHeightInRange ? "Within" : "Outside"} recommended range - (
-                {minHeight}m - {maxHeight}m)
-              </strong>
-            </Typography>
-            {heightRangeInfo && (
-              <Tooltip title={heightRangeInfo} arrow placement="right">
-                <IconButton size="small">
-                  <InfoOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
-        </Paper>
+          sx={{ width: 100 }}
+        />
+      </Box>
+
+      <Box sx={{ px: 1 }}>
+        <Slider
+          value={hubHeight}
+          onChange={handleSliderChange}
+          aria-labelledby="hub-height-slider"
+          valueLabelDisplay="auto"
+          getAriaValueText={(value) => `${value}m`}
+          step={interpolable ? 1 : null}
+          marks={hubHeightMarks}
+          min={modelMin}
+          max={modelMax}
+          color={validationColor}
+        />
+      </Box>
+
+      {interpolable && (
+        <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
+          * Values between marks are interpolated (no extrapolation).
+        </Typography>
       )}
 
-      <Slider
-        value={hubHeight}
-        onChange={handleHubHeightChange}
-        aria-labelledby="hub-height-slider"
-        valueLabelDisplay="auto"
-        getAriaValueText={(value) => `${value}m`}
-        step={step}
-        marks={hubHeightMarks}
-        min={Math.min(...availableHeights)}
-        max={Math.max(...availableHeights)}
-        color={validationColor}
-      />
+      {hasHeightRange && (
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Typography
+            variant="caption"
+            sx={{ color: `${validationColor}.main` }}
+          >
+            * Recommended range: {turbineMinHeight}m - {turbineMaxHeight}m
+          </Typography>
+          {heightRangeInfo && (
+            <Tooltip title={heightRangeInfo} arrow placement="right">
+              <IconButton size="small">
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      )}
     </Box>
   );
 }
