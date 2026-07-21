@@ -9,6 +9,7 @@ Welcome to the WindWatts documentation.
 3.  [Backend Guide](03-backend.md) - API development.
 4.  [Frontend Guide](04-frontend.md) - UI development.
 5.  [Deployment](05-deployment.md) - Production deployment.
+6.  [Migration Guide](06-migration.md) - Migrating from legacy API endpoints to v1.
 
 ## Contributing
 
