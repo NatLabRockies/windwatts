@@ -37,7 +37,13 @@ def resolve_heights(target_height: int, available_heights: list[int]) -> dict:
     }
 
 
-def interpolate_windspeed(
+def _power_law(v_ref: pd.Series, h_target: int, h_ref: int) -> pd.Series:
+    """Neutral Power Law: V(h) = V_ref * (h / h_ref) ^ (1/7)"""
+    alpha = 1 / 7
+    return v_ref * (h_target / h_ref) ** alpha
+
+
+def interpolate_windspeed_linear(
     df: pd.DataFrame, target_height: int, lower: int, upper: int
 ) -> pd.DataFrame:
     """
@@ -51,6 +57,34 @@ def interpolate_windspeed(
         + fraction * (result[f"windspeed_{upper}m"] - result[f"windspeed_{lower}m"])
     ).round(2)
     return result
+
+
+def interpolate_windspeed_power_law(
+    df: pd.DataFrame, target_height: int, lower: int, upper: int
+) -> pd.DataFrame:
+    """
+    Add windspeed_{target_height}m column via Neutral Power Law interpolation.
+
+    Averages estimates from both bracketing heights because with a fixed
+    exponent (1/7) the power law curve through one height won't pass exactly
+    through the other. Averaging uses all available information and reduces
+    directional bias.
+
+    Returns new DataFrame (does not mutate input).
+    """
+    result = df.copy()
+
+    est_from_lower = _power_law(result[f"windspeed_{lower}m"], target_height, lower)
+    est_from_upper = _power_law(result[f"windspeed_{upper}m"], target_height, upper)
+
+    result[f"windspeed_{target_height}m"] = (
+        0.5 * (est_from_lower + est_from_upper)
+    ).round(2)
+    return result
+
+
+# Default interpolation method
+interpolate_windspeed = interpolate_windspeed_power_law
 
 
 def aggregate(df: pd.DataFrame, height: int, period: str) -> dict:
