@@ -77,6 +77,7 @@ app.include_router(
     era5_data_router, prefix="/era5", tags=["era5-data (deprecated)"], deprecated=True
 )
 
+
 @app.get("/healthcheck", response_model=HealthCheckResponse)
 def healthcheck():
     return JSONResponse({"status": "up"}, status_code=200)

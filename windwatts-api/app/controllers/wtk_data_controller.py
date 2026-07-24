@@ -44,7 +44,7 @@ if not _skip_data_init:
         bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
     )
     athena_data_fetcher_wtk = AthenaDataFetcher(
-        athena_config=athena_config, source_key="wtk"
+        athena_config=athena_config, model_key="wtk-timeseries"
     )
     # db_manager = DatabaseManager()
     # db_data_fetcher = DatabaseDataFetcher(db_manager=db_manager)

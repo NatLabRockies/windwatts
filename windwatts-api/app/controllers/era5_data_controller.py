@@ -42,10 +42,10 @@ if not _skip_data_init:
     # Initialize DataFetchers
     # s3_data_fetcher = S3DataFetcher("WINDWATTS_S3_BUCKET_NAME")
     athena_data_fetcher_era5 = AthenaDataFetcher(
-        athena_config=athena_config, source_key="era5"
+        athena_config=athena_config, model_key="era5-quantiles"
     )
     athena_data_fetcher_ensemble = AthenaDataFetcher(
-        athena_config=athena_config, source_key="ensemble"
+        athena_config=athena_config, model_key="ensemble-quantiles"
     )
     s3_data_fetcher_era5 = S3DataFetcher(
         bucket_name="windwatts-era5",
