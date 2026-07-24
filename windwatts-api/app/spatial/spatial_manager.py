@@ -21,9 +21,9 @@ class SpatialManager:
         return self.get_lookup(model_key).find_nearest(lat, lng)
 
     def find_n_nearest(
-        self, lat: float, lng: float, model_key: str, n: int = 1
+        self, lat: float, lng: float, model_key: str, n_neighbors: int = 1
     ) -> list[tuple[str, float, float]]:
-        return self.get_lookup(model_key).find_n_nearest(lat, lng, n)
+        return self.get_lookup(model_key).find_n_nearest(lat, lng, n_neighbors)
 
     @property
     def registered_models(self) -> list[str]:

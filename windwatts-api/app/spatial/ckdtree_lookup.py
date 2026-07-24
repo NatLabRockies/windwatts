@@ -22,10 +22,10 @@ class CKDTreeLookup:
         )
 
     def find_n_nearest(
-        self, lat: float, lng: float, n: int
+        self, lat: float, lng: float, n_neighbors: int
     ) -> list[tuple[str, float, float]]:
-        _, indices = self.tree.query([lat, lng], k=n)
-        if n == 1:
+        _, indices = self.tree.query([lat, lng], k=n_neighbors)
+        if n_neighbors == 1:
             indices = [indices]
         return [
             (

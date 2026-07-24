@@ -26,7 +26,7 @@ from app.utils.wind_data_core import (
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
-from app.spatial.global_spatial_manager import init_spatial
+from app.spatial.global_spatial_manager import init_spatial, spatial_manager
 
 from app.schemas import (
     AvailableTurbinesResponse,
@@ -403,19 +403,11 @@ def get_grid_points(
     try:
         model = validate_model_exists(model)
 
-        # Grid lookup only available via athena
-        # Use athena fetcher for the specified model
-        fetcher = athena_data_fetchers.get(model)
-
-        if not fetcher or not hasattr(fetcher, "find_nearest_locations"):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Grid point lookup not available for model '{model}'",
-            )
-
-        # Call find_nearest_locations on the fetcher
         limit = validate_limit(limit)
-        result = fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=limit)
+
+        result = spatial_manager.find_n_nearest(
+            lat=lat, lng=lng, model_key=model, n_neighbors=limit
+        )
 
         locations = [
             {"index": str(i), "latitude": float(a), "longitude": float(o)}
