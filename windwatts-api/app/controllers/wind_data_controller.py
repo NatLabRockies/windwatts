@@ -26,8 +26,7 @@ from app.utils.wind_data_core import (
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
-from app.spatial import register as register_spatial
-from app.spatial import CKDTreeLookup
+from app.spatial.global_spatial_manager import init_spatial
 
 from app.schemas import (
     AvailableTurbinesResponse,
@@ -63,15 +62,8 @@ if not _skip_data_init:
     )
     athena_config = config_manager.get_config()
 
-    # Register spatial lookups
-    wtk_lookup = CKDTreeLookup("./app/spatial/grid_lookup_files/wtk_location_data.npz")
-    era5_lookup = CKDTreeLookup(
-        "./app/spatial/grid_lookup_files/era5_location_data.npz"
-    )
-    register_spatial("wtk-timeseries", wtk_lookup)
-    register_spatial("era5-quantiles", era5_lookup)
-    register_spatial("era5-timeseries", era5_lookup)  # same grid as ERA5
-    register_spatial("ensemble-quantiles", era5_lookup)  # same grid as ERA5
+    # Initialize spatial
+    init_spatial()
 
     # Initialize Athena data fetchers
     athena_data_fetchers["era5-quantiles"] = AthenaDataFetcher(

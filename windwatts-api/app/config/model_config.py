@@ -76,6 +76,7 @@ MODEL_CONFIG = {
         "years": {"full": list(range(2013, 2024)), "sample": [2020, 2021, 2022, 2023]},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
         "interpolation": True,
+        "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
@@ -98,6 +99,7 @@ MODEL_CONFIG = {
             "winddirection": [],
         },
         "interpolation": True,
+        "grid": "wtk",
         "grid_info": {
             "min_lat": 7.75129,
             "min_long": -179.99918,
@@ -119,6 +121,7 @@ MODEL_CONFIG = {
         "years": {"full": list(range(2013, 2024)), "sample": []},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
         "interpolation": True,
+        "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
@@ -141,6 +144,7 @@ MODEL_CONFIG = {
             "winddirection": [10, 100],
         },
         "interpolation": False,
+        "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,

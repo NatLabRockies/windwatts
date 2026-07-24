@@ -5,7 +5,7 @@ from io import StringIO
 from collections import OrderedDict
 
 from .abstract_data_fetcher import AbstractDataFetcher
-from app.spatial import find_nearest, find_n_nearest
+from app.spatial.global_spatial_manager import spatial_manager
 from app.utils.wind_processing import (
     resolve_heights,
     interpolate_windspeed,
@@ -78,7 +78,7 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Returns:
             dict: Fetched aggregated wind data.
         """
-        grid_idx, _, _ = find_nearest(lat, lng, self.model_key)
+        grid_idx, _, _ = spatial_manager.find_nearest(lat, lng, self.model_key)
         height_info = resolve_heights(height, self._available_heights())
         df = self._cache_df(grid_idx)
 
@@ -105,7 +105,7 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Returns:
             DataFrame: Raw wind data without aggregation.
         """
-        grid_idx, _, _ = find_nearest(lat, lng, self.model_key)
+        grid_idx, _, _ = spatial_manager.find_nearest(lat, lng, self.model_key)
         height_info = resolve_heights(height, self._available_heights())
         df = self._cache_df(grid_idx)
 
@@ -135,7 +135,7 @@ class AthenaDataFetcher(AbstractDataFetcher):
             :rtype: list[tuple[str, float, float]]
         """
         # A list of tuples where each tuple contains: (grid_index, latitude, longitude)
-        tuples = find_n_nearest(lat, lng, self.model_key, n_neighbors)
+        tuples = spatial_manager.find_n_nearest(lat, lng, self.model_key, n_neighbors)
         return tuples
 
     def _execute_athena(
