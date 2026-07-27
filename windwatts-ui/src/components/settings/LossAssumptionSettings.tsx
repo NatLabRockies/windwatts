@@ -44,7 +44,7 @@ export function LossAssumptionSettings() {
         Loss Assumption
       </Typography>
       <Typography variant="body2" mb={2}>
-        Set an energy percent loss (17% recommended).
+        Set an energy percent loss (17% recommended):
       </Typography>
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
         <FormControlLabel
