@@ -13,9 +13,13 @@ _GRID_LOADERS = {
     "era5": lambda: CKDTreeLookup(str(_GRID_DIR / "era5_location_data.npz")),
 }
 
+_initialized = False
 
 def init_spatial():
     "Load grids and register lookups for all models in MODEL_CONFIG"
+    global _initialized
+    if _initialized:
+        return
     loaded: dict[str, object] = {}
     for model_key, config in MODEL_CONFIG.items():
         grid = config.get("grid")
