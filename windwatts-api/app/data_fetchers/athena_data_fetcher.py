@@ -3,6 +3,7 @@ import time
 import pandas as pd
 from io import StringIO
 from collections import OrderedDict
+import threading
 
 from .abstract_data_fetcher import AbstractDataFetcher
 from app.spatial.global_spatial_manager import spatial_manager
@@ -40,6 +41,7 @@ class AthenaDataFetcher(AbstractDataFetcher):
 
         self._df_cache: OrderedDict[str, pd.DataFrame] = OrderedDict()
         self._df_cache_maxsize = 100
+        self._cache_lock = threading.Lock()
 
     def _schema(self) -> str:
         return MODEL_CONFIG[self.model_key]["schema"]
@@ -48,15 +50,23 @@ class AthenaDataFetcher(AbstractDataFetcher):
         return MODEL_CONFIG[self.model_key]["heights"]["windspeed"]
 
     def _cache_df(self, grid_idx: str) -> pd.DataFrame:
-        if grid_idx in self._df_cache:
-            self._df_cache.move_to_end(grid_idx)
-            return self._df_cache[grid_idx].copy()
+        with self._cache_lock:
+            if grid_idx in self._df_cache:
+                self._df_cache.move_to_end(grid_idx)
+                return self._df_cache[grid_idx].copy()
+
         query = f"SELECT * FROM {self.table} WHERE index = '{grid_idx}'"
         df = self._execute_athena(query)
-        self._df_cache[grid_idx] = df
-        if len(self._df_cache) > self._df_cache_maxsize:
-            self._df_cache.popitem(last=False)
-        return df.copy()
+
+        with self._cache_lock:
+            existing = self._df_cache.get(grid_idx)
+            if existing is not None:
+                self._df_cache.move_to_end(grid_idx)
+                return existing.copy()
+            self._df_cache[grid_idx] = df
+            if len(self._df_cache) > self._df_cache_maxsize:
+                self._df_cache.popitem(last=False)
+            return df.copy()
 
     def fetch_data(
         self, lat: float, lng: float, height: int, period: str = "all"
