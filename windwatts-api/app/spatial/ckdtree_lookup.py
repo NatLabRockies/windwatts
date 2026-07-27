@@ -6,10 +6,10 @@ class CKDTreeLookup:
     """Nearest-neighbor on a point cloud. For WTK and ERA5."""
 
     def __init__(self, index_path: str):
-        data = np.load(index_path)
-        self._index = data["index"]
-        self._latitude = data["latitude"]
-        self._longitude = data["longitude"]
+        with np.load(index_path) as data:
+            self._index = data["index"]
+            self._latitude = data["latitude"]
+            self._longitude = data["longitude"]
         coords = np.column_stack((self._latitude, self._longitude))
         self.tree = cKDTree(coords)
 
