@@ -14,6 +14,7 @@ from app.utils.wind_processing import (
     aggregate_quantile,
 )
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
+from botocore.config import Config
 
 
 class AthenaDataFetcher(AbstractDataFetcher):
@@ -36,8 +37,14 @@ class AthenaDataFetcher(AbstractDataFetcher):
         self.table = source["athena_table_name"]
         self.alt_table = source.get("alt_athena_table_name", "")
 
-        self.athena = boto3.client("athena", region_name=athena_config["region_name"])
-        self.s3 = boto3.client("s3", region_name=athena_config["region_name"])
+        boto_cfg = Config(
+            connect_timeout=5,
+            read_timeout=5,
+            retries={"max_attempts": 2, "mode": "standard"},
+        )
+
+        self.athena = boto3.client("athena", region_name=athena_config["region_name"], config=boto_cfg)
+        self.s3 = boto3.client("s3", region_name=athena_config["region_name"], config=boto_cfg)
 
         self._df_cache: OrderedDict[str, pd.DataFrame] = OrderedDict()
         self._df_cache_maxsize = 100
@@ -157,7 +164,9 @@ class AthenaDataFetcher(AbstractDataFetcher):
             WorkGroup=self.workgroup,
         )["QueryExecutionId"]
 
-        delay = 0
+        start = time.monotonic()
+        delay = 0.0
+        max_wait_seconds = 15
         while True:
             resp = self.athena.get_query_execution(QueryExecutionId=execution_id)
             state = resp["QueryExecution"]["Status"]["State"]
@@ -166,10 +175,9 @@ class AthenaDataFetcher(AbstractDataFetcher):
             if state in ("FAILED", "CANCELLED"):
                 reason = resp["QueryExecution"]["Status"].get("StateChangeReason", "")
                 raise RuntimeError(f"Athena query {state}: {reason}")
-            if delay == 0:
-                delay = 0.15
-            else:
-                delay = min(delay * 2, 5.0)
+            if time.monotonic() - start > max_wait_seconds:
+                raise RuntimeError(f"Athena query timed out after {max_wait_seconds:.0f}s (execution_id={execution_id})")
+            delay = 0.15 if delay == 0 else min(delay * 2, 3.0)
             time.sleep(delay)
 
         output = resp["QueryExecution"]["ResultConfiguration"]["OutputLocation"]
