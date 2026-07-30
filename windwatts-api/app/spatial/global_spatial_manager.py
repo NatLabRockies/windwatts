@@ -32,3 +32,4 @@ def init_spatial():
             loaded[grid] = loader()
         spatial_manager.register(model_key, loaded[grid])
         print(f"Loaded grid lookup for model '{model_key}' on grid '{grid}'")
+    _initialized = True
