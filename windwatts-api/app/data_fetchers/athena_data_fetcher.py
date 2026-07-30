@@ -1,7 +1,4 @@
-import boto3
-import time
 import pandas as pd
-from io import StringIO
 from collections import OrderedDict
 import threading
 
@@ -14,40 +11,26 @@ from app.utils.wind_processing import (
     aggregate_quantile,
 )
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
-from botocore.config import Config
+from app.utils.athena_query_client import AthenaQueryClient
+from app.schemas import AthenaConfig
 
 
 class AthenaDataFetcher(AbstractDataFetcher):
-    def __init__(self, athena_config: dict, model_key: str):
+    def __init__(self, athena_config: AthenaConfig, model_key: str):
         """
         Initializes the AthenaDataFetcher with a single model_key like 'wtk-timeseries', 'era5-quantiles', or 'ensemble-quantiles' with its respective Athena config.
 
         Args:
-            athena_config (str): Full athena config dict from ConfigManager.get_config()
+            athena_config (AthenaConfig): Validated Athena config from ConfigManager.
             model_key (str): Key into config["sources"], e.g. "wtk-timeseries", "era5-quantiles", "ensemble-quantiles". Same as MODEL_CONFIG keys.
         """
-        print(f"Initializing Athene Data Fetcher for '{model_key}'")
+        print(f"Initializing Athena Data Fetcher for '{model_key}'")
         self.model_key = model_key
-        source = athena_config["sources"][model_key]
-
-        self.database = athena_config["database"]
-        self.workgroup = athena_config["athena_workgroup"]
-        self.output_bucket = athena_config["output_bucket"]
-        self.output_location = athena_config["output_location"]
-        self.table = source["athena_table_name"]
-        self.alt_table = source.get("alt_athena_table_name", "")
-
-        boto_cfg = Config(
-            connect_timeout=5,
-            read_timeout=5,
-            retries={"max_attempts": 2, "mode": "standard"},
-        )
-
-        self.athena = boto3.client("athena", region_name=athena_config["region_name"], config=boto_cfg)
-        self.s3 = boto3.client("s3", region_name=athena_config["region_name"], config=boto_cfg)
+        source = athena_config.sources[model_key]
+        self.query_client = AthenaQueryClient(athena_config, source)
 
         self._df_cache: OrderedDict[str, pd.DataFrame] = OrderedDict()
-        self._df_cache_maxsize = 100
+        self._df_cache_maxsize = 10
         self._cache_lock = threading.Lock()
 
     def _schema(self) -> str:
@@ -62,17 +45,13 @@ class AthenaDataFetcher(AbstractDataFetcher):
                 self._df_cache.move_to_end(grid_idx)
                 return self._df_cache[grid_idx].copy()
 
-        query = f"SELECT * FROM {self.table} WHERE index = '{grid_idx}'"
-        df = self._execute_athena(query)
+        df = self.query_client.query(grid_idx)
 
         with self._cache_lock:
-            existing = self._df_cache.get(grid_idx)
-            if existing is not None:
-                self._df_cache.move_to_end(grid_idx)
-                return existing.copy()
-            self._df_cache[grid_idx] = df
-            if len(self._df_cache) > self._df_cache_maxsize:
-                self._df_cache.popitem(last=False)
+            if grid_idx not in self._df_cache:
+                self._df_cache[grid_idx] = df
+                if len(self._df_cache) > self._df_cache_maxsize:
+                    self._df_cache.popitem(last=False)
             return df.copy()
 
     def fetch_data(
@@ -132,55 +111,3 @@ class AthenaDataFetcher(AbstractDataFetcher):
             )
 
         return df
-
-    def _execute_athena(
-        self, query: str, params: list[str] | None = None
-    ) -> pd.DataFrame:
-        """Execute an Athena query and return results as a DataFrame.
-
-        Uses 7-day result reuse so repeated queries for the same location
-        resolve from cache server-side. Polls with exponential backoff,
-        checking immediately on the first attempt for fast cache hits.
-
-        Args:
-            query: SQL query string to execute.
-
-        Returns:
-            DataFrame parsed from the CSV result stored in S3.
-
-        Raises:
-            RuntimeError: If the query fails or is cancelled.
-        """
-        execution_id = self.athena.start_query_execution(
-            QueryString=query,
-            QueryExecutionContext={"Database": self.database},
-            ResultConfiguration={"OutputLocation": self.output_location},
-            ResultReuseConfiguration={
-                "ResultReuseByAgeConfiguration": {
-                    "Enabled": True,
-                    "MaxAgeInMinutes": 10080,
-                }
-            },
-            WorkGroup=self.workgroup,
-        )["QueryExecutionId"]
-
-        start = time.monotonic()
-        delay = 0.0
-        max_wait_seconds = 15
-        while True:
-            resp = self.athena.get_query_execution(QueryExecutionId=execution_id)
-            state = resp["QueryExecution"]["Status"]["State"]
-            if state == "SUCCEEDED":
-                break
-            if state in ("FAILED", "CANCELLED"):
-                reason = resp["QueryExecution"]["Status"].get("StateChangeReason", "")
-                raise RuntimeError(f"Athena query {state}: {reason}")
-            if time.monotonic() - start > max_wait_seconds:
-                raise RuntimeError(f"Athena query timed out after {max_wait_seconds:.0f}s (execution_id={execution_id})")
-            delay = 0.15 if delay == 0 else min(delay * 2, 3.0)
-            time.sleep(delay)
-
-        output = resp["QueryExecution"]["ResultConfiguration"]["OutputLocation"]
-        bucket, key = output.replace("s3://", "").split("/", 1)
-        obj = self.s3.get_object(Bucket=bucket, Key=key)
-        return pd.read_csv(StringIO(obj["Body"].read().decode("utf-8")))

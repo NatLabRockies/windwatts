@@ -709,3 +709,23 @@ class ProductionRequestPayload(BaseModel):
             ]
         }
     }
+
+class AthenaSourceConfig(BaseModel):
+    bucket_name: str = Field(..., description="S3 bucket where the dataset lives")
+    athena_table_name: str = Field(..., description="Primary Athena table (partitioned by index)")
+    alt_athena_table_name: str = Field("", description="Alternative table for non-index queries")
+    capabilities: Optional[Dict[str, List[str]]] = Field(
+        None, description="Optional capabilities like supported avg_types"
+    )
+
+
+class AthenaConfig(BaseModel):
+    region_name: str = Field("us-west-2", description="AWS region")
+    output_location: str = Field(..., description="S3 URI for Athena query results")
+    output_bucket: str = Field(..., description="S3 bucket name for query results")
+    database: str = Field(..., description="Athena/Glue database name")
+    athena_workgroup: str = Field(..., description="Athena workgroup name")
+    sources: Dict[str, AthenaSourceConfig] = Field(
+        ..., description="Map of model_key to source config"
+    )
+
