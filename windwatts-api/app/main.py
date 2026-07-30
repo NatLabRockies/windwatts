@@ -19,7 +19,7 @@ app = FastAPI(
 
         - Rate limits: tiered - 10 / 100 / 1000 requests per minute per IP.
         - Base path: `/api`
-        - Contact: windwatts@nrel.gov
+        - Contact: windwatts@nlr.gov
 
         ## API
 

@@ -21,7 +21,7 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
     info: "Residential reference turbines (0-20 kW): system size 2.5 kW, rotor diameter 2.2m, allowable hub heights 20, 30, 40 m (Lantz et al., 2016). Also see https://doi.org/10.2172/1333625",
     // Source: Lantz et al. (2016)
     // Lantz, E., Sigrin, B., Gleason, M., Preus, R., & Baring-Gould, I. (2016). Assessing the Future of Distributed Wind: Opportunities for Behind-the-Meter Projects (NREL/TP--6A20-67337, 1333625; p. NREL/TP--6A20-67337, 1333625). https://doi.org/10.2172/1333625
-    // For more information, refer to https://atb.nrel.gov/electricity/2024b/distributed_wind
+    // For more information, refer to https://atb.nlr.gov/electricity/2024b/distributed_wind
     // Note: residential turbines (0 - 20 kW): system size 2.5 kW, rotor diameter 2.2m, allowable hub heights 20, 30, 40 m
   },
   "nlr-reference-100kW": {
@@ -31,7 +31,7 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
     info: "Commercial reference turbines (20-100 kW): system size 100 kW, rotor diameter 13.8m, allowable hub heights 40, 50 m (Lantz et al., 2016). Also see https://doi.org/10.2172/1333625",
     // Source: Lantz et al. (2016)
     // Lantz, E., Sigrin, B., Gleason, M., Preus, R., & Baring-Gould, I. (2016). Assessing the Future of Distributed Wind: Opportunities for Behind-the-Meter Projects (NREL/TP--6A20-67337, 1333625; p. NREL/TP--6A20-67337, 1333625). https://doi.org/10.2172/1333625
-    // For more information, refer to https://atb.nrel.gov/electricity/2024b/distributed_wind
+    // For more information, refer to https://atb.nlr.gov/electricity/2024b/distributed_wind
     // Note: commercial turbines (20-100 kW): system size 100 kW, rotor diameter 13.8m, allowable hub heights 40, 50 m
   },
   "nlr-reference-250kW": {
@@ -41,7 +41,7 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
     info: "Mid-size reference turbines (100 kW - 1 MW): system size 250 kW, rotor diameter 21.9m, allowable hub heights 50 m (Lantz et al., 2016). Also see https://doi.org/10.2172/1333625",
     // Source: Lantz et al. (2016)
     // Lantz, E., Sigrin, B., Gleason, M., Preus, R., & Baring-Gould, I. (2016). Assessing the Future of Distributed Wind: Opportunities for Behind-the-Meter Projects (NREL/TP--6A20-67337, 1333625; p. NREL/TP--6A20-67337, 1333625). https://doi.org/10.2172/1333625
-    // For more information, refer to https://atb.nrel.gov/electricity/2024b/distributed_wind
+    // For more information, refer to https://atb.nlr.gov/electricity/2024b/distributed_wind
     // Note: mid-size turbines (100 kW - 1 MW): system size 250 kW, rotor diameter 21.9m, allowable hub heights 50 m
   },
   "nlr-reference-2000kW": {
@@ -51,7 +51,7 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
     maxHeight: 80,
     // Source: Lantz et al. (2016)
     // Lantz, E., Sigrin, B., Gleason, M., Preus, R., & Baring-Gould, I. (2016). Assessing the Future of Distributed Wind: Opportunities for Behind-the-Meter Projects (NREL/TP--6A20-67337, 1333625; p. NREL/TP--6A20-67337, 1333625). https://doi.org/10.2172/1333625
-    // For more information, refer to https://atb.nrel.gov/electricity/2024b/distributed_wind
+    // For more information, refer to https://atb.nlr.gov/electricity/2024b/distributed_wind
     // Note: large-size turbines (> 1 MW): system size 1 MW, rotor diameter 43.7m, allowable hub heights 50, 80 m
   },
   "bergey-excel-15": {
