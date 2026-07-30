@@ -62,3 +62,15 @@ pytest
 ## API Documentation
 
 When the app is running, visit `/docs` (e.g., `http://localhost:8080/docs`) to see the auto-generated Swagger UI.
+
+### API Endpoints
+
+All endpoints are under the `/api/v1/{model}/` prefix.
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/v1/{model}/windspeed` | Wind speed data |
+| `GET /api/v1/{model}/production` | Energy production estimates |
+| `GET /api/v1/{model}/timeseries` | Raw timeseries downloads |
+
+**Supported models**: `era5-quantiles`, `era5-timeseries`, `wtk-timeseries`, `ensemble-quantiles`
