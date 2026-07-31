@@ -6,6 +6,7 @@ Tests for V1 API endpoints.
 from fastapi.testclient import TestClient
 from app.main import app
 from unittest.mock import patch
+import pytest
 import numpy as np
 import pandas as pd
 

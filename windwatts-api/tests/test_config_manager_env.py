@@ -1,5 +1,6 @@
 import os
 from app.config_manager import ConfigManager
+import json
 
 # Set required top-level environment variables
 os.environ["REGION_NAME"] = "us-west-2"
@@ -19,10 +20,9 @@ os.environ["SOURCES_ERA5_ATHENA_TABLE_NAME"] = "era5_table"
 # Instantiate ConfigManager (no secret ARN, no local file)
 cm = ConfigManager(secret_arn_env_var="DUMMY_SECRET_ARN", local_config_path=None)
 
-# Get config path
-config_path = cm.get_config()
-print(f"\nGenerated config file path: {config_path}\n")
+# Get config (now returns a dict, not a file path)
+config = cm.get_config()
+print(f"\nGenerated config: {config}\n")
 
-# Print the contents for verification
-with open(config_path) as f:
-    print(f.read())
+# Verify the config dict structure
+print(json.dumps(config, indent=2))

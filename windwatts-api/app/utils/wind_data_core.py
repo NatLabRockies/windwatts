@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import bisect
 from app.schemas import PowerCurveData
+from app.utils.wind_processing import compute_sectors
 
 from app.utils.validation import (
     validate_lat,
@@ -345,20 +346,6 @@ def get_timeseries_energy_core(
     return csv_io.getvalue()
 
 
-def _compute_sectors(n: int):
-    "Return sector centre bearings (degrees CW from North), sector width in degrees, and sector edges."
-    sector_width_deg = 360.0 / n
-    centers = [round(i * sector_width_deg, 2) for i in range(n)]
-    edges = [
-        (
-            round((c - 0.5 * sector_width_deg) % 360, 2),
-            round((c + 0.5 * sector_width_deg) % 360, 2),
-        )
-        for c in centers
-    ]
-    return centers, sector_width_deg, edges
-
-
 def get_windrose_core(
     model: str,
     gridIndices: List[str],
@@ -424,7 +411,7 @@ def get_windrose_core(
     active_wd = wd[~calm_mask]
 
     # Divide the compass into equal sectors and assign each active observation to one
-    sector_centers, sector_width_deg, sector_edges = _compute_sectors(sectors)
+    sector_centers, sector_width_deg, sector_edges = compute_sectors(sectors)
     sector_idx = (
         np.floor((active_wd + sector_width_deg / 2) % 360 / sector_width_deg)
     ).astype(int)

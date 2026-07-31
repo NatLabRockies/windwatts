@@ -26,6 +26,8 @@ from app.utils.wind_data_core import (
 
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
+from app.spatial.global_spatial_manager import init_spatial, spatial_manager
+
 from app.schemas import (
     AvailableTurbinesResponse,
     RoseRequestPayload,
@@ -40,6 +42,7 @@ from app.schemas import (
     AvailableModelsResponse,
     RoseResponse,
     ProductionRequestPayload,
+    AthenaConfig,
 )
 
 router = APIRouter()
@@ -58,17 +61,20 @@ if not _skip_data_init:
         secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
         local_config_path="./app/config/windwatts_data_config.json",
     )
-    athena_config = config_manager.get_config()
+    athena_config = AthenaConfig(**config_manager.get_config())
+
+    # Initialize spatial
+    init_spatial()
 
     # Initialize Athena data fetchers
     athena_data_fetchers["era5-quantiles"] = AthenaDataFetcher(
-        athena_config=athena_config, source_key="era5"
+        athena_config=athena_config, model_key="era5-quantiles"
     )
     athena_data_fetchers["ensemble-quantiles"] = AthenaDataFetcher(
-        athena_config=athena_config, source_key="ensemble"
+        athena_config=athena_config, model_key="ensemble-quantiles"
     )
     athena_data_fetchers["wtk-timeseries"] = AthenaDataFetcher(
-        athena_config=athena_config, source_key="wtk"
+        athena_config=athena_config, model_key="wtk-timeseries"
     )
 
     # Initialize S3 data fetchers
@@ -398,19 +404,11 @@ def get_grid_points(
     try:
         model = validate_model_exists(model)
 
-        # Grid lookup only available via athena
-        # Use athena fetcher for the specified model
-        fetcher = athena_data_fetchers.get(model)
-
-        if not fetcher or not hasattr(fetcher, "find_nearest_locations"):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Grid point lookup not available for model '{model}'",
-            )
-
-        # Call find_nearest_locations on the fetcher
         limit = validate_limit(limit)
-        result = fetcher.find_nearest_locations(lat=lat, lng=lng, n_neighbors=limit)
+
+        result = spatial_manager.find_n_nearest(
+            lat=lat, lng=lng, model_key=model, n_neighbors=limit
+        )
 
         locations = [
             {"index": str(i), "latitude": float(a), "longitude": float(o)}
