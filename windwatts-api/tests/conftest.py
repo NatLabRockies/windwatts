@@ -68,6 +68,10 @@ def pytest_collection_finish(session):
     into the controller's module-level dicts (which are empty due to SKIP_DATA_INIT=1).
     """
     from app.controllers import wind_data_controller as wdc
+    from app.spatial.global_spatial_manager import init_spatial
+
+    # Load real spatial lookups (reads local .npz files, no AWS needed)
+    init_spatial()
 
     mock_athena_fetcher = MagicMock()
 
