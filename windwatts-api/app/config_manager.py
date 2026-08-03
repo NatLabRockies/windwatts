@@ -64,7 +64,7 @@ class ConfigManager:
         # Scan for all SOURCES_<SOURCE>_FIELD_NAME env vars
         sources = {}
         prefix = "SOURCES_"
-        suffixes = ["_BUCKET_NAME", "_ATHENA_TABLE_NAME", "_ALT_ATHENA_TABLE_NAME"]
+        suffixes = ["_ALT_ATHENA_TABLE_NAME", "_ATHENA_TABLE_NAME", "_BUCKET_NAME"]
         env = os.environ
         source_fields = {}
         for key, value in env.items():
@@ -77,6 +77,7 @@ class ConfigManager:
                         if source not in source_fields:
                             source_fields[source] = {}
                         source_fields[source][field] = value
+                        break
         # Package the sources with required fields into `sources`
         for source, fields in source_fields.items():
             if "bucket_name" in fields and "athena_table_name" in fields:
