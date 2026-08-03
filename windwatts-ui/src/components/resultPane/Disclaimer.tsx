@@ -29,7 +29,7 @@ export const Disclaimer = () => {
           wind installers who may share insights from nearby projects. To access
           alternative wind models, visit&nbsp;
           <Link
-            href="https://wrdb.nrel.gov"
+            href="https://wrdb.nlr.gov"
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"

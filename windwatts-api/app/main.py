@@ -19,7 +19,7 @@ app = FastAPI(
 
         - Rate limits: tiered - 10 / 100 / 1000 requests per minute per IP.
         - Base path: `/api`
-        - Contact: windwatts@nrel.gov
+        - Contact: windwatts@nlr.gov
 
         ## API
 
@@ -43,13 +43,9 @@ app.add_exception_handler(RequestValidationError, log_validation_errors)
 
 origins = [
     "http://localhost",
-    "https://windwatts-dev.stratus.nrel.gov",
-    "https://windwatts-stage.stratus.nrel.gov",
-    "https://windwatts-prod.stratus.nrel.gov",
     "https://windwatts-dev.stratus.nlr.gov",
     "https://windwatts-stage.stratus.nlr.gov",
     "https://windwatts-prod.stratus.nlr.gov",
-    "https://windwatts.nrel.gov",
     "https://windwatts.nlr.gov",
 ]
 app.add_middleware(

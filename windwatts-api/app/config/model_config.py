@@ -108,7 +108,7 @@ MODEL_CONFIG = {
             "spatial_resolution": "2 km",
             "temporal_resolution": "1 hour",
         },
-        "links": ["https://www.nrel.gov/grid/wind-toolkit"],
+        "links": ["https://www.nlr.gov/grid/wind-toolkit"],
         "references": [
             "Draxl, C., B.M. Hodge, A. Clifton, and J. McCaa. 2015. Overview and Meteorological Validation of the Wind Integration National Dataset Toolkit (Technical Report, NREL/TP-5000-61740). Golden, CO: National Laboratory of the Rockies",
             'Draxl, C., B.M. Hodge, A. Clifton, and J. McCaa. 2015. "The Wind Integration National Dataset (WIND) Toolkit." Applied Energy 151: 355366',
