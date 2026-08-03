@@ -15,6 +15,7 @@ _GRID_LOADERS = {
 
 _initialized = False
 
+
 def init_spatial():
     "Load grids and register lookups for all models in MODEL_CONFIG"
     global _initialized

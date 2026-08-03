@@ -710,10 +710,15 @@ class ProductionRequestPayload(BaseModel):
         }
     }
 
+
 class AthenaSourceConfig(BaseModel):
     bucket_name: str = Field(..., description="S3 bucket where the dataset lives")
-    athena_table_name: str = Field(..., description="Primary Athena table (partitioned by index)")
-    alt_athena_table_name: str = Field("", description="Alternative table for non-index queries")
+    athena_table_name: str = Field(
+        ..., description="Primary Athena table (partitioned by index)"
+    )
+    alt_athena_table_name: str = Field(
+        "", description="Alternative table for non-index queries"
+    )
     capabilities: Optional[Dict[str, List[str]]] = Field(
         None, description="Optional capabilities like supported avg_types"
     )
@@ -728,4 +733,3 @@ class AthenaConfig(BaseModel):
     sources: Dict[str, AthenaSourceConfig] = Field(
         ..., description="Map of model_key to source config"
     )
-
