@@ -1,10 +1,27 @@
 {
   "region_name": "us-east-1",
-  "bucket_name": "sample-bucket",
-  "database": "sample_database",
   "output_location": "s3://sample-output-location/",
   "output_bucket": "sample-output-bucket",
-  "athena_table_name": "sample_table",
-  "alt_athena_table_name": "sample_alt_table",
-  "athena_workgroup": "sample_workgroup"
+  "database": "sample_database",
+  "athena_workgroup": "sample_workgroup",
+  "sources": {
+    "wtk-timeseries": {
+      "bucket_name": "sample-bucket",
+      "athena_table_name": "sample_table",
+      "alt_athena_table_name": "sample_alt_table",
+      "capabilities": { "avg_types": ["all", "annual", "monthly", "hourly"] }
+    },
+    "era5-quantiles": {
+      "bucket_name": "sample-bucket",
+      "athena_table_name": "sample_table",
+      "alt_athena_table_name": "sample_alt_table",
+      "capabilities": { "avg_types": ["all", "annual"] }
+    },
+    "ensemble-quantiles": {
+      "bucket_name": "sample-bucket",
+      "athena_table_name": "sample_table",
+      "alt_athena_table_name": "sample_alt_table",
+      "capabilities": { "avg_types": ["all"] }
+    }
+  }
 }

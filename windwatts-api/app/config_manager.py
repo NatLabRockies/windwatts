@@ -72,7 +72,7 @@ class ConfigManager:
                 rest = key[len(prefix) :]
                 for suffix in suffixes:
                     if rest.endswith(suffix):
-                        source = rest[: -len(suffix)].lower()
+                        source = rest[: -len(suffix)].lower().replace("_", "-")
                         field = suffix[1:].lower()  # e.g. 'bucket_name'
                         if source not in source_fields:
                             source_fields[source] = {}
