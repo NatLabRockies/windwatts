@@ -25,15 +25,15 @@ export const TURBINE_DATA: Record<string, TurbineInfo> = {
     // Note: residential turbines (0 - 20 kW): system size 2.5 kW, rotor diameter 2.2m, allowable hub heights 20, 30, 40 m
   },
   "nlr-reference-20kW": {
-    label: "NLR 20kW Reference Turbine",
-    minHeight: 20,
-    maxHeight: 40,
-    info: "Distributed wind reference turbine released by NLR: rated power 20 kW, rotor diameter 12.6m, hub height 31.03m. Aeroelastic model: https://github.com/NatLabRockies/DistributedWindReferenceTurbines. Also, residential reference turbines (2-20 kW): allowable hub heights 20, 30, 40 m (Lantz et al., 2016), see https://doi.org/10.2172/1333625",
+    label: "NLR Reference 20kW",
+    minHeight: 30,
+    maxHeight: 50,
+    info: "Distributed wind reference turbine released by NLR: rated power 20 kW, rotor diameter 12.6m, hub height 31.03m. Aeroelastic model: https://github.com/NatLabRockies/DistributedWindReferenceTurbines. Also, residential reference turbines (2-20 kW): allowable hub heights 30, 40, 50 m (Lantz et al., 2016), see https://doi.org/10.2172/1333625",
     // Source: NLR Distributed Wind Reference Turbines aeroelastic model repository and Lantz et al. (2016)
     // https://github.com/NatLabRockies/DistributedWindReferenceTurbines, accessed 2026-08-03.
     // Lantz, E., Sigrin, B., Gleason, M., Preus, R., & Baring-Gould, I. (2016). Assessing the Future of Distributed Wind: Opportunities for Behind-the-Meter Projects (NREL/TP--6A20-67337, 1333625; p. NREL/TP--6A20-67337, 1333625). https://doi.org/10.2172/1333625
     // For more information, refer to https://atb.nlr.gov/electricity/2024b/distributed_wind
-    // Note: residential turbines (2 - 20 kW): allowable hub heights 20, 30, 40 m
+    // Note: residential turbines (2 - 20 kW): allowable hub heights 30, 40, 50 m
   },
   "nlr-reference-100kW": {
     label: "NLR Reference 100kW",
