@@ -22,7 +22,9 @@ class AthenaQueryClient:
             read_timeout=5,
             retries={"max_attempts": 2, "mode": "standard"},
         )
-        self._athena = boto3.client("athena", region_name=config.region_name, config=boto_cfg)
+        self._athena = boto3.client(
+            "athena", region_name=config.region_name, config=boto_cfg
+        )
         self._s3 = boto3.client("s3", region_name=config.region_name, config=boto_cfg)
 
     def query(self, grid_idx: str) -> pd.DataFrame:
