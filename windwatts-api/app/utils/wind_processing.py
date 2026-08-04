@@ -105,8 +105,7 @@ def aggregate(df: pd.DataFrame, height: int, period: str) -> dict:
         grouped = tmp.groupby("month")[col].mean().round(2)
         return {
             "monthly_avg": [
-                {"month": int(m), col: float(v)}
-                for m, v in grouped.items()
+                {"month": int(m), col: float(v)} for m, v in grouped.items()
             ]
         }
 
