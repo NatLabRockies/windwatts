@@ -1,5 +1,4 @@
 import bisect
-import calendar
 import numpy as np
 import pandas as pd
 from scipy.interpolate import CubicSpline
@@ -106,7 +105,7 @@ def aggregate(df: pd.DataFrame, height: int, period: str) -> dict:
         grouped = tmp.groupby("month")[col].mean().round(2)
         return {
             "monthly_avg": [
-                {"month": calendar.month_abbr[int(m)], col: float(v)}
+                {"month": int(m), col: float(v)}
                 for m, v in grouped.items()
             ]
         }
