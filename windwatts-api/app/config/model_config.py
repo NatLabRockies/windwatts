@@ -75,6 +75,8 @@ MODEL_CONFIG = {
         "schema": "quantile_yearly",
         "years": {"full": list(range(2013, 2024)), "sample": [2020, 2021, 2022, 2023]},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
+        "interpolation": True,
+        "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
@@ -96,6 +98,8 @@ MODEL_CONFIG = {
             "windspeed": [40, 60, 80, 100, 120, 140, 160, 200],
             "winddirection": [],
         },
+        "interpolation": True,
+        "grid": "wtk",
         "grid_info": {
             "min_lat": 7.75129,
             "min_long": -179.99918,
@@ -104,7 +108,7 @@ MODEL_CONFIG = {
             "spatial_resolution": "2 km",
             "temporal_resolution": "1 hour",
         },
-        "links": ["https://www.nrel.gov/grid/wind-toolkit"],
+        "links": ["https://www.nlr.gov/grid/wind-toolkit"],
         "references": [
             "Draxl, C., B.M. Hodge, A. Clifton, and J. McCaa. 2015. Overview and Meteorological Validation of the Wind Integration National Dataset Toolkit (Technical Report, NREL/TP-5000-61740). Golden, CO: National Laboratory of the Rockies",
             'Draxl, C., B.M. Hodge, A. Clifton, and J. McCaa. 2015. "The Wind Integration National Dataset (WIND) Toolkit." Applied Energy 151: 355366',
@@ -116,6 +120,8 @@ MODEL_CONFIG = {
         "schema": "quantile_atemporal",
         "years": {"full": list(range(2013, 2024)), "sample": []},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
+        "interpolation": True,
+        "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,
@@ -137,6 +143,8 @@ MODEL_CONFIG = {
             "windspeed": [10, 30, 40, 50, 60, 80, 100],
             "winddirection": [10, 100],
         },
+        "interpolation": False,
+        "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
             "min_long": -137.725,

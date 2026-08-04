@@ -38,8 +38,8 @@ export const QUICK_LINKS: FooterLink[] = [
     content: "Site Feedback",
     href: "https://www.nlr.gov/webmaster",
   },
-  { content: "Developers", href: "https://developer.nrel.gov" },
-  { content: "Employees", href: "https://thesource.nrel.gov" },
+  { content: "Developers", href: "https://developer.nlr.gov" },
+  { content: "Employees", href: "https://thesource.nlr.gov" },
 ];
 
 // Social media links (content will be icons, added in component)
@@ -51,12 +51,12 @@ export const SOCIAL_LINKS = [
   },
   {
     name: "instagram",
-    href: "https://www.instagram.com/nationalrenewableenergylab",
+    href: "https://www.instagram.com/natlabrockies/",
     ariaLabel: "Follow NLR on Instagram",
   },
   {
     name: "linkedin",
-    href: "https://www.linkedin.com/company/national-renewable-energy-laboratory",
+    href: "https://www.linkedin.com/company/national-lab-of-the-rockies",
     ariaLabel: "Follow NLR on LinkedIn",
   },
   {
@@ -66,12 +66,12 @@ export const SOCIAL_LINKS = [
   },
   {
     name: "x",
-    href: "https://twitter.com/NatLabRockies",
+    href: "https://x.com/natlabrockies",
     ariaLabel: "Follow NLR on X",
   },
   {
     name: "threads",
-    href: "https://threads.net/@nationalrenewableenergylab",
+    href: "https://www.threads.com/@natlabrockies",
     ariaLabel: "Follow NLR on Threads",
   },
 ];

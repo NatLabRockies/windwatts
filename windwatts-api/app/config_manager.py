@@ -1,7 +1,6 @@
 import os
 import json
 import boto3
-import tempfile
 
 
 class ConfigManager:
@@ -21,45 +20,34 @@ class ConfigManager:
         self.local_config_path = local_config_path
         self.client = boto3.client("secretsmanager", region_name=region_name)
 
-    def get_config(self) -> str:
+    def get_config(self) -> dict:
         """
         Retrieve the secret from AWS Secrets Manager, environment variables, or the local configuration file.
-        :return: The path to the configuration file.
+        :return: The dict with config keys.
         """
         # Try to retrieve the secret from AWS Secrets Manager
         if self.secret_arn:
             try:
                 response = self.client.get_secret_value(SecretId=self.secret_arn)
-                secret = response["SecretString"]
-                config_data = json.loads(secret)
-
-                # Save the secret to a temporary file
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-                temp_file.close()
-                with open(temp_file.name, "w") as f:
-                    json.dump(config_data, f)
-                return temp_file.name
+                return json.loads(response["SecretString"])
             except self.client.exceptions.ClientError as e:
                 print(f"Unable to retrieve secret: {e}")
 
         # Try to retrieve config from environment variables
         env_config = self._get_config_from_env()
         if env_config:
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-            temp_file.close()
-            with open(temp_file.name, "w") as f:
-                json.dump(env_config, f)
             print("Config loaded from environment variables.")
-            return temp_file.name
+            return env_config
 
         # Fallback: return the path to the local configuration file
         if self.local_config_path and os.path.exists(self.local_config_path):
-            print("Local configuration file found.")
-            return self.local_config_path
-        else:
-            raise FileNotFoundError(
-                "Local configuration file not found and unable to retrieve secret from AWS Secrets Manager or environment variables."
-            )
+            with open(self.local_config_path, "r") as f:
+                print(f"Loaded config from local path '{self.local_config_path}'")
+                return json.load(f)
+
+        raise FileNotFoundError(
+            "Local configuration file not found and unable to retrieve secret from AWS Secrets Manager or environment variables."
+        )
 
     def _get_config_from_env(self):
         """
@@ -76,7 +64,7 @@ class ConfigManager:
         # Scan for all SOURCES_<SOURCE>_FIELD_NAME env vars
         sources = {}
         prefix = "SOURCES_"
-        suffixes = ["_BUCKET_NAME", "_ATHENA_TABLE_NAME", "_ALT_ATHENA_TABLE_NAME"]
+        suffixes = ["_ALT_ATHENA_TABLE_NAME", "_ATHENA_TABLE_NAME", "_BUCKET_NAME"]
         env = os.environ
         source_fields = {}
         for key, value in env.items():
@@ -84,11 +72,12 @@ class ConfigManager:
                 rest = key[len(prefix) :]
                 for suffix in suffixes:
                     if rest.endswith(suffix):
-                        source = rest[: -len(suffix)].lower()
+                        source = rest[: -len(suffix)].lower().replace("_", "-")
                         field = suffix[1:].lower()  # e.g. 'bucket_name'
                         if source not in source_fields:
                             source_fields[source] = {}
                         source_fields[source][field] = value
+                        break
         # Package the sources with required fields into `sources`
         for source, fields in source_fields.items():
             if "bucket_name" in fields and "athena_table_name" in fields:
