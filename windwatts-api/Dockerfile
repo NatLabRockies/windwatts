@@ -11,9 +11,14 @@ ENV PYTHONPATH=/app
 WORKDIR $APP_HOME
 
 # Install system dependencies and upgrade packages
+# remove package index files /var/lib/apt/lists/* during apt-get update
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     gdal-bin libgdal-dev libproj-dev libgeos-dev \
-    gcc python3-dev libffi-dev curl
+    gcc python3-dev libffi-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# remove unused perl-base to resolve related CVEs
+RUN apt-get purge -y --allow-remove-essential perl-base && apt-get autoremove -y
 
 # Install dependencies
 COPY requirements.txt .
