@@ -27,8 +27,8 @@ export const MobileBottomSheet = forwardRef<
 >(({ isLoaded, onPlaceSelected }, ref) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasSelectedPlace, setHasSelectedPlace] = useState(false);
-  const [searchPredictions, setSearchPredictions] = useState<
-    google.maps.places.AutocompletePrediction[]
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    google.maps.places.AutocompleteSuggestion[]
   >([]);
   const [isSearching, setIsSearching] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -45,7 +45,7 @@ export const MobileBottomSheet = forwardRef<
   useImperativeHandle(ref, () => ({
     clearSearchInput: () => {
       setInputValue("");
-      setSearchPredictions([]);
+      setSearchSuggestions([]);
       setIsSearching(false);
       setHasInitialLocation(true);
     },
@@ -59,7 +59,7 @@ export const MobileBottomSheet = forwardRef<
     setHasSelectedPlace(true);
     setHasInitialLocation(true);
     setIsSearching(false);
-    setSearchPredictions([]);
+    setSearchSuggestions([]);
     // Set flag to prevent prediction search when updating input value
     isSettingFromSelectionRef.current = true;
     // Update input value to show the selected place (consistent with desktop)
@@ -71,11 +71,11 @@ export const MobileBottomSheet = forwardRef<
     }, FLAG_RESET_DELAY);
   };
 
-  const handleSearchPredictions = (
-    predictions: google.maps.places.AutocompletePrediction[],
+  const handleSearchSuggestions = (
+    suggestions: google.maps.places.AutocompleteSuggestion[],
     searching: boolean
   ) => {
-    setSearchPredictions(predictions);
+    setSearchSuggestions(suggestions);
     setIsSearching(searching);
   };
 
@@ -85,7 +85,7 @@ export const MobileBottomSheet = forwardRef<
 
   const handleClear = () => {
     setInputValue("");
-    setSearchPredictions([]);
+    setSearchSuggestions([]);
     setIsSearching(false);
     setHasSelectedPlace(false);
     // Show results when clearing (like desktop behavior)
@@ -102,27 +102,25 @@ export const MobileBottomSheet = forwardRef<
     }, 100);
   };
 
-  const handlePredictionClick = (
-    prediction: google.maps.places.AutocompletePrediction
+  const handlePredictionClick = async (
+    suggestion: google.maps.places.AutocompleteSuggestion
   ) => {
-    // Create a dummy map element for PlacesService if needed
-    const mapDiv = document.createElement("div");
-    const map = new window.google.maps.Map(mapDiv);
-    const placesService = new window.google.maps.places.PlacesService(map);
+    const placePrediction = suggestion.placePrediction;
+    if (!placePrediction) return;
 
-    const request = {
-      placeId: prediction.place_id,
-      fields: ["geometry", "name", "formatted_address", "place_id"],
-    };
-
-    placesService.getDetails(request, (place, status) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        place
-      ) {
-        handlePlaceSelected(place);
-      }
+    const place = placePrediction.toPlace();
+    await place.fetchFields({
+      fields: ["location", "formattedAddress", "displayName"],
     });
+
+    if (place.location) {
+      handlePlaceSelected({
+        place_id: place.id,
+        name: place.displayName ?? undefined,
+        formatted_address: place.formattedAddress ?? undefined,
+        geometry: { location: place.location },
+      });
+    }
   };
 
   const expandDrawer = () => {
@@ -260,7 +258,7 @@ export const MobileBottomSheet = forwardRef<
             <Box sx={{ flex: 1 }}>
               <MobileSearchBar
                 ref={searchBarRef}
-                onSearchPredictions={handleSearchPredictions}
+                onSearchSuggestions={handleSearchSuggestions}
                 onInputChange={handleInputChange}
                 inputValue={inputValue}
                 isSettingFromSelectionRef={isSettingFromSelectionRef}
@@ -304,9 +302,9 @@ export const MobileBottomSheet = forwardRef<
           display: isExpanded ? "block" : "none",
         }}
       >
-        {isSearching && searchPredictions.length > 0 ? (
+        {isSearching && searchSuggestions.length > 0 ? (
           <SearchResultsList
-            predictions={searchPredictions}
+            suggestions={searchSuggestions}
             onPredictionClick={handlePredictionClick}
           />
         ) : hasSelectedPlace || hasInitialLocation ? (
