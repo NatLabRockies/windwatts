@@ -77,6 +77,11 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
         placeAutocomplete.noInputIcon = true;
         placeAutocomplete.noClearButton = true;
         placeAutocomplete.style.width = "100%";
+        placeAutocomplete.style.padding = "12px 88px 12px 16px";
+        placeAutocomplete.style.setProperty("border", "none", "important");
+        placeAutocomplete.style.setProperty("box-shadow", "none", "important");
+        placeAutocomplete.style.setProperty("outline", "none", "important");
+        placeAutocomplete.style.backgroundColor = "transparent";
 
         // Append the Google Place Autocomplete widget to the container div
         autocompleteContainerRef.current.appendChild(placeAutocomplete);
@@ -189,20 +194,25 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
     if (useGoogleAutocomplete) {
       return (
         <Box sx={{ position: "relative", width: "100%" }}>
-          <div
+          <Box
             ref={autocompleteContainerRef}
             id="search-bar-input"
-            style={{
+            sx={{
               width: "100%",
-              paddingRight: onSettingsClick
-                ? "88px"
-                : inputValue
-                  ? "48px"
-                  : "16px",
               border: "1px solid #ddd",
               borderRadius: "8px",
               backgroundColor: "white",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+              "&:focus-within": {
+                borderColor: "#1976d2",
+                boxShadow:
+                  "0 0 0 3px rgba(25, 118, 210, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)",
+              },
+              // Hide the widget's own inner focus indicator (a shadow-DOM
+              // element exposed as `::part(focus-ring)`); the glow above replaces it.
+              "& gmp-place-autocomplete::part(focus-ring)": {
+                display: "none",
+              },
             }}
           />
           <Box
