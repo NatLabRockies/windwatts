@@ -109,9 +109,14 @@ export const MobileBottomSheet = forwardRef<
     if (!placePrediction) return;
 
     const place = placePrediction.toPlace();
-    await place.fetchFields({
-      fields: ["location", "formattedAddress", "displayName"],
-    });
+    try {
+      await place.fetchFields({
+        fields: ["location", "formattedAddress", "displayName"],
+      });
+    } catch (error) {
+      console.error("Failed to fetch place details:", error);
+      return;
+    }
 
     if (place.location) {
       handlePlaceSelected({

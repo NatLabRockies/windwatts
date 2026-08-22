@@ -44,6 +44,8 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
     // Ref for the Google Place Autocomplete widget instance
     const placeAutocompleteRef =
       useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
+    // Ref for the custom (useGoogleAutocomplete=false) TextField's input
+    const textFieldInputRef = useRef<HTMLInputElement>(null);
 
     // Load Google Maps API
     const { isLoaded: isGoogleMapsReady } = useGoogleMaps();
@@ -88,7 +90,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
         // Store the reference to the widget for later use (e.g., clearing input)
         placeAutocompleteRef.current = placeAutocomplete;
 
-        // Input EventListerner to update inputValue state
+        // Input EventListener to update inputValue state
         // No onChange event <input> + attached google.maps.places.Autocomplete
         const handleInput = () => setInputValue(placeAutocomplete.value);
         placeAutocomplete.addEventListener("input", handleInput);
@@ -99,9 +101,14 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
           const { placePrediction } =
             event as google.maps.places.PlacePredictionSelectEvent;
           const place = placePrediction.toPlace();
-          await place.fetchFields({
-            fields: ["location", "formattedAddress", "displayName"],
-          });
+          try {
+            await place.fetchFields({
+              fields: ["location", "formattedAddress", "displayName"],
+            });
+          } catch (error) {
+            console.error("Failed to fetch place details:", error);
+            return;
+          }
           if (place.location) {
             // Requires onPlaceSelected func to be a stable (memoized) reference -
             // otherwise this effect reruns on every render and recreates the widget.
@@ -174,9 +181,14 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
       if (!placePrediction || !onPlaceSelected) return;
 
       const place = placePrediction.toPlace();
-      await place.fetchFields({
-        fields: ["location", "formattedAddress", "displayName"],
-      });
+      try {
+        await place.fetchFields({
+          fields: ["location", "formattedAddress", "displayName"],
+        });
+      } catch (error) {
+        console.error("Failed to fetch place details:", error);
+        return;
+      }
 
       if (place.location) {
         onPlaceSelected({
@@ -192,7 +204,11 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
 
     const handleClear = () => {
       clearInput();
-      placeAutocompleteRef.current?.focus();
+      if (useGoogleAutocomplete) {
+        placeAutocompleteRef.current?.focus();
+      } else {
+        textFieldInputRef.current?.focus();
+      }
     };
 
     if (useGoogleAutocomplete) {
@@ -285,6 +301,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
+          inputRef={textFieldInputRef}
           InputProps={{
             endAdornment: inputValue && (
               <IconButton size="small" onClick={handleClear}>

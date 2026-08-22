@@ -33,9 +33,8 @@ export const MapViewDesktop = () => {
     [setCurrentPosition]
   );
 
-  // Memoized callback to handle place selection from the SearchBar.
-  // so SearchBar's onPlaceSelected prop as a stable reference withou
-  // no unnecessary re-renders/tearing down of the SearchBar widget.
+  // Memoized so SearchBar's widget-creation effect (which depends on this
+  // prop) doesn't tear down and recreate the widget on every render.
   const handlePlaceSelected = useCallback(
     (place: google.maps.places.PlaceResult) => {
       const lat = place.geometry?.location?.lat();
