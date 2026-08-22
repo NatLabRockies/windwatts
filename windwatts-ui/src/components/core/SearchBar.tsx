@@ -102,13 +102,17 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
           await place.fetchFields({
             fields: ["location", "formattedAddress", "displayName"],
           });
-          if (place.location && onPlaceSelected) {
-            onPlaceSelected({
+          if (place.location) {
+            // Requires onPlaceSelected func to be a stable (memoized) reference -
+            // otherwise this effect reruns on every render and recreates the widget.
+            onPlaceSelected?.({
               place_id: place.id,
               name: place.displayName ?? undefined,
               formatted_address: place.formattedAddress ?? undefined,
               geometry: { location: place.location },
             });
+            // Update the input value to the selected place's formatted address
+            placeAutocomplete.value = place.formattedAddress || "";
             setInputValue(place.formattedAddress || "");
             setShowPredictions(false);
           }
