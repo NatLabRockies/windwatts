@@ -1,5 +1,5 @@
 import { GoogleMap } from "@react-google-maps/api";
-import { useContext, useRef } from "react";
+import { useCallback, useContext, useRef } from "react";
 import { SearchBar, SearchBarRef } from "../core";
 import { Box } from "@mui/material";
 import { SettingsContext } from "../../providers/SettingsContext";
@@ -22,22 +22,31 @@ export const MapViewDesktop = () => {
 
   useGeolocation();
 
-  const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
-    const lat = place.geometry?.location?.lat();
-    const lng = place.geometry?.location?.lng();
-    if (lat === undefined || lng === undefined) {
-      console.error("Selected place does not have valid coordinates.");
-      return;
-    }
-    handleSetLocation({ lat, lng });
-  };
+  // Memoized callback to set the current location based on latitude and longitude.
+  const handleSetLocation = useCallback(
+    (location: { lat: number; lng: number }) => {
+      setCurrentPosition({
+        lat: location.lat,
+        lng: location.lng,
+      });
+    },
+    [setCurrentPosition]
+  );
 
-  const handleSetLocation = (location: { lat: number; lng: number }) => {
-    setCurrentPosition({
-      lat: location.lat,
-      lng: location.lng,
-    });
-  };
+  // Memoized so SearchBar's widget-creation effect (which depends on this
+  // prop) doesn't tear down and recreate the widget on every render.
+  const handlePlaceSelected = useCallback(
+    (place: google.maps.places.PlaceResult) => {
+      const lat = place.geometry?.location?.lat();
+      const lng = place.geometry?.location?.lng();
+      if (lat === undefined || lng === undefined) {
+        console.error("Selected place does not have valid coordinates.");
+        return;
+      }
+      handleSetLocation({ lat, lng });
+    },
+    [handleSetLocation]
+  );
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     const lat: number = e.latLng?.lat() ?? 0;

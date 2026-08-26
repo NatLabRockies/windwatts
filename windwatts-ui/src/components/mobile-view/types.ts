@@ -11,8 +11,8 @@ export interface MobileBottomSheetRef {
 
 // Mobile Search Bar Types
 export interface MobileSearchBarProps {
-  onSearchPredictions: (
-    predictions: google.maps.places.AutocompletePrediction[],
+  onSearchSuggestions: (
+    suggestions: google.maps.places.AutocompleteSuggestion[],
     searching: boolean
   ) => void;
   inputValue: string;
@@ -26,8 +26,8 @@ export interface MobileSearchBarRef {
 
 // Search Results List Types
 export interface SearchResultsListProps {
-  predictions: google.maps.places.AutocompletePrediction[];
+  suggestions: google.maps.places.AutocompleteSuggestion[];
   onPredictionClick: (
-    prediction: google.maps.places.AutocompletePrediction
+    suggestion: google.maps.places.AutocompleteSuggestion
   ) => void;
 }
