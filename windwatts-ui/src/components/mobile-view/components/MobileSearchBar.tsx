@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import React, { useEffect, forwardRef, useImperativeHandle } from "react";
 import { Box, TextField, InputAdornment } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { MobileSearchBarProps, MobileSearchBarRef } from "../types";
@@ -15,16 +10,13 @@ export const MobileSearchBar = forwardRef<
 >(
   (
     {
-      onSearchPredictions,
+      onSearchSuggestions,
       inputValue,
       onInputChange,
       isSettingFromSelectionRef,
     },
     ref
   ) => {
-    const [placesService, setPlacesService] =
-      useState<google.maps.places.PlacesService | null>(null);
-
     // Check if Google Maps API is available
     const isGoogleMapsReady =
       typeof window !== "undefined" &&
@@ -36,21 +28,11 @@ export const MobileSearchBar = forwardRef<
     useImperativeHandle(ref, () => ({
       clearInput: () => {
         onInputChange("");
-        onSearchPredictions([], false);
+        onSearchSuggestions([], false);
       },
     }));
 
-    // Initialize services when Google Maps is ready
-    useEffect(() => {
-      if (isGoogleMapsReady && !placesService) {
-        // Create a dummy map element for PlacesService
-        const mapDiv = document.createElement("div");
-        const map = new window.google.maps.Map(mapDiv);
-        setPlacesService(new window.google.maps.places.PlacesService(map));
-      }
-    }, [isGoogleMapsReady, placesService]);
-
-    // Fetch predictions when input changes
+    // Fetch suggestions when input changes
     useEffect(() => {
       const isSettingFromSelection =
         isSettingFromSelectionRef?.current || false;
@@ -60,29 +42,29 @@ export const MobileSearchBar = forwardRef<
         inputValue.length < SEARCH_MIN_LENGTH ||
         isSettingFromSelection
       ) {
-        onSearchPredictions([], false);
+        onSearchSuggestions([], false);
         return;
       }
 
-      const request = {
-        input: inputValue,
-        types: ["geocode", "establishment"],
-      };
+      let cancelled = false;
 
-      const autocompleteService =
-        new window.google.maps.places.AutocompleteService();
-      autocompleteService.getPlacePredictions(request, (results, status) => {
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          results
-        ) {
-          onSearchPredictions(results, true);
-        } else {
-          onSearchPredictions([], false);
-        }
-      });
+      window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
+        { input: inputValue }
+      )
+        .then(({ suggestions }) => {
+          if (cancelled) return;
+          onSearchSuggestions(suggestions, true);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          onSearchSuggestions([], false);
+        });
+
+      return () => {
+        cancelled = true;
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [inputValue, isGoogleMapsReady]); // Remove onSearchPredictions from deps
+    }, [inputValue, isGoogleMapsReady]); // Remove onSearchSuggestions from deps
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       onInputChange(event.target.value);

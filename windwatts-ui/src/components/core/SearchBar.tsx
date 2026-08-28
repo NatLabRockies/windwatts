@@ -35,14 +35,17 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
   ) => {
     const [inputValue, setInputValue] = useState("");
     const [predictions, setPredictions] = useState<
-      google.maps.places.AutocompletePrediction[]
+      google.maps.places.AutocompleteSuggestion[]
     >([]);
     const [showPredictions, setShowPredictions] = useState(false);
 
-    const inputRef = useRef<HTMLInputElement>(null);
-    const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(
-      null
-    );
+    // Ref container for the Google Place Autocomplete widget/ element
+    const autocompleteContainerRef = useRef<HTMLDivElement>(null);
+    // Ref for the Google Place Autocomplete widget instance
+    const placeAutocompleteRef =
+      useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
+    // Ref for the custom (useGoogleAutocomplete=false) TextField's input
+    const textFieldInputRef = useRef<HTMLInputElement>(null);
 
     // Load Google Maps API
     const { isLoaded: isGoogleMapsReady } = useGoogleMaps();
@@ -51,6 +54,9 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
     const clearInput = () => {
       setInputValue("");
       setShowPredictions(false);
+      if (placeAutocompleteRef.current) {
+        placeAutocompleteRef.current.value = "";
+      }
     };
 
     // Expose clearInput method to parent
@@ -58,150 +64,175 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
       clearInput,
     }));
 
-    // Initialize Google Autocomplete for native input
+    // Google Place Autocomplete widget (useGoogleAutocomplete=true)
     useEffect(() => {
       if (
         useGoogleAutocomplete &&
         isGoogleMapsReady &&
-        inputRef.current &&
+        autocompleteContainerRef.current &&
         window.google
       ) {
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(
-          inputRef.current,
-          {
-            types: ["geocode", "establishment"],
-            fields: ["place_id", "geometry", "formatted_address", "name"],
-          }
-        );
+        const placeAutocomplete =
+          new window.google.maps.places.PlaceAutocompleteElement({});
+        placeAutocomplete.placeholder = "Enter a city, address, or landmark";
+        // Hide the widget's built-in icon/clear button; we render our own overlay controls.
+        placeAutocomplete.noInputIcon = true;
+        placeAutocomplete.noClearButton = true;
+        placeAutocomplete.style.width = "100%";
+        placeAutocomplete.style.padding = "12px 88px 12px 16px";
+        placeAutocomplete.style.setProperty("border", "none", "important");
+        placeAutocomplete.style.setProperty("box-shadow", "none", "important");
+        placeAutocomplete.style.setProperty("outline", "none", "important");
+        placeAutocomplete.style.backgroundColor = "transparent";
 
-        autocompleteRef.current.addListener("place_changed", () => {
-          const place = autocompleteRef.current?.getPlace();
-          if (place && place.geometry?.location && onPlaceSelected) {
-            onPlaceSelected(place);
-            setInputValue(place.formatted_address || "");
+        // Append the Google Place Autocomplete widget to the container div
+        autocompleteContainerRef.current.appendChild(placeAutocomplete);
+        // Store the reference to the widget for later use (e.g., clearing input)
+        placeAutocompleteRef.current = placeAutocomplete;
+
+        // Input EventListener to update inputValue state
+        // No onChange event <input> + attached google.maps.places.Autocomplete
+        const handleInput = () => setInputValue(placeAutocomplete.value);
+        placeAutocomplete.addEventListener("input", handleInput);
+
+        // Selection EventListener for prediction selection via `gmp-select` event
+        // async fetches place.fetchFields()
+        const handleSelect = async (event: Event) => {
+          const { placePrediction } =
+            event as google.maps.places.PlacePredictionSelectEvent;
+          const place = placePrediction.toPlace();
+          try {
+            await place.fetchFields({
+              fields: ["location", "formattedAddress", "displayName"],
+            });
+          } catch (error) {
+            console.error("Failed to fetch place details:", error);
+            return;
+          }
+          if (place.location) {
+            // Requires onPlaceSelected func to be a stable (memoized) reference -
+            // otherwise this effect reruns on every render and recreates the widget.
+            onPlaceSelected?.({
+              place_id: place.id,
+              name: place.displayName ?? undefined,
+              formatted_address: place.formattedAddress ?? undefined,
+              geometry: { location: place.location },
+            });
+            // Update the input value to the selected place's formatted address
+            placeAutocomplete.value = place.formattedAddress || "";
+            setInputValue(place.formattedAddress || "");
             setShowPredictions(false);
           }
-        });
+        };
+        placeAutocomplete.addEventListener("gmp-select", handleSelect);
 
         return () => {
-          if (autocompleteRef.current) {
-            window.google.maps.event.clearInstanceListeners(
-              autocompleteRef.current
-            );
-          }
+          placeAutocomplete.removeEventListener("input", handleInput);
+          placeAutocomplete.removeEventListener("gmp-select", handleSelect);
+          placeAutocomplete.remove(); // Remove the widget from the DOM
+          placeAutocompleteRef.current = null;
         };
       }
     }, [useGoogleAutocomplete, isGoogleMapsReady, onPlaceSelected]);
 
-    // Custom prediction search (when not using Google Autocomplete)
+    // Custom prediction search (useGoogleAutocomplete=false)
+    // Plain TextField input + Google Maps Places Autocomplete API fetch
     useEffect(() => {
       if (
         !useGoogleAutocomplete &&
         isGoogleMapsReady &&
         inputValue.length >= 2
       ) {
-        const service = new window.google.maps.places.AutocompleteService();
+        let cancelled = false;
 
-        service.getPlacePredictions(
-          {
-            input: inputValue,
-            types: ["geocode", "establishment"],
-          },
-          (predictions, status) => {
-            if (
-              status === window.google.maps.places.PlacesServiceStatus.OK &&
-              predictions
-            ) {
-              setPredictions(predictions);
-              setShowPredictions(true);
-            } else {
-              setPredictions([]);
-              setShowPredictions(false);
-            }
-          }
-        );
+        window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
+          { input: inputValue }
+        )
+          .then(({ suggestions }) => {
+            if (cancelled) return;
+            setPredictions(suggestions);
+            setShowPredictions(true);
+          })
+          .catch(() => {
+            if (cancelled) return;
+            setPredictions([]);
+            setShowPredictions(false);
+          });
+
+        return () => {
+          cancelled = true;
+        };
       } else if (!useGoogleAutocomplete) {
         setPredictions([]);
         setShowPredictions(false);
       }
     }, [inputValue, isGoogleMapsReady, useGoogleAutocomplete]);
 
+    // Handle input change for custom search (useGoogleAutocomplete=false)
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       setInputValue(event.target.value);
     };
 
+    // Handle prediction click for custom search (useGoogleAutocomplete=false)
     const handlePredictionClick = async (
-      prediction: google.maps.places.AutocompletePrediction
+      suggestion: google.maps.places.AutocompleteSuggestion
     ) => {
-      if (!window.google) return;
+      const placePrediction = suggestion.placePrediction;
+      if (!placePrediction || !onPlaceSelected) return;
 
-      const service = new window.google.maps.places.PlacesService(
-        document.createElement("div")
-      );
+      const place = placePrediction.toPlace();
+      try {
+        await place.fetchFields({
+          fields: ["location", "formattedAddress", "displayName"],
+        });
+      } catch (error) {
+        console.error("Failed to fetch place details:", error);
+        return;
+      }
 
-      service.getDetails(
-        {
-          placeId: prediction.place_id,
-          fields: ["place_id", "geometry", "formatted_address", "name"],
-        },
-        (place, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            place &&
-            onPlaceSelected
-          ) {
-            onPlaceSelected(place);
-            setInputValue(place.formatted_address || prediction.description);
-            setShowPredictions(false);
-          }
-        }
-      );
+      if (place.location) {
+        onPlaceSelected({
+          place_id: place.id,
+          name: place.displayName ?? undefined,
+          formatted_address: place.formattedAddress ?? undefined,
+          geometry: { location: place.location },
+        });
+        setInputValue(place.formattedAddress || placePrediction.text.text);
+        setShowPredictions(false);
+      }
     };
 
     const handleClear = () => {
       clearInput();
-      if (inputRef.current) {
-        inputRef.current.focus();
+      if (useGoogleAutocomplete) {
+        placeAutocompleteRef.current?.focus();
+      } else {
+        textFieldInputRef.current?.focus();
       }
     };
 
     if (useGoogleAutocomplete) {
       return (
         <Box sx={{ position: "relative", width: "100%" }}>
-          <input
-            ref={inputRef}
+          <Box
+            ref={autocompleteContainerRef}
             id="search-bar-input"
-            type="text"
-            placeholder="Enter a city, address, or landmark"
-            value={inputValue}
-            onChange={handleInputChange}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck="false"
-            style={{
+            sx={{
               width: "100%",
-              padding: "12px 16px",
-              paddingRight: onSettingsClick
-                ? "88px"
-                : inputValue
-                  ? "48px"
-                  : "16px",
               border: "1px solid #ddd",
               borderRadius: "8px",
-              fontSize: "16px",
-              outline: "none",
               backgroundColor: "white",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = "#1976d2";
-              e.target.style.boxShadow =
-                "0 0 0 3px rgba(25, 118, 210, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)";
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = "#ddd";
-              e.target.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.1)";
+              "&:focus-within": {
+                borderColor: "#1976d2",
+                boxShadow:
+                  "0 0 0 3px rgba(25, 118, 210, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)",
+              },
+              // Hide the widget's own inner focus indicator (a shadow-DOM
+              // element exposed as `::part(focus-ring)`); the glow above replaces it.
+              "& gmp-place-autocomplete::part(focus-ring)": {
+                display: "none",
+              },
             }}
           />
           <Box
@@ -270,6 +301,7 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
+          inputRef={textFieldInputRef}
           InputProps={{
             endAdornment: inputValue && (
               <IconButton size="small" onClick={handleClear}>
@@ -292,25 +324,29 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(
             }}
           >
             <List>
-              {predictions.map((prediction) => (
-                <ListItem
-                  key={prediction.place_id}
-                  component="button"
-                  onClick={() => handlePredictionClick(prediction)}
-                  sx={{ py: 1, textAlign: "left", width: "100%" }}
-                >
-                  <ListItemIcon>
-                    <LocationOn color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      prediction.structured_formatting?.main_text ||
-                      prediction.description
-                    }
-                    secondary={prediction.structured_formatting?.secondary_text}
-                  />
-                </ListItem>
-              ))}
+              {predictions.map((suggestion) => {
+                const placePrediction = suggestion.placePrediction;
+                if (!placePrediction) return null; // null guard
+                return (
+                  <ListItem
+                    key={placePrediction.placeId}
+                    component="button"
+                    onClick={() => handlePredictionClick(suggestion)}
+                    sx={{ py: 1, textAlign: "left", width: "100%" }}
+                  >
+                    <ListItemIcon>
+                      <LocationOn color="action" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        placePrediction.mainText?.text ||
+                        placePrediction.text.text
+                      }
+                      secondary={placePrediction.secondaryText?.text}
+                    />
+                  </ListItem>
+                );
+              })}
             </List>
           </Paper>
         )}
