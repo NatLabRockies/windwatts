@@ -232,13 +232,14 @@ class GridLocation(BaseModel):
     index: str = Field(..., description="Grid point identifier/index")
     latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
     longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
-
+    tile: Optional[str] = Field(None, description="Tile partition key (WEM grid only)")
     model_config = {
         "json_schema_extra": {
             "example": {
                 "index": "031233",
                 "latitude": 43.653,
                 "longitude": -79.47437700534891,
+                "tile": "T0001_0344"
             }
         }
     }
