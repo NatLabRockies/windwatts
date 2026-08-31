@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.spatial import cKDTree
+from app.spatial.base_lookup import BaseSpatialLookup, GridPoint
 
-
-class CKDTreeLookup:
+class CKDTreeLookup(BaseSpatialLookup):
     """Nearest-neighbor on a point cloud. For WTK and ERA5."""
 
     def __init__(self, index_path: str):
@@ -13,25 +13,25 @@ class CKDTreeLookup:
         coords = np.column_stack((self._latitude, self._longitude))
         self.tree = cKDTree(coords)
 
-    def find_nearest(self, lat: float, lng: float) -> tuple[str, float, float]:
+    def find_nearest(self, lat: float, lng: float, max_search_cells=None) -> GridPoint:
         _, idx = self.tree.query([lat, lng])
-        return (
-            str(self._index[idx]),
-            float(self._latitude[idx]),
-            float(self._longitude[idx]),
+        return GridPoint(
+            index=str(self._index[idx]),
+            latitude=float(self._latitude[idx]),
+            longitude=float(self._longitude[idx]),
         )
 
     def find_n_nearest(
-        self, lat: float, lng: float, n_neighbors: int
-    ) -> list[tuple[str, float, float]]:
+        self, lat: float, lng: float, n_neighbors: int, max_search_cells=None
+    ) -> list[GridPoint]:
         _, indices = self.tree.query([lat, lng], k=n_neighbors)
         if n_neighbors == 1:
             indices = [indices]
         return [
-            (
-                str(self._index[i]),
-                float(self._latitude[i]),
-                float(self._longitude[i]),
+            GridPoint(
+                index=str(self._index[i]),
+                latitude=float(self._latitude[i]),
+                longitude=float(self._longitude[i]),
             )
             for i in indices
         ]
