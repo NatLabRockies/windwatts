@@ -411,8 +411,8 @@ def get_grid_points(
         )
 
         locations = [
-            {"index": str(i), "latitude": float(a), "longitude": float(o)}
-            for i, a, o in result
+            {"index": point.index, "latitude": point.latitude, "longitude": point.longitude, "tile": point.tile}
+            for point in result
         ]
 
         return {"locations": locations}
