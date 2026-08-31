@@ -39,17 +39,18 @@ class AthenaDataFetcher(AbstractDataFetcher):
     def _available_heights(self) -> list[int]:
         return MODEL_CONFIG[self.model_key]["heights"]["windspeed"]
 
-    def _cache_df(self, grid_idx: str) -> pd.DataFrame:
+    def _cache_df(self, grid_idx: str, tile: str = None) -> pd.DataFrame:
+        cache_key = f"{tile}/{grid_idx}" if tile else grid_idx
         with self._cache_lock:
-            if grid_idx in self._df_cache:
-                self._df_cache.move_to_end(grid_idx)
-                return self._df_cache[grid_idx].copy()
+            if cache_key in self._df_cache:
+                self._df_cache.move_to_end(cache_key)
+                return self._df_cache[cache_key].copy()
 
-        df = self.query_client.query(grid_idx)
+        df = self.query_client.query(grid_idx, tile=tile)
 
         with self._cache_lock:
-            if grid_idx not in self._df_cache:
-                self._df_cache[grid_idx] = df
+            if cache_key not in self._df_cache:
+                self._df_cache[cache_key] = df
                 if len(self._df_cache) > self._df_cache_maxsize:
                     self._df_cache.popitem(last=False)
             return df.copy()
@@ -74,9 +75,10 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Returns:
             dict: Fetched aggregated wind data.
         """
-        grid_idx, _, _ = spatial_manager.find_nearest(lat, lng, self.model_key)
+        point = spatial_manager.find_nearest(lat, lng, self.model_key)
+        print(f"POINT for ({lat}, {lng}) -> ({point.latitude},{point.longitude})")
         height_info = resolve_heights(height, self._available_heights())
-        df = self._cache_df(grid_idx)
+        df = self._cache_df(point.index, point.tile)
 
         if not height_info["exact"]:
             df = interpolate_windspeed(
@@ -101,9 +103,9 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Returns:
             DataFrame: Raw wind data without aggregation.
         """
-        grid_idx, _, _ = spatial_manager.find_nearest(lat, lng, self.model_key)
+        point= spatial_manager.find_nearest(lat, lng, self.model_key)
         height_info = resolve_heights(height, self._available_heights())
-        df = self._cache_df(grid_idx)
+        df = self._cache_df(point.index, point.tile)
 
         if not height_info["exact"]:
             df = interpolate_windspeed(
