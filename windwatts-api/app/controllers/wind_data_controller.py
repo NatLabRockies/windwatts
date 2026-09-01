@@ -27,6 +27,7 @@ from app.utils.wind_data_core import (
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
 from app.spatial.global_spatial_manager import init_spatial, spatial_manager
+from app.spatial.base_lookup import NoLandCellError
 
 from app.schemas import (
     AvailableTurbinesResponse,
@@ -160,6 +161,8 @@ def get_windspeed(
         )
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error {e}")
 
@@ -246,6 +249,8 @@ def get_production(
         )
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -341,6 +346,8 @@ def get_post_production(
         )
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -418,6 +425,8 @@ def get_grid_points(
         return {"locations": locations}
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 

@@ -1,5 +1,5 @@
 import numpy as np
-from app.spatial.base_lookup import BaseSpatialLookup, GridPoint
+from app.spatial.base_lookup import BaseSpatialLookup, GridPoint, NoLandCellError
 
 class GWAGridLookup(BaseSpatialLookup):
     def __init__(self, index_path: str):
@@ -54,7 +54,7 @@ class GWAGridLookup(BaseSpatialLookup):
         row, col = self.lat_lon_to_row_col(lat, lng)
         lands = self._find_existing_neighbors(row, col, 1, max_search_cells)
         if not lands:
-            raise ValueError(f"No land cell within {max_search_cells} cells of ({lat}, {lng})")
+            raise NoLandCellError(f"No land cell within {max_search_cells} cells of ({lat}, {lng})")        
         r, c = lands[0]
         nearest_lat, nearest_lng = self.row_col_to_lat_lon(r, c)
         index = self.row_col_to_index(r, c)
@@ -72,7 +72,7 @@ class GWAGridLookup(BaseSpatialLookup):
         row, col = self.lat_lon_to_row_col(lat, lng)
         lands = self._find_existing_neighbors(row, col, n_neighbors, max_search_cells)
         if not lands:
-            raise ValueError(f"No land cell within {max_search_cells} cells of ({lat}, {lng})")
+            raise NoLandCellError(f"No land cell within {max_search_cells} cells of ({lat}, {lng})")
         return [
             GridPoint(
                 index=self.row_col_to_index(r, c),

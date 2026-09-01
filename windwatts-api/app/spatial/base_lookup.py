@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import NamedTuple, Optional
 
+class NoLandCellError(Exception):
+    """Raised when no land grid cell is found within the search window."""
+    pass
+
 class GridPoint(NamedTuple):
     index: str
     latitude: float
