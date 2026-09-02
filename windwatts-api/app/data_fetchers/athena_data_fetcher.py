@@ -103,7 +103,7 @@ class AthenaDataFetcher(AbstractDataFetcher):
         Returns:
             DataFrame: Raw wind data without aggregation.
         """
-        point= spatial_manager.find_nearest(lat, lng, self.model_key)
+        point = spatial_manager.find_nearest(lat, lng, self.model_key)
         height_info = resolve_heights(height, self._available_heights())
         df = self._cache_df(point.index, point.tile)
 

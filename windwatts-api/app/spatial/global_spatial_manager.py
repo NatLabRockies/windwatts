@@ -12,7 +12,7 @@ _GRID_DIR = Path(__file__).parent / "grid_lookup_files"
 _GRID_LOADERS = {
     "wtk": lambda: CKDTreeLookup(str(_GRID_DIR / "wtk_location_data.npz")),
     "era5": lambda: CKDTreeLookup(str(_GRID_DIR / "era5_location_data.npz")),
-    "gwa_na": lambda: GWAGridLookup(str(_GRID_DIR / "wem_gwa_na_grid_mask.npz"))
+    "gwa_na": lambda: GWAGridLookup(str(_GRID_DIR / "wem_gwa_na_grid_mask.npz")),
 }
 
 _initialized = False

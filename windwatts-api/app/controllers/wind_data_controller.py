@@ -69,10 +69,10 @@ if not _skip_data_init:
 
     # Initialize Athena data fetchers
     for model_key in MODEL_CONFIG.keys():
-        if MODEL_CONFIG[model_key]['source'] == 'athena':
+        if MODEL_CONFIG[model_key]["source"] == "athena":
             athena_data_fetchers[model_key] = AthenaDataFetcher(
                 athena_config=athena_config, model_key=model_key
-            )        
+            )
 
     # Initialize S3 data fetchers
     s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
@@ -409,7 +409,12 @@ def get_grid_points(
         )
 
         locations = [
-            {"index": point.index, "latitude": point.latitude, "longitude": point.longitude, "tile": point.tile}
+            {
+                "index": point.index,
+                "latitude": point.latitude,
+                "longitude": point.longitude,
+                "tile": point.tile,
+            }
             for point in result
         ]
 

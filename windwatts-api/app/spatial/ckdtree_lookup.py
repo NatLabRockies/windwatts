@@ -2,6 +2,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 from app.spatial.base_lookup import BaseSpatialLookup, GridPoint
 
+
 class CKDTreeLookup(BaseSpatialLookup):
     """Nearest-neighbor on a point cloud. For WTK and ERA5."""
 

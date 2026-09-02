@@ -1,5 +1,6 @@
 from app.spatial.base_lookup import BaseSpatialLookup, GridPoint
 
+
 class SpatialManager:
     """Manages spatial lookups for all models."""
 
@@ -17,9 +18,7 @@ class SpatialManager:
             raise ValueError(f"No spatial lookup registered for the '{model_key}'")
         return lookup
 
-    def find_nearest(
-        self, lat: float, lng: float, model_key: str
-    ) -> GridPoint:
+    def find_nearest(self, lat: float, lng: float, model_key: str) -> GridPoint:
         return self.get_lookup(model_key).find_nearest(lat, lng)
 
     def find_n_nearest(

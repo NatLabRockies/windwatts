@@ -115,7 +115,7 @@ MODEL_CONFIG = {
             "King, J., A. Clifton, and B.M. Hodge. 2014. Validation of Power Output for the WIND Toolkit (Technical Report, NREL/TP-5D00-61714). Golden, CO: National Laboratory of the Rockies",
         ],
     },
-     "ensemble-quantiles": {
+    "ensemble-quantiles": {
         "source": "athena",
         "schema": "quantile_atemporal",
         "years": {"full": [], "sample": []},

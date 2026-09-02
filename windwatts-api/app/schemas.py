@@ -239,7 +239,7 @@ class GridLocation(BaseModel):
                 "index": "031233",
                 "latitude": 43.653,
                 "longitude": -79.47437700534891,
-                "tile": "T0001_0344"
+                "tile": "T0001_0344",
             }
         }
     }
@@ -261,13 +261,13 @@ class NearestLocationsResponse(BaseModel):
                         "index": "031233",
                         "latitude": 43.653,
                         "longitude": -79.47437700534891,
-                        "tile": "T0001_0344"
+                        "tile": "T0001_0344",
                     },
                     {
                         "index": "031234",
                         "latitude": 43.653,
                         "longitude": -79.22437433155213,
-                        "tile": "T0002_0345"
+                        "tile": "T0002_0345",
                     },
                 ]
             }
@@ -523,7 +523,8 @@ class ModelInfoResponse(BaseModel):
         ..., description="Supported hub heights (in meters)"
     )
     supports_interpolation: str = Field(
-        ..., description="Does model support vertical interpolation at arbitrary heights?"
+        ...,
+        description="Does model support vertical interpolation at arbitrary heights?",
     )
     grid_info: Dict[str, AlphaNumeric] = Field(
         default_factory=dict,
