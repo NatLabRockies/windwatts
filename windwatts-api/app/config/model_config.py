@@ -115,7 +115,27 @@ MODEL_CONFIG = {
             "King, J., A. Clifton, and B.M. Hodge. 2014. Validation of Power Output for the WIND Toolkit (Technical Report, NREL/TP-5D00-61714). Golden, CO: National Laboratory of the Rockies",
         ],
     },
-    "ensemble-quantiles": {
+     "ensemble-quantiles": {
+        "source": "athena",
+        "schema": "quantile_atemporal",
+        "years": {"full": [], "sample": []},
+        "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
+        "interpolation": True,
+        "grid": "era5",
+        "grid_info": {
+            "min_lat": 23.402,
+            "min_long": -137.725,
+            "max_lat": 51.403,
+            "max_long": -44.224,
+            "spatial_resolution": "31 km",
+            "temporal_resolution": "1 hour",
+        },
+        "links": [],
+        "references": [
+            "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for High-Accuracy Wind Resource Assessment to Support Distributed Wind Turbine Siting."
+        ],
+    },
+    "wem-quantiles": {
         "source": "athena",
         "schema": "quantile_atemporal",
         "years": {"full": [], "sample": []},
