@@ -261,11 +261,13 @@ class NearestLocationsResponse(BaseModel):
                         "index": "031233",
                         "latitude": 43.653,
                         "longitude": -79.47437700534891,
+                        "tile": "T0001_0344"
                     },
                     {
                         "index": "031234",
                         "latitude": 43.653,
                         "longitude": -79.22437433155213,
+                        "tile": "T0002_0345"
                     },
                 ]
             }
@@ -520,6 +522,9 @@ class ModelInfoResponse(BaseModel):
     available_heights: Dict[str, List[int]] = Field(
         ..., description="Supported hub heights (in meters)"
     )
+    supports_interpolation: str = Field(
+        ..., description="Does model support vertical interpolation at arbitrary heights?"
+    )
     grid_info: Dict[str, AlphaNumeric] = Field(
         default_factory=dict,
         description="Metadata about the model grid (bounds, resolution, etc.)",
@@ -556,6 +561,7 @@ class ModelInfoResponse(BaseModel):
                     "windspeed": [30, 40, 50, 60, 80, 100],
                     "winddirection": [10, 100],
                 },
+                "supports_interpolation": "True",
                 "grid_info": {
                     "min_lat": 23.402,
                     "min_long": -137.725,
