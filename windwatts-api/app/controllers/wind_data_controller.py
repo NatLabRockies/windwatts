@@ -27,6 +27,7 @@ from app.utils.wind_data_core import (
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
 from app.spatial.global_spatial_manager import init_spatial, spatial_manager
+from app.spatial.base_lookup import NoLandCellError
 
 from app.schemas import (
     AvailableTurbinesResponse,
@@ -67,15 +68,11 @@ if not _skip_data_init:
     init_spatial()
 
     # Initialize Athena data fetchers
-    athena_data_fetchers["era5-quantiles"] = AthenaDataFetcher(
-        athena_config=athena_config, model_key="era5-quantiles"
-    )
-    athena_data_fetchers["ensemble-quantiles"] = AthenaDataFetcher(
-        athena_config=athena_config, model_key="ensemble-quantiles"
-    )
-    athena_data_fetchers["wtk-timeseries"] = AthenaDataFetcher(
-        athena_config=athena_config, model_key="wtk-timeseries"
-    )
+    for model_key in MODEL_CONFIG.keys():
+        if MODEL_CONFIG[model_key]["source"] == "athena":
+            athena_data_fetchers[model_key] = AthenaDataFetcher(
+                athena_config=athena_config, model_key=model_key
+            )
 
     # Initialize S3 data fetchers
     s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
@@ -90,12 +87,7 @@ if not _skip_data_init:
 
     # Register fetchers with DataFetcherRouter
     # Register with simple names: athena, s3 (not athena_era5, s3_era5)
-    for model_key in [
-        "era5-quantiles",
-        "ensemble-quantiles",
-        "wtk-timeseries",
-        "era5-timeseries",
-    ]:
+    for model_key in MODEL_CONFIG.keys():
         if model_key in athena_data_fetchers:
             data_fetcher_router.register_fetcher(
                 f"athena_{model_key}", athena_data_fetchers[model_key]
@@ -160,6 +152,8 @@ def get_windspeed(
         )
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error {e}")
 
@@ -246,6 +240,8 @@ def get_production(
         )
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -341,6 +337,8 @@ def get_post_production(
         )
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -411,13 +409,20 @@ def get_grid_points(
         )
 
         locations = [
-            {"index": str(i), "latitude": float(a), "longitude": float(o)}
-            for i, a, o in result
+            {
+                "index": point.index,
+                "latitude": point.latitude,
+                "longitude": point.longitude,
+                "tile": point.tile,
+            }
+            for point in result
         ]
 
         return {"locations": locations}
     except HTTPException:
         raise
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -485,6 +490,7 @@ def get_model_info(
             "available_years": config.get("years", {}).get("full", []),
             "sample_years": config.get("years", {}).get("sample", []),
             "available_heights": config.get("heights", []),
+            "supports_interpolation": str(config.get("interpolation")),
             "grid_info": config.get("grid_info", {}),
             "links": config.get("links", []),
             "references": config.get("references", []),
