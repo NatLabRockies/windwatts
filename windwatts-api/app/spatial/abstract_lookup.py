@@ -1,21 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import NamedTuple, Optional
+from typing import Optional
+
+from app.types.spatial import GridPoint
 
 
-class NoLandCellError(Exception):
-    """Raised when no land grid cell is found within the search window."""
-
-    pass
-
-
-class GridPoint(NamedTuple):
-    index: str
-    latitude: float
-    longitude: float
-    tile: Optional[str] = None
-
-
-class BaseSpatialLookup(ABC):
+class AbstractSpatialLookup(ABC):
     @abstractmethod
     def find_nearest(
         self, lat: float, lng: float, max_search_cells: Optional[int] = None
