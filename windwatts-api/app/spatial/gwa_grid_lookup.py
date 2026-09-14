@@ -1,8 +1,9 @@
 import numpy as np
-from app.spatial.base_lookup import BaseSpatialLookup, GridPoint, NoLandCellError
+from app.spatial.abstract_lookup import AbstractSpatialLookup
+from app.types.spatial import GridPoint, NoLandCellError
 
 
-class GWAGridLookup(BaseSpatialLookup):
+class GWAGridLookup(AbstractSpatialLookup):
     def __init__(self, index_path: str):
         with np.load(index_path) as data:
             self.NROWS = int(data["nrows"])

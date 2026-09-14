@@ -1,9 +1,10 @@
 import numpy as np
 from scipy.spatial import cKDTree
-from app.spatial.base_lookup import BaseSpatialLookup, GridPoint
+from app.spatial.abstract_lookup import AbstractSpatialLookup
+from app.types.spatial import GridPoint
 
 
-class CKDTreeLookup(BaseSpatialLookup):
+class CKDTreeLookup(AbstractSpatialLookup):
     """Nearest-neighbor on a point cloud. For WTK and ERA5."""
 
     def __init__(self, index_path: str):

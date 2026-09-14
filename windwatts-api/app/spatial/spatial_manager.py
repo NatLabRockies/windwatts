@@ -1,17 +1,18 @@
-from app.spatial.base_lookup import BaseSpatialLookup, GridPoint
+from app.spatial.abstract_lookup import AbstractSpatialLookup
+from app.types.spatial import GridPoint
 
 
 class SpatialManager:
     """Manages spatial lookups for all models."""
 
     def __init__(self):
-        self._lookups: dict[str, BaseSpatialLookup] = {}
+        self._lookups: dict[str, AbstractSpatialLookup] = {}
 
-    def register(self, model_key: str, lookup: BaseSpatialLookup):
+    def register(self, model_key: str, lookup: AbstractSpatialLookup):
         "Register lookup instance for a model key."
         self._lookups[model_key] = lookup
 
-    def get_lookup(self, model_key: str) -> BaseSpatialLookup:
+    def get_lookup(self, model_key: str) -> AbstractSpatialLookup:
         "Retrieve the lookup for a model key."
         lookup = self._lookups.get(model_key)
         if lookup is None:
