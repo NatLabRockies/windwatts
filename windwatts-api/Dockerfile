@@ -9,7 +9,9 @@ ENV PYTHONPATH=/app
 # Set the working directory
 WORKDIR $APP_HOME
 
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+	&& apt-get upgrade -y \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
 COPY requirements.txt .
