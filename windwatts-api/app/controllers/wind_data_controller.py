@@ -407,7 +407,6 @@ def get_grid_points(
                 "index": point.index,
                 "latitude": point.latitude,
                 "longitude": point.longitude,
-                "tile": point.tile,
             }
             for point in result
         ]
