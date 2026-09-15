@@ -14,10 +14,22 @@ export const MODEL_COORDINATES_BOUNDS: Record<string, CoordinatesBounds> = {
     minLng: -137.725,
     maxLng: -44.224,
   },
+  "ensemble-quantiles": {
+    minLat: 23.402,
+    maxLat: 51.403,
+    minLng: -137.725,
+    maxLng: -44.224,
+  },
   "wtk-timeseries": {
     minLat: 7.75129,
     maxLat: 78.392685,
     minLng: -179.99918,
     maxLng: 180.0,
+  },
+  "wem-quantiles": {
+    minLat: 24.545,
+    maxLat: 49.3675,
+    minLng: -124.7325,
+    maxLng: -66.98,
   },
 };
