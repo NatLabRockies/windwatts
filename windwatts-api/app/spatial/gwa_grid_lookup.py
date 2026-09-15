@@ -4,7 +4,7 @@ from app.types.spatial import GridPoint, NoLandCellError
 
 
 class GWAGridLookup(AbstractSpatialLookup):
-    """Nearest land-cell lookup on a masked raster grid. For WEM (GWA North America)."""
+    """Nearest land-cell lookup on a masked raster grid (GWA, Global Wind Atlas - North America)."""
 
     def __init__(self, index_path: str):
         with np.load(index_path) as data:
