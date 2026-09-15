@@ -22,6 +22,12 @@
       "athena_table_name": "sample_table",
       "alt_athena_table_name": "sample_alt_table",
       "capabilities": { "avg_types": ["all"] }
+    },
+    "wem-quantiles": {
+      "bucket_name": "sample-bucket",
+      "athena_table_name": "sample_table",
+      "alt_athena_table_name": "sample_alt_table",
+      "capabilities": { "avg_types": ["all"] }
     }
   }
 }
