@@ -40,6 +40,17 @@ def mock_ensemble_quantiles_df(height=40):
     )
 
 
+def mock_wem_quantiles_df(height=40):
+    "wem-quantiles: quantile_atemporal schema -> windspeed, probability"
+    probs = [0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+    return pd.DataFrame(
+        {
+            "probability": probs,
+            f"windspeed_{height}m": [round(4.0 + p * 5, 2) for p in probs],
+        }
+    )
+
+
 def mock_wtk_timeseries_df(height=40):
     "wtk-timeseries: aggregated-mohr schema -> mohr, windspeed"
     rows = []
@@ -124,6 +135,15 @@ class TestV1WindspeedEndpoints:
         """Test ensemble windspeed."""
         response = client.get(
             "/api/v1/ensemble-quantiles/windspeed?lat=40.0&lng=-70.0&height=40"
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert "global_avg" in json
+
+    def test_wem_windspeed(self):
+        """Test WEM windspeed."""
+        response = client.get(
+            "/api/v1/wem-quantiles/windspeed?lat=40.0&lng=-100.0&height=40"
         )
         assert response.status_code == 200
         json = response.json()
@@ -214,6 +234,17 @@ class TestV1ProductionEndpoints:
         )
         assert response.status_code == 400
 
+    @patch("app.controllers.wind_data_controller.data_fetcher_router")
+    def test_wem_production(self, mock_router):
+        """Test WEM production (only supports period=all)."""
+        mock_router.fetch_raw.return_value = mock_wem_quantiles_df()
+        response = client.get(
+            "/api/v1/wem-quantiles/production?lat=40.0&lng=-100.0&height=40&powercurve=nlr-reference-100kW&period=all"
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert "energy_production" in json
+
     def test_production_invalid_powercurve(self):
         """Test production with invalid power curve."""
         response = client.get(
@@ -267,6 +298,15 @@ class TestV1GridPoints:
         """Test WTK grid points lookup."""
         response = client.get(
             "/api/v1/wtk-timeseries/grid-points?lat=40.0&lng=-100.0&limit=1"
+        )
+        assert response.status_code == 200
+        json = response.json()
+        assert "locations" in json
+
+    def test_wem_grid_points(self):
+        """Test WEM grid points lookup."""
+        response = client.get(
+            "/api/v1/wem-quantiles/grid-points?lat=40.0&lng=-100.0&limit=1"
         )
         assert response.status_code == 200
         json = response.json()

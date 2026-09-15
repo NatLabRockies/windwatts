@@ -27,9 +27,12 @@ class AthenaQueryClient:
         )
         self._s3 = boto3.client("s3", region_name=config.region_name, config=boto_cfg)
 
-    def query(self, grid_idx: str) -> pd.DataFrame:
+    def query(self, grid_idx: str, tile: str = None) -> pd.DataFrame:
         """Fetch all data for a single grid point."""
-        query = f"SELECT * FROM {self.table} WHERE index = '{grid_idx}'"
+        if tile:
+            query = f"SELECT * FROM {self.table} WHERE tile = '{tile}' AND index = '{grid_idx}'"
+        else:
+            query = f"SELECT * FROM {self.table} WHERE index = '{grid_idx}'"
         return self._execute(query)
 
     def _execute(self, query: str) -> pd.DataFrame:

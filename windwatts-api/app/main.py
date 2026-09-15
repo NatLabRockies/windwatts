@@ -26,7 +26,7 @@ app = FastAPI(
         - `GET /api/v1/{model}/windspeed` - Wind speed data
         - `GET /api/v1/{model}/production` - Energy production estimates
         - `GET /api/v1/{model}/timeseries` - Raw timeseries downloads
-        - Supported models: `era5-quantiles`, `era5-timeseries`, `wtk-timeseries`, `ensemble-quantiles`
+        - Supported models: `era5-quantiles`, `era5-timeseries`, `wtk-timeseries`, `ensemble-quantiles`, `wem-quantiles`
 
         Full interactive documentation: `/api/docs`
 

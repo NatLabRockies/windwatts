@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np
 import bisect
 from app.schemas import PowerCurveData
+from app.types.spatial import NoLandCellError
 from app.utils.wind_processing import compute_sectors
 
 from app.utils.validation import (
@@ -70,7 +71,10 @@ def get_windspeed_core(
     params = {"lat": lat, "lng": lng, "height": height, "period": period}
 
     key = f"{source}_{model}"
-    data = data_fetcher_router.fetch_data(params, key=key)
+    try:
+        data = data_fetcher_router.fetch_data(params, key=key)
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     if data is None:
         raise HTTPException(status_code=404, detail="Data not found")
     return data
@@ -116,7 +120,10 @@ def get_production_core(
     params = {"lat": lat, "lng": lng, "height": height}
 
     key = f"{source}_{model}"
-    df = data_fetcher_router.fetch_raw(params, key=key)
+    try:
+        df = data_fetcher_router.fetch_raw(params, key=key)
+    except NoLandCellError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     if df is None:
         raise HTTPException(status_code=404, detail="Data not found")
 
