@@ -49,7 +49,7 @@ export const defaultValues: StoredSettings = {
   zoom: 12,
   hubHeight: 40,
   turbine: DEFAULT_TURBINE,
-  preferredModel: "ensemble-quantiles",
+  preferredModel: "wem-quantiles",
   lossAssumptionFactor: 1.0, // 1.0 = 0% loss, 0.83 = 17% loss defaulted to 0% loss
   windspeedUnit: "mph",
 };

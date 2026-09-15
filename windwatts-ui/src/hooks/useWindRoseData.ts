@@ -14,8 +14,7 @@ export const useWindRoseData = (
   const { hubHeight, preferredModel, turbine, customCurves } =
     useContext(SettingsContext);
 
-  const dataModel =
-    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const dataModel = preferredModel;
 
   const directionHeights =
     DATA_MODEL_INFO["era5-quantiles"].wind_direction_heights;

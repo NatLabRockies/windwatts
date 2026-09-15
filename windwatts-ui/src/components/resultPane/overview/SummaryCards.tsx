@@ -54,7 +54,7 @@ const SkeletonCard = () => (
 export const SummaryCards = memo(() => {
   const { units } = useContext(UnitsContext);
   const { preferredModel } = useContext(SettingsContext);
-  const isEnsemble = preferredModel === "ensemble-quantiles";
+  const isEnsemble = preferredModel === "wem-quantiles";
 
   const eraWind = useWindData();
   const eraProd = useProductionData();

@@ -17,10 +17,13 @@ export const useEnsemble = () => {
     currentPosition,
     hubHeight,
     turbine,
-    preferredModel: dataModel,
+    preferredModel,
     lossAssumptionFactor,
     customCurves,
   } = useContext(SettingsContext);
+
+  // wem-quantiles is the acting model for Ensemble mode
+  const dataModel = preferredModel;
 
   const { lat, lng } = currentPosition || {};
   const outOfBounds =
@@ -34,8 +37,7 @@ export const useEnsemble = () => {
     lng &&
     hubHeight &&
     turbine &&
-    dataModel &&
-    dataModel === "ensemble-quantiles" &&
+    preferredModel === "wem-quantiles" &&
     !outOfBounds &&
     (!isCustomTurbine || customCurve !== null)
   );
