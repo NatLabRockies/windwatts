@@ -73,4 +73,4 @@ All endpoints are under the `/api/v1/{model}/` prefix.
 | `GET /api/v1/{model}/production` | Energy production estimates |
 | `GET /api/v1/{model}/timeseries` | Raw timeseries downloads |
 
-**Supported models**: `era5-quantiles`, `era5-timeseries`, `wtk-timeseries`, `ensemble-quantiles`
+**Supported models**: `era5-quantiles`, `era5-timeseries`, `wtk-timeseries`, `ensemble-quantiles`, `wem-quantiles`

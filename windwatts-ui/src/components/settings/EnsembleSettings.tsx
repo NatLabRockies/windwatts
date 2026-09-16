@@ -45,10 +45,10 @@ export const EnsembleSettings = () => {
         </Box>
         <Switch
           size="small"
-          checked={preferredModel === "ensemble-quantiles"}
+          checked={preferredModel === "wem-quantiles"}
           onChange={(e) =>
             setPreferredModel(
-              e.target.checked ? "ensemble-quantiles" : "era5-quantiles"
+              e.target.checked ? "wem-quantiles" : "era5-quantiles"
             )
           }
           inputProps={{ "aria-label": "Enable Ensemble Model" }}

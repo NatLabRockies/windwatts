@@ -232,7 +232,6 @@ class GridLocation(BaseModel):
     index: str = Field(..., description="Grid point identifier/index")
     latitude: float = Field(..., ge=-90, le=90, description="Latitude coordinate")
     longitude: float = Field(..., ge=-180, le=180, description="Longitude coordinate")
-
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -519,6 +518,10 @@ class ModelInfoResponse(BaseModel):
     available_heights: Dict[str, List[int]] = Field(
         ..., description="Supported hub heights (in meters)"
     )
+    supports_interpolation: str = Field(
+        ...,
+        description="Does model support vertical interpolation at arbitrary heights?",
+    )
     grid_info: Dict[str, AlphaNumeric] = Field(
         default_factory=dict,
         description="Metadata about the model grid (bounds, resolution, etc.)",
@@ -555,6 +558,7 @@ class ModelInfoResponse(BaseModel):
                     "windspeed": [30, 40, 50, 60, 80, 100],
                     "winddirection": [10, 100],
                 },
+                "supports_interpolation": "True",
                 "grid_info": {
                     "min_lat": 23.402,
                     "min_long": -137.725,

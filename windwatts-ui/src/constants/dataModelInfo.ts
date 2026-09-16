@@ -10,6 +10,16 @@ export const DATA_MODEL_INFO: Record<string, DataModelInfo> = {
     wind_speed_heights: ["30m", "40m", "50m", "60m", "80m", "100m"],
     wind_direction_heights: [],
   },
+  "wem-quantiles": {
+    label: "WindWatts Ensemble",
+    source_href: "",
+    help_href: "",
+    description:
+      "WindWatts Ensemble Model (Global Wind Atlas - North America Grid)",
+    year_range: "",
+    wind_speed_heights: ["30m", "40m", "50m", "60m", "80m", "100m"],
+    wind_direction_heights: [],
+  },
   "era5-quantiles": {
     label: "ERA5 Reanalysis",
     source_href:

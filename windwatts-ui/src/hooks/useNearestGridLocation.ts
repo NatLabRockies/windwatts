@@ -7,7 +7,7 @@ import { GridLocation } from "../types";
 export const useNearestGridLocation = (n_neighbors: number = 1) => {
   const { currentPosition, preferredModel } = useContext(SettingsContext);
   const dataModel =
-    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+    preferredModel === "wem-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
 
   const shouldFetch = lat && lng && dataModel;

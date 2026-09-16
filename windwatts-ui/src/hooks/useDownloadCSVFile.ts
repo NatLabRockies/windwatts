@@ -18,7 +18,7 @@ export const useDownloadCSVFile = () => {
   const { currentPosition, preferredModel, turbine, customCurves } =
     useContext(SettingsContext);
   const dataModel =
-    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+    preferredModel === "wem-quantiles" ? "era5-quantiles" : preferredModel;
   const { lat, lng } = currentPosition || {};
 
   const isCustomTurbine = isCustomTurbineId(turbine);

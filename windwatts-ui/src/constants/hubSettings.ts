@@ -10,6 +10,10 @@ export const HUB_HEIGHTS: Record<DataModel | "default", Heights> = {
     values: [30, 40, 50, 60, 80, 100],
     interpolation: true,
   },
+  "wem-quantiles": {
+    values: [30, 40, 50, 60, 80, 100],
+    interpolation: true,
+  },
   "era5-timeseries": { values: [30, 40, 50, 60, 80, 100], interpolation: true },
   default: { values: [40, 60, 80, 100], interpolation: false },
 };
