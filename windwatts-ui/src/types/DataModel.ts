@@ -2,6 +2,7 @@ export const DATA_MODELS = [
   "wtk-timeseries",
   "era5-quantiles",
   "ensemble-quantiles",
+  "wem-quantiles",
   "era5-timeseries",
 ] as const;
 

@@ -21,7 +21,7 @@ export const URL_PARAM_DEFAULTS = {
   zoom: 12,
   hubHeight: 40,
   turbine: DEFAULT_TURBINE,
-  dataModel: "ensemble-quantiles" as DataModel,
+  dataModel: "wem-quantiles" as DataModel,
   lossAssumption: 0,
   windspeedUnit: "mph",
 };

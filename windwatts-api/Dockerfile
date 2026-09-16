@@ -1,24 +1,17 @@
-# Use the official Python image with Debian bookworm
-FROM python:3.13-slim-bookworm
+# Use the official Python image with Debian trixie
+FROM python:3.13-slim-trixie
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV APP_HOME=/app
-ENV PROJ_LIB=/usr/share/proj
 ENV PYTHONPATH=/app
 
 # Set the working directory
 WORKDIR $APP_HOME
 
-# Install system dependencies and upgrade packages
-# remove package index files /var/lib/apt/lists/* during apt-get update
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
-    gdal-bin libgdal-dev libproj-dev libgeos-dev \
-    gcc python3-dev libffi-dev curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# remove unused perl-base to resolve related CVEs
-RUN apt-get purge -y --allow-remove-essential perl-base && apt-get autoremove -y
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+	&& apt-get upgrade -y \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Install dependencies
 COPY requirements.txt .

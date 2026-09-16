@@ -118,7 +118,7 @@ MODEL_CONFIG = {
     "ensemble-quantiles": {
         "source": "athena",
         "schema": "quantile_atemporal",
-        "years": {"full": list(range(2013, 2024)), "sample": []},
+        "years": {"full": [], "sample": []},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
         "interpolation": True,
         "grid": "era5",
@@ -132,7 +132,27 @@ MODEL_CONFIG = {
         },
         "links": [],
         "references": [
-            "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for High-Accuracy Wind Resource Assessment to Support Distributed Wind Turbine Siting. Under Review."
+            "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for High-Accuracy Wind Resource Assessment to Support Distributed Wind Turbine Siting."
+        ],
+    },
+    "wem-quantiles": {
+        "source": "athena",
+        "schema": "quantile_atemporal",
+        "years": {"full": [], "sample": []},
+        "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
+        "interpolation": True,
+        "grid": "gwa_na",
+        "grid_info": {
+            "min_lat": 24.545,
+            "min_long": -124.7325,
+            "max_lat": 49.3675,
+            "max_long": -66.98,
+            "spatial_resolution": "250m",
+            "temporal_resolution": "1 hour",
+        },
+        "links": [],
+        "references": [
+            "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for High-Accuracy Wind Resource Assessment to Support Distributed Wind Turbine Siting."
         ],
     },
     "era5-timeseries": {

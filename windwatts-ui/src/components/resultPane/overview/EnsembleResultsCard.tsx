@@ -18,7 +18,7 @@ export const EnsembleTiles = memo(() => {
     hasData,
   } = useEnsemble();
 
-  if (preferredModel !== "ensemble-quantiles") return null;
+  if (preferredModel !== "wem-quantiles") return null;
 
   const loading = isTilesLoading;
   const hasDataCombined = hasData;

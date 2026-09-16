@@ -58,8 +58,7 @@ export const WindRose = ({
     useContext(SettingsContext);
   const lat = currentPosition?.lat;
   const lng = currentPosition?.lng;
-  const dataModel =
-    preferredModel === "ensemble-quantiles" ? "era5-quantiles" : preferredModel;
+  const dataModel = preferredModel;
   const outOfBounds =
     lat !== undefined && lng !== undefined
       ? isOutOfBounds(lat, lng, dataModel)

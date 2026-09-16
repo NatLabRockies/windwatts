@@ -39,6 +39,9 @@ def pytest_configure(config):
     os.environ["SOURCES_WTK-TIMESERIES_BUCKET_NAME"] = "test-fake-wtk"
     os.environ["SOURCES_WTK-TIMESERIES_ATHENA_TABLE_NAME"] = "test_wtk_1224"
     os.environ["SOURCES_WTK-TIMESERIES_ALT_ATHENA_TABLE_NAME"] = ""
+    os.environ["SOURCES_WEM-QUANTILES_BUCKET_NAME"] = "test-fake-wem"
+    os.environ["SOURCES_WEM-QUANTILES_ATHENA_TABLE_NAME"] = "test_wem"
+    os.environ["SOURCES_WEM-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
 
     # Skip real data initialization (spatial lookups, AWS clients)
     os.environ["SKIP_DATA_INIT"] = "1"
@@ -168,15 +171,23 @@ def pytest_collection_finish(session):
     mock_wtk_fetcher.fetch_raw = MagicMock(return_value=wtk_raw_df)
     mock_wtk_fetcher.find_nearest_locations = MagicMock(side_effect=mock_find_n_nearest)
 
+    # WEM: quantile_atemporal — same shape as ensemble
+    mock_wem_fetcher = MagicMock()
+    mock_wem_fetcher.fetch_data = MagicMock(side_effect=mock_fetch_data)
+    mock_wem_fetcher.fetch_raw = MagicMock(return_value=ensemble_raw_df)
+    mock_wem_fetcher.find_nearest_locations = MagicMock(side_effect=mock_find_n_nearest)
+
     # Inject into the controller's module-level dicts
     wdc.athena_data_fetchers["era5-quantiles"] = mock_era5_fetcher
     wdc.athena_data_fetchers["ensemble-quantiles"] = mock_ensemble_fetcher
     wdc.athena_data_fetchers["wtk-timeseries"] = mock_wtk_fetcher
+    wdc.athena_data_fetchers["wem-quantiles"] = mock_wem_fetcher
     wdc.data_fetcher_router.register_fetcher("athena_era5-quantiles", mock_era5_fetcher)
     wdc.data_fetcher_router.register_fetcher(
         "athena_ensemble-quantiles", mock_ensemble_fetcher
     )
     wdc.data_fetcher_router.register_fetcher("athena_wtk-timeseries", mock_wtk_fetcher)
+    wdc.data_fetcher_router.register_fetcher("athena_wem-quantiles", mock_wem_fetcher)
 
     # Mock S3 fetcher for timeseries endpoints
     mock_s3_fetcher = MagicMock()

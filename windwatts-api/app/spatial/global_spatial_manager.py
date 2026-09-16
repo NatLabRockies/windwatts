@@ -1,6 +1,7 @@
 from pathlib import Path
 from app.spatial.spatial_manager import SpatialManager
 from app.spatial.ckdtree_lookup import CKDTreeLookup
+from app.spatial.gwa_grid_lookup import GWAGridLookup
 from app.config.model_config import MODEL_CONFIG
 
 # Singleton
@@ -9,8 +10,11 @@ spatial_manager = SpatialManager()
 _GRID_DIR = Path(__file__).parent / "grid_lookup_files"
 
 _GRID_LOADERS = {
-    "wtk": lambda: CKDTreeLookup(str(_GRID_DIR / "wtk_location_data.npz")),
-    "era5": lambda: CKDTreeLookup(str(_GRID_DIR / "era5_location_data.npz")),
+    "wtk": lambda: CKDTreeLookup(index_path=str(_GRID_DIR / "wtk_location_data.npz")),
+    "era5": lambda: CKDTreeLookup(index_path=str(_GRID_DIR / "era5_location_data.npz")),
+    "gwa_na": lambda: GWAGridLookup(
+        index_path=str(_GRID_DIR / "wem_gwa_na_grid_mask.npz")
+    ),
 }
 
 _initialized = False
