@@ -1,4 +1,6 @@
 export { OutOfBoundsWarning } from "./OutOfBoundsWarning";
+export { PageHero } from "./PageHero";
+export { PageSection } from "./PageSection";
 export { OutOfBoundsMarker } from "./OutOfBoundsMarker";
 export { ShareButton } from "./ShareButton";
 export { SettingsButton } from "./SettingsButton";

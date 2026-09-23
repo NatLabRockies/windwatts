@@ -13,6 +13,10 @@
   -moz-osx-font-smoothing: grayscale;
 
   --color-light: #f8f9fa;
+
+  /* Content pages (About, Research) */
+  --content-hero-gradient: linear-gradient(135deg, #0079c1 0%, #00457c 100%);
+  --content-section-alt-bg: #f5f5f5;
 }
 
 * {
