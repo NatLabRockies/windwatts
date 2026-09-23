@@ -5,6 +5,8 @@ export interface Publication {
   title: string;
   summary: string;
   link?: string;
+  // Path under public/assets/publications/, e.g. "/assets/publications/sheridan-1.png"
+  chartImage?: string;
 }
 
 // Placeholder entries
