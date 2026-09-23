@@ -13,6 +13,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import InsightsIcon from "@mui/icons-material/Insights";
 import DownloadIcon from "@mui/icons-material/Download";
 import EmailIcon from "@mui/icons-material/Email";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import { ContentPageLayout } from "../components/ContentPageLayout";
 import { PageHero } from "../components/shared/PageHero";
 import { PageSection } from "../components/shared/PageSection";
@@ -114,11 +115,24 @@ export const AboutPage = () => (
         Have a question, found an issue, or want to share feedback about the
         tool? We'd like to hear from you.
       </Typography>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <EmailIcon color="primary" />
-        <Link href={`mailto:${CONTACT_EMAIL}`} underline="hover">
-          {CONTACT_EMAIL}
-        </Link>
+      <Stack spacing={1}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <EmailIcon color="primary" />
+          <Link href={`mailto:${CONTACT_EMAIL}`} underline="hover">
+            {CONTACT_EMAIL}
+          </Link>
+        </Stack>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <GitHubIcon color="primary" />
+          <Link
+            href="https://github.com/NatLabRockies/windwatts"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            View the source code and contribute on GitHub
+          </Link>
+        </Stack>
       </Stack>
     </PageSection>
   </ContentPageLayout>
