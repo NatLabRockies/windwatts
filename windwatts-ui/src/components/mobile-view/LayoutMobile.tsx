@@ -1,5 +1,5 @@
-import { Outlet, Link as RouterLink } from "react-router-dom";
-import { Link, Box, AppBar, Toolbar } from "@mui/material";
+import { Outlet } from "react-router-dom";
+import { Box } from "@mui/material";
 import { Settings } from "../settings";
 import { useContext } from "react";
 import { SettingsContext } from "../../providers/SettingsContext";
@@ -9,9 +9,9 @@ import {
   useMobileBottomSheet,
 } from "../../providers/MobileBottomSheetProvider";
 import { useGoogleMaps } from "../../hooks";
+import { AppHeader } from "../AppHeader";
 
 const LayoutMobileContent = () => {
-  const APP_TITLE = import.meta.env.VITE_APP_TITLE || "Wind Watts";
   const { setCurrentPosition } = useContext(SettingsContext);
   const { setBottomSheetRef } = useMobileBottomSheet();
 
@@ -31,38 +31,7 @@ const LayoutMobileContent = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Box sx={{ flexGrow: 0 }}>
-        <AppBar
-          position="static"
-          sx={{
-            bgcolor: "background.paper",
-            borderBottom: "1px solid #ddd",
-          }}
-        >
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Link
-              to="/"
-              variant="h6"
-              component={RouterLink}
-              underline="none"
-              sx={{ flexGrow: 1, color: "text.primary" }}
-            >
-              {APP_TITLE}
-            </Link>
-            <Link
-              href="https://www.nlr.gov"
-              target="_blank"
-              rel="noopener noreferrer"
-              underline="none"
-            >
-              <Box
-                component="img"
-                sx={{ height: 32 }}
-                src="/assets/nlr-logo-horizontal.svg"
-                alt="NLR Logo"
-              />
-            </Link>
-          </Toolbar>
-        </AppBar>
+        <AppHeader logoHeight={32} titleVariant="h6" />
       </Box>
 
       <Box
