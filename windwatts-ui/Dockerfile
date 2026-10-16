@@ -3,8 +3,8 @@ FROM node:22-bookworm AS certificates
 
 # Update and upgrade packages then install NREL root certs
 RUN apt-get update && apt-get upgrade -y && \
-    curl -fsSLk -o /usr/local/share/ca-certificates/nrel_root.crt https://raw.github.nrel.gov/TADA/nrel-certs/v20180329/certs/nrel_root.pem && \
-    curl -fsSLk -o /usr/local/share/ca-certificates/nrel_xca1.crt https://raw.github.nrel.gov/TADA/nrel-certs/v20180329/certs/nrel_xca1.pem && \
+    curl -fsSLk -o /usr/local/share/ca-certificates/nrel_root.crt https://raw.github.nlr.gov/TADA/nrel-certs/v20251216/certs/nrel_root.pem && \
+    curl -fsSLk -o /usr/local/share/ca-certificates/nrel_xca1.crt https://raw.github.nlr.gov/TADA/nrel-certs/v20251216/certs/nrel_xca1.pem && \
     update-ca-certificates
 
 FROM node:22-alpine AS build
