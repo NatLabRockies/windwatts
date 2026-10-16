@@ -1,4 +1,10 @@
 import { DataModel, DATA_MODELS } from "../types";
+import type { CustomPowerCurve } from "../types";
+import {
+  customCurveShareId,
+  isCustomTurbineId,
+  resolveCustomCurve,
+} from "./turbine";
 import {
   MODEL_COORDINATES_BOUNDS,
   VALID_TURBINES,
@@ -65,7 +71,11 @@ export function parseUrlParams(searchParams?: URLSearchParams): UrlParams {
 
   // "turbine" or legacy "powerCurve"
   const turbine = params.get("turbine") || params.get("powerCurve");
-  if (turbine && VALID_TURBINES.includes(turbine)) {
+  // reference or custom curve
+  if (
+    turbine &&
+    (VALID_TURBINES.includes(turbine) || isCustomTurbineId(turbine))
+  ) {
     result.turbine = turbine;
   }
 
@@ -102,6 +112,7 @@ export function buildUrlFromSettings(settings: {
   zoom: number;
   hubHeight: number;
   turbine: string;
+  customCurves?: CustomPowerCurve[];
   preferredModel: DataModel;
   lossAssumptionPercent: number;
   windspeedUnit: string;
@@ -125,7 +136,18 @@ export function buildUrlFromSettings(settings: {
   }
 
   if (settings.turbine !== URL_PARAM_DEFAULTS.turbine) {
-    params.set("turbine", settings.turbine);
+    // resolve turbine ID (reference/ custom) and add to link
+    if (isCustomTurbineId(settings.turbine)) {
+      const curve = resolveCustomCurve(
+        settings.turbine,
+        settings.customCurves ?? []
+      );
+      const shareId = curve ? customCurveShareId(curve) : null;
+      if (!shareId) return "/";
+      params.set("turbine", shareId);
+    } else {
+      params.set("turbine", settings.turbine);
+    }
   }
 
   if (settings.preferredModel !== URL_PARAM_DEFAULTS.dataModel) {

@@ -8,6 +8,7 @@ export interface CustomPowerCurve {
   name: string;
   data: PowerCurvePoint[];
   createdAt: number;
+  fingerprint?: string;
   minHeight?: number; // Optional recommended min hub height (m)
   maxHeight?: number; // Optional recommended max hub height (m)
 }
