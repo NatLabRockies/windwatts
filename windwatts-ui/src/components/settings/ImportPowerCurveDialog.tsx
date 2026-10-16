@@ -13,7 +13,11 @@ import { CheckCircleOutline, UploadFile } from "@mui/icons-material";
 import { useRef, useState, useContext } from "react";
 import { parsePowerCurveCSV, readFileAsText } from "../../services/upload";
 import { idbPut, STORES } from "../../services/idb";
-import { parseOptionalHeight, validateHubHeightRange } from "../../utils";
+import {
+  fingerprintCustomCurve,
+  parseOptionalHeight,
+  validateHubHeightRange,
+} from "../../utils";
 import type { CustomPowerCurve } from "../../types";
 import { SettingsContext } from "../../providers/SettingsContext";
 
@@ -109,6 +113,7 @@ export function ImportPowerCurveDialog({
           ? { minHeight: parsedMin, maxHeight: parsedMax }
           : {}),
       };
+      curve.fingerprint = await fingerprintCustomCurve(curve);
       // 4. save to IndexedDB and update context
       await idbPut(STORES.CUSTOM_TURBINES, curve);
       addCustomCurve(curve);
