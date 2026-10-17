@@ -27,11 +27,17 @@ export function Toast({
     <Snackbar
       open={open}
       autoHideDuration={duration}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       onClose={(_event, reason) => {
         if (reason !== "clickaway") dismiss();
       }}
     >
-      <Alert severity={severity} onClose={dismiss}>
+      <Alert
+        severity={severity}
+        onClose={dismiss}
+        variant="filled"
+        sx={{ width: "100%" }}
+      >
         {message}
       </Alert>
     </Snackbar>
