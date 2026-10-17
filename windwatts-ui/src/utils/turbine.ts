@@ -41,16 +41,9 @@ export function matchSharedCustomCurve(
 ): CustomPowerCurve[] {
   const match = CUSTOM_SHARE_ID_PATTERN.exec(turbineId);
   if (!match) return curves.filter((curve) => curve.id === turbineId);
-  const candidates = curves
+  return curves
     .filter((curve) => curve.fingerprint?.startsWith(match[1]))
     .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
-  const seenFingerprints = new Set<string>();
-  return candidates.filter((curve) => {
-    const fingerprint = curve.fingerprint;
-    if (!fingerprint || seenFingerprints.has(fingerprint)) return false;
-    seenFingerprints.add(fingerprint);
-    return true;
-  });
 }
 
 /**
