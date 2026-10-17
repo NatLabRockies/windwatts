@@ -157,7 +157,7 @@ describe("custom curve sharing", () => {
     ).not.toBe(hash);
   });
 
-  test("deduplicates equivalent imports but exposes abbreviated collisions", () => {
+  test("returns all matching imports oldest first, including duplicates and collisions", () => {
     const first = { ...curve, fingerprint: "a31f09c2" + "0".repeat(56) };
     const duplicate = { ...first, id: "custom-local-b", createdAt: 2 };
     const collision = {
@@ -167,10 +167,17 @@ describe("custom curve sharing", () => {
     };
     expect(
       matchSharedCustomCurve("custom-v1-a31f09c2", [duplicate, first])
-    ).toEqual([first]);
+    ).toEqual([first, duplicate]);
     expect(
       matchSharedCustomCurve("custom-v1-a31f09c2", [collision, first])
     ).toEqual([first, collision]);
+    expect(
+      matchSharedCustomCurve("custom-v1-a31f09c2", [
+        collision,
+        duplicate,
+        first,
+      ])
+    ).toEqual([first, duplicate, collision]);
     expect(matchSharedCustomCurve("custom-v1-ffffffff", [first])).toEqual([]);
     expect(matchSharedCustomCurve(curve.id, [curve])).toEqual([curve]);
     expect(matchSharedCustomCurve("custom-missing", [curve])).toEqual([]);
