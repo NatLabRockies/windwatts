@@ -5,6 +5,47 @@ import { TURBINE_LABEL, TURBINE_DATA } from "../constants";
 export const isCustomTurbineId = (id: string): boolean =>
   id.startsWith("custom-");
 
+const FINGERPRINT_VERSION = "v1";
+const CUSTOM_SHARE_ID_PATTERN = new RegExp(
+  `^custom-${FINGERPRINT_VERSION}-([0-9a-f]{8})$`
+);
+
+export async function fingerprintCustomCurve(
+  curve: CustomPowerCurve
+): Promise<string> {
+  const points = [...curve.data].sort((a, b) => a.ws - b.ws);
+  const canonical = JSON.stringify({
+    version: FINGERPRINT_VERSION,
+    points: points.map(({ ws, kw }) => [ws, kw]),
+    minHeight: curve.minHeight ?? null,
+    maxHeight: curve.maxHeight ?? null,
+  });
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(canonical)
+  );
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+export function customCurveShareId(curve: CustomPowerCurve): string | null {
+  return curve.fingerprint
+    ? `custom-${FINGERPRINT_VERSION}-${curve.fingerprint.slice(0, 8)}`
+    : null;
+}
+
+export function matchSharedCustomCurve(
+  turbineId: string,
+  curves: CustomPowerCurve[]
+): CustomPowerCurve[] {
+  const match = CUSTOM_SHARE_ID_PATTERN.exec(turbineId);
+  if (!match) return curves.filter((curve) => curve.id === turbineId);
+  return curves
+    .filter((curve) => curve.fingerprint?.startsWith(match[1]))
+    .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+}
+
 /**
  * Returns the CustomPowerCurve with Id
  */
