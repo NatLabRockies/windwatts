@@ -39,3 +39,7 @@ manage-aws-parameters.sh
 # Cursor thoughts
 thoughts/
 .thoughts/
+
+# dev, tmp folders
+dev/
+tmp/
