@@ -277,6 +277,7 @@ class TimeseriesBatchRequestPayload(BaseModel):
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
+    height: Optional[int] = Field(None, description="Height in meters.")
     years: Optional[List[int]] = Field(
         None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
@@ -331,6 +332,7 @@ class PowerCurveData(BaseModel):
 
 class TimeseriesEnergyRequestPayload(BaseModel):
     gridIndex: str = Field(..., description="Grid index identifier")
+    height: Optional[int] = Field(None, description="Height in meters.")
     turbine: Optional[str] = Field(
         None,
         min_length=1,
@@ -399,6 +401,7 @@ class TimeseriesEnergyBatchRequestPayload(BaseModel):
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
+    height: Optional[int] = Field(None, description="Height in meters.")
     turbine: Optional[str] = Field(
         None,
         min_length=1,
