@@ -9,6 +9,7 @@ from app.config.model_config import MODEL_CONFIG
 
 MIN_POOL_WORKERS = 1
 
+
 class S3DataFetcher(AbstractDataFetcher):
     def __init__(self, model_key: str):
         """

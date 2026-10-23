@@ -737,7 +737,7 @@ def post_energy_timeseries(
             payload.years,
             payload.year_range,
             payload.year_set,
-            payload.height
+            payload.height,
         )
 
         return StreamingResponse(
@@ -799,7 +799,7 @@ def download_timeseries_energy_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
-                    payload.height
+                    payload.height,
                 )
                 file_name = f"wind_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)

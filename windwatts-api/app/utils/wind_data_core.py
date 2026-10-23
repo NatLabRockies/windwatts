@@ -15,7 +15,11 @@ import numpy as np
 import bisect
 from app.schemas import PowerCurveData
 from app.types.spatial import NoLandCellError
-from app.utils.wind_processing import compute_sectors, resolve_heights, interpolate_windspeed_power_law_timeseries
+from app.utils.wind_processing import (
+    compute_sectors,
+    resolve_heights,
+    interpolate_windspeed_power_law_timeseries,
+)
 
 from app.utils.validation import (
     validate_lat,
@@ -35,6 +39,7 @@ from app.utils.validation import (
     validate_model_for_timeseries,
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
+
 
 def get_windspeed_core(
     model: str,
@@ -199,6 +204,7 @@ def get_production_core(
 
         return response_dict
 
+
 def _resolve_timeseries_columns(model: str, height: Optional[int] = None):
     """Resolve the column subset and height_info for a timeseries request.
 
@@ -219,6 +225,7 @@ def _resolve_timeseries_columns(model: str, height: Optional[int] = None):
     cols = file_temporal + height_info["columns"]
     return cols, height_info
 
+
 def _apply_timeseries_interpolation(df: pd.DataFrame, height: int, height_info: dict):
     """Interpolate windspeed to the target height for hourly timeseries.
 
@@ -230,8 +237,11 @@ def _apply_timeseries_interpolation(df: pd.DataFrame, height: int, height_info: 
         return df
     lower_col = f"windspeed_{height_info['lower']}m"
     upper_col = f"windspeed_{height_info['upper']}m"
-    df = interpolate_windspeed_power_law_timeseries(df, height, height_info["lower"], height_info["upper"])
+    df = interpolate_windspeed_power_law_timeseries(
+        df, height, height_info["lower"], height_info["upper"]
+    )
     return df.drop(columns=[lower_col, upper_col])
+
 
 def _aggregate_timeseries_monthly(df, time, windspeed_cols):
     """Aggregate hourly timeseries to a per-month (yyyy-mm) mean.
@@ -248,9 +258,12 @@ def _aggregate_timeseries_monthly(df, time, windspeed_cols):
     """
     df["year"] = time.dt.year.astype(int)
     df["month"] = time.dt.month.astype(int)
-    df["year_month"] = df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
+    df["year_month"] = (
+        df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
+    )
     agg_dict = {col: "mean" for col in windspeed_cols}
     return df.groupby("year_month").agg(agg_dict).reset_index()
+
 
 def get_timeseries_core(
     model: str,
@@ -300,7 +313,7 @@ def get_timeseries_core(
         resolved_years = MODEL_CONFIG[model]["years"].get("sample", [])
 
     params = {"gridIndices": gridIndices, "years": resolved_years}
-    
+
     resolved_cols, height_info = _resolve_timeseries_columns(model, height)
     if resolved_cols is not None:
         params["cols"] = resolved_cols

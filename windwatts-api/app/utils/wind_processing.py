@@ -36,7 +36,9 @@ def resolve_heights(target_height: int, available_heights: list[int]) -> dict:
     }
 
 
-def _power_law(v_ref: pd.Series, h_target: int, h_ref: int, alpha: float = 1/7) -> pd.Series:
+def _power_law(
+    v_ref: pd.Series, h_target: int, h_ref: int, alpha: float = 1 / 7
+) -> pd.Series:
     """Power Law: V(h) = V_ref * (h / h_ref) ^ alpha
     alpha default to 1/7 for neutral stability if alpha not provided."""
     return v_ref * (h_target / h_ref) ** alpha
@@ -81,6 +83,7 @@ def interpolate_windspeed_power_law_quantiles(
     ).round(2)
     return result
 
+
 def interpolate_windspeed_power_law_timeseries(
     df: pd.DataFrame, target_height: int, lower: int, upper: int
 ) -> pd.DataFrame:
@@ -97,11 +100,14 @@ def interpolate_windspeed_power_law_timeseries(
     v_lower = result[f"windspeed_{lower}m"]
     v_upper = result[f"windspeed_{upper}m"]
 
-    alpha = np.log(v_upper/v_lower) / np.log(upper/lower)
+    alpha = np.log(v_upper / v_lower) / np.log(upper / lower)
 
-    result[f"windspeed_{target_height}m"] = _power_law(v_lower, target_height, lower, alpha).round(2)
+    result[f"windspeed_{target_height}m"] = _power_law(
+        v_lower, target_height, lower, alpha
+    ).round(2)
 
     return result
+
 
 # Default interpolation method
 interpolate_windspeed = interpolate_windspeed_power_law_quantiles

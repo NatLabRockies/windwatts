@@ -79,7 +79,9 @@ def validate_height(model: str, height: int, height_type: str) -> int:
     if height in valid_heights:
         return height
     # Only windspeed is interpolated, winddirection must be a native height.
-    if height_type != "windspeed" or not MODEL_CONFIG[model].get("interpolation", False):
+    if height_type != "windspeed" or not MODEL_CONFIG[model].get(
+        "interpolation", False
+    ):
         raise HTTPException(
             status_code=400,
             detail=f"Invalid height for {model}. Must be one of: {valid_heights} for {height_type}",
