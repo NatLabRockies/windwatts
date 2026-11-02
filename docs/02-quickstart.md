@@ -5,7 +5,7 @@ This guide will help you get the WindWatts application up and running on your lo
 ## Prerequisites
 
 1.  **Docker**: Ensure Docker is installed and running.
-2.  **AWS Credentials**: You need access to the WindWatts Data package.
+2.  **AWS Credentials**: You need access to the WindWatts data in AWS (Athena and S3).
 3.  **Google Maps API Key**: Required for the frontend map.
 
 ## Option 1: Docker (Recommended)
@@ -26,7 +26,6 @@ git checkout develop # Ensure you are on the 'develop' branch (the main developm
 Create a `.env` file in the root:
 
 ```plaintext
-WINDWATTS_DATA_URL=https://windwatts-era5.s3.us-west-2.amazonaws.com/
 AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
 AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_ACCESS_KEY"
 AWS_SESSION_TOKEN="YOUR_AWS_SESSION_TOKEN"
@@ -46,19 +45,24 @@ VITE_MAP_ID=YOUR_MAP_ID
 {
   "region_name": "us-west-2",
   "output_location": "S3_BUCKET_URI_FOR_ATHENA_RESULTS",
-  "output_bucket": "NAME_OF_S3_BUCKET_FOR_ATHENA_RESULTS",
   "database": "NAME_OF_THE_GLUE_DATABASE",
   "athena_workgroup": "NAME_OF_THE_ATHENA_WORKGROUP",
   "sources": {
-    "wtk": {
+    "wtk-timeseries": {
       "bucket_name": "NAME_OF_THE_WTK_S3_BUCKET",
-      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK",
-      "alt_athena_table_name": ""
+      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK"
     },
-    "era5": {
+    "era5-quantiles": {
       "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
-      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5",
-      "alt_athena_table_name": ""
+      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5"
+    },
+    "ensemble-quantiles": {
+      "bucket_name": "NAME_OF_THE_ENSEMBLE_S3_BUCKET",
+      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ENSEMBLE"
+    },
+    "wem-quantiles": {
+      "bucket_name": "NAME_OF_THE_WEM_S3_BUCKET",
+      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WEM"
     }
   }
 }

@@ -17,7 +17,6 @@ Uses Docker Compose to run all services (API, UI, database, reverse proxy).
 Create a `.env` file in the project root:
 
 ```plaintext
-WINDWATTS_DATA_URL=<s3-url-for-windwatts-data-package>
 AWS_ACCESS_KEY_ID=<your-access-key>
 AWS_SECRET_ACCESS_KEY=<your-secret-key>
 AWS_SESSION_TOKEN=<your-session-token>
@@ -40,21 +39,24 @@ Configure AWS Athena settings and data sources:
 {
   "region_name": "us-west-2",
   "output_location": "s3://your-athena-results-bucket/",
-  "output_bucket": "your-athena-results-bucket",
   "database": "your-glue-database",
   "athena_workgroup": "your-athena-workgroup",
   "sources": {
-    "wtk": {
+    "wtk-timeseries": {
       "bucket_name": "your-wtk-bucket",
-      "athena_table_name": "wtk_table",
-      "alt_athena_table_name": "",
-      "capabilities": { "avg_types": ["all", "annual", "monthly", "hourly"] }
+      "athena_table_name": "wtk_table"
     },
-    "era5": {
+    "era5-quantiles": {
       "bucket_name": "your-era5-bucket",
-      "athena_table_name": "era5_table",
-      "alt_athena_table_name": "",
-      "capabilities": { "avg_types": ["all", "annual"] }
+      "athena_table_name": "era5_table"
+    },
+    "ensemble-quantiles": {
+      "bucket_name": "your-ensemble-bucket",
+      "athena_table_name": "ensemble_table"
+    },
+    "wem-quantiles": {
+      "bucket_name": "your-wem-bucket",
+      "athena_table_name": "wem_table"
     }
   }
 }
