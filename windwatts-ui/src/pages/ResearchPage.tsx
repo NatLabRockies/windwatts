@@ -3,15 +3,36 @@ import {
   Card,
   CardContent,
   Chip,
-  Grid,
+  Link,
   Stack,
   Typography,
 } from "@mui/material";
-import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
-import { ContentPageLayout } from "../components/ContentPageLayout";
-import { PageHero } from "../components/shared/PageHero";
-import { PageSection } from "../components/shared/PageSection";
+import { ContentPageLayout } from "../components";
+import {
+  PageHero,
+  PageSection,
+  FigureLightbox,
+  CitationBlock,
+} from "../components/shared";
 import { PUBLICATIONS } from "../constants/publications";
+
+const WEM_VERSIONS = [
+  {
+    version: "Version 1",
+    status: "Released",
+    description: "[Initial grid.]",
+  },
+  {
+    version: "Version 2",
+    status: "Released",
+    description: "[Higher-resolution update.]",
+  },
+  {
+    version: "Version 3",
+    status: "Upcoming",
+    description: "[Extension beyond CONUS (Alaska, Hawaii, others).]",
+  },
+];
 
 export const ResearchPage = () => (
   <ContentPageLayout>
@@ -21,8 +42,7 @@ export const ResearchPage = () => (
     />
 
     <PageSection title="Overview">
-      <Typography paragraph>
-        {/* Placeholder — team to provide final summary of the research program */}
+      <Typography>
         WindWatts is built on an active body of research into distributed wind
         resource assessment, including national wind resource modeling, obstacle
         flow modeling, and validation against field measurements. This page
@@ -30,87 +50,99 @@ export const ResearchPage = () => (
       </Typography>
     </PageSection>
 
-    <PageSection title="Publications" alt>
-      <Grid container spacing={3}>
+    <PageSection title="WindWatts Ensemble Model" alt>
+      <Stack spacing={2}>
+        <Typography>[Model description.]</Typography>
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+            Version history
+          </Typography>
+          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+            {WEM_VERSIONS.map(({ version, status, description }) => (
+              <Typography key={version} component="li" sx={{ mb: 0.5 }}>
+                <strong>{version}</strong>
+                <Chip
+                  label={status}
+                  size="small"
+                  variant="outlined"
+                  color={status === "Released" ? "success" : "default"}
+                  sx={{ mx: 1, verticalAlign: "middle" }}
+                />
+                {description}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+      </Stack>
+    </PageSection>
+
+    <PageSection title="Publications">
+      <Stack spacing={3}>
         {PUBLICATIONS.map((pub) => (
-          <Grid key={pub.id} size={{ xs: 12 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Grid container spacing={3}>
-                  <Grid size={{ xs: 12, md: 8 }}>
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      justifyContent="space-between"
-                      alignItems={{ sm: "center" }}
-                      spacing={1}
-                      sx={{ mb: 1 }}
+          <Card key={pub.id} variant="outlined">
+            <CardContent>
+              <Stack spacing={1.25} sx={{ mb: 2.5 }}>
+                <Typography variant="h6" component="h3">
+                  {pub.link ? (
+                    <Link
+                      href={pub.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      underline="hover"
+                      color="inherit"
                     >
-                      <Typography variant="h6" component="h3">
-                        {pub.title}
-                      </Typography>
-                      <Chip
-                        label={pub.status}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    </Stack>
-                    <Typography
-                      variant="subtitle2"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      {pub.authors}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {pub.summary}
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    {pub.chartImage ? (
-                      <Box
-                        component="img"
-                        src={pub.chartImage}
-                        alt={`Supporting chart for ${pub.title}`}
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          maxHeight: 200,
-                          objectFit: "contain",
-                          borderRadius: 1,
-                        }}
-                      />
-                    ) : (
-                      // Placeholder until the team provides a chart image (see Publication.chartImage)
-                      <Box
-                        sx={{
-                          height: "100%",
-                          minHeight: 140,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 0.5,
-                          border: "1px dashed",
-                          borderColor: "divider",
-                          borderRadius: 1,
-                          color: "text.disabled",
-                          bgcolor: "action.hover",
-                        }}
-                      >
-                        <InsertChartOutlinedIcon fontSize="large" />
-                        <Typography variant="caption">
-                          Chart placeholder
-                        </Typography>
-                      </Box>
-                    )}
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
+                      {pub.title}
+                    </Link>
+                  ) : (
+                    pub.title
+                  )}
+                </Typography>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  spacing={1}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {pub.authors}
+                  </Typography>
+                  <Chip
+                    label={pub.status}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                </Stack>
+              </Stack>
+              <FigureLightbox src={pub.chartImage} caption={pub.chartCaption} />
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 2.5 }}
+              >
+                {pub.summary}
+              </Typography>
+              <Typography variant="subtitle2" sx={{ mt: 2, mb: 0.5 }}>
+                Key takeaways
+              </Typography>
+              <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                {pub.takeaways.map((takeaway) => (
+                  <Typography
+                    key={takeaway}
+                    component="li"
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
+                    {takeaway}
+                  </Typography>
+                ))}
+              </Box>
+              <CitationBlock citation={pub.citation} />
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </Stack>
     </PageSection>
   </ContentPageLayout>
 );
