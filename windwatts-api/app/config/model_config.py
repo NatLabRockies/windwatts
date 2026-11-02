@@ -71,7 +71,7 @@ TEMPORAL_SCHEMAS = {
 
 MODEL_CONFIG = {
     "era5-quantiles": {
-        "source": "athena",
+        "source": "duckdb",
         "schema": "quantile_yearly",
         "years": {"full": list(range(2013, 2024)), "sample": [2020, 2021, 2022, 2023]},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
@@ -87,8 +87,8 @@ MODEL_CONFIG = {
         },
         "s3": {
             "bucket": "windwatts-era5",
-            "prefix": "era5_quantiles",
-            "partition_template": "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
+            "prefix": "era5_raw_quantiles",
+            "partition_template": "{prefix}/index={index}/data.parquet",
             "partition_columns": ["year", "index"],
         },
         "links": ["https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5"],
@@ -154,7 +154,7 @@ MODEL_CONFIG = {
         ],
     },
     "wem-quantiles": {
-        "source": "athena",
+        "source": "duckdb",
         "schema": "quantile_atemporal",
         "years": {"full": [], "sample": []},
         "heights": {"windspeed": [30, 40, 50, 60, 80, 100], "winddirection": []},
