@@ -57,14 +57,13 @@ class ConfigManager:
         # Top-level keys
         region_name = os.getenv("REGION_NAME")
         output_location = os.getenv("OUTPUT_LOCATION")
-        output_bucket = os.getenv("OUTPUT_BUCKET")
         database = os.getenv("DATABASE")
         athena_workgroup = os.getenv("ATHENA_WORKGROUP")
 
         # Scan for all SOURCES_<SOURCE>_FIELD_NAME env vars
         sources = {}
         prefix = "SOURCES_"
-        suffixes = ["_ALT_ATHENA_TABLE_NAME", "_ATHENA_TABLE_NAME", "_BUCKET_NAME"]
+        suffixes = ["_ATHENA_TABLE_NAME", "_BUCKET_NAME"]
         env = os.environ
         source_fields = {}
         for key, value in env.items():
@@ -81,20 +80,15 @@ class ConfigManager:
         # Package the sources with required fields into `sources`
         for source, fields in source_fields.items():
             if "bucket_name" in fields and "athena_table_name" in fields:
-                if "alt_athena_table_name" not in fields:
-                    fields["alt_athena_table_name"] = ""
                 sources[source] = {
                     "bucket_name": fields["bucket_name"],
                     "athena_table_name": fields["athena_table_name"],
-                    "alt_athena_table_name": fields["alt_athena_table_name"],
                 }
         # check if all keys have been set
         if (
             all(
                 [
                     region_name,
-                    output_location,
-                    output_bucket,
                     database,
                     athena_workgroup,
                 ]
@@ -104,7 +98,6 @@ class ConfigManager:
             return {
                 "region_name": region_name,
                 "output_location": output_location,
-                "output_bucket": output_bucket,
                 "database": database,
                 "athena_workgroup": athena_workgroup,
                 "sources": sources,
