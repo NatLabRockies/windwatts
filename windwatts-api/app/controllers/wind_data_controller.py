@@ -79,9 +79,7 @@ if not _skip_data_init:
     # Initialize DuckDB data fetchers
     for model_key in MODEL_CONFIG.keys():
         if MODEL_CONFIG[model_key]["source"] == "duckdb":
-            duckdb_data_fetchers[model_key] = DuckDBDataFetcher(
-                model_key=model_key
-            )
+            duckdb_data_fetchers[model_key] = DuckDBDataFetcher(model_key=model_key)
 
     # Initialize S3 data fetchers
     s3_data_fetchers["era5-timeseries"] = S3DataFetcher(model_key="era5-timeseries")
@@ -98,9 +96,9 @@ if not _skip_data_init:
                 f"s3_{model_key}", s3_data_fetchers[model_key]
             )
         if model_key in duckdb_data_fetchers:
-                    data_fetcher_router.register_fetcher(
-                        f"duckdb_{model_key}", duckdb_data_fetchers[model_key]
-                    )
+            data_fetcher_router.register_fetcher(
+                f"duckdb_{model_key}", duckdb_data_fetchers[model_key]
+            )
 
 
 # API Endpoints

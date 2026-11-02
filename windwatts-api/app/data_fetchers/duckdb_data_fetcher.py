@@ -1,5 +1,3 @@
-import pandas as pd
-
 from .abstract_data_fetcher import AbstractDataFetcher
 from app.spatial.global_spatial_manager import spatial_manager
 from app.utils.wind_processing import (
@@ -56,7 +54,9 @@ class DuckDBDataFetcher(AbstractDataFetcher):
         height_info = resolve_heights(height, self._available_heights())
         df = self.query_client.query(point.index, point.tile)
         if df.empty:
-            raise ValueError(f"No data for {self.model_key} index={point.index!r} tile={point.tile!r}")
+            raise ValueError(
+                f"No data for {self.model_key} index={point.index!r} tile={point.tile!r}"
+            )
         if not height_info["exact"]:
             df = interpolate_windspeed(
                 df, height, height_info["lower"], height_info["upper"]

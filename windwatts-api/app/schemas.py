@@ -744,7 +744,9 @@ class AthenaConfig(BaseModel):
 
 class S3Config(BaseModel):
     bucket: str = Field(..., description="S3 bucket where the dataset lives")
-    prefix: str = Field(..., description="Top-level key prefix for the dataset in the bucket")
+    prefix: str = Field(
+        ..., description="Top-level key prefix for the dataset in the bucket"
+    )
     partition_template: str = Field(
         ...,
         description="Key template with '{prefix}' and partition placeholders, e.g. '{prefix}/index={index}/data.parquet'",
