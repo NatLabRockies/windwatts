@@ -39,7 +39,13 @@ components/
 │   ├── UnitsSettings.tsx
 │   └── index.ts
 ├── shared/                 # Shared components
-│   └── OutOfBoundsWarning.tsx
+│   ├── OutOfBoundsWarning.tsx
+│   ├── PageHero.tsx        # Hero banner for content pages
+│   ├── PageSection.tsx     # Section wrapper for content pages
+│   ├── FigureLightbox.tsx  # Figure with click-to-enlarge dialog
+│   └── CitationBlock.tsx   # Citation text with copy button
+├── AppHeader.tsx           # Top bar with Map/About/Research navigation
+├── ContentPageLayout.tsx   # Layout for About and Research pages
 ├── Layout.tsx              # Main layout router
 ├── MapView.tsx             # Main map view router
 ├── index.ts                # Public exports
@@ -97,6 +103,14 @@ Components for user preferences and configuration:
 Components used across multiple platforms:
 
 - **OutOfBoundsWarning**: Warning for out-of-bounds coordinates
+- **PageHero**, **PageSection**: Building blocks for content pages (About, Research)
+- **FigureLightbox**: Figure thumbnail with caption and click-to-enlarge dialog
+- **CitationBlock**: Citation text with a copy-to-clipboard button
+
+### App-Level Components
+
+- **AppHeader**: Top bar shared by the map layouts and content pages
+- **ContentPageLayout**: Header, content, and footer for full-page content
 
 ## Usage
 
