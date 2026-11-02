@@ -14,9 +14,8 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import DownloadIcon from "@mui/icons-material/Download";
 import EmailIcon from "@mui/icons-material/Email";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import { ContentPageLayout } from "../components/ContentPageLayout";
-import { PageHero } from "../components/shared/PageHero";
-import { PageSection } from "../components/shared/PageSection";
+import { ContentPageLayout } from "../components";
+import { PageHero, PageSection } from "../components/shared";
 import { CONTACT_EMAIL } from "../constants/footer";
 
 const HOW_TO_STEPS = [
@@ -55,21 +54,20 @@ export const AboutPage = () => (
 
     <PageSection title="What is WindWatts?">
       <Stack spacing={2} sx={{ mb: 3 }}>
-        <Typography component="p">
+        <Typography>
           WindWatts is a public tool that showcases best-practice siting methods
           developed as part of the WindWatts project. Drop a pin anywhere you
           like to quickly and easily assess the wind resource and estimated
           energy generation potential at that site.
         </Typography>
-        <Typography component="p">
-          {/* Placeholder — team to confirm final wording */}
+        <Typography>
           Estimates draw on multiple wind datasets, including the ERA5 global
-          reanalysis, the Wind Toolkit, and ensemble models that combine several
-          sources for improved accuracy. Quantile-based summaries power fast,
-          on-the-spot estimates, while detailed hourly time series are available
-          to download for deeper analysis. The wind resource data is combined
-          with a turbine's power curve to estimate energy production for the
-          selected site.
+          reanalysis, and ensemble models that combine several sources through
+          machine learning for improved accuracy. Quantile-based summaries power
+          fast, on-the-spot estimates, while detailed hourly time series are
+          available to download for deeper analysis. The wind resource data is
+          combined with a turbine's power curve to estimate energy production
+          for the selected site.
         </Typography>
       </Stack>
       <Button
@@ -110,7 +108,7 @@ export const AboutPage = () => (
     </PageSection>
 
     <PageSection title="Support">
-      <Typography paragraph>
+      <Typography sx={{ mb: 2 }}>
         {/* Placeholder — confirm preferred support channel/copy with the team */}
         Have a question, found an issue, or want to share feedback about the
         tool? We'd like to hear from you.
