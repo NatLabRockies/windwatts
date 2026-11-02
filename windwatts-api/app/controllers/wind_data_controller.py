@@ -10,6 +10,7 @@ from app.config_manager import ConfigManager
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
+from app.data_fetchers.duckdb_data_fetcher import DuckDBDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.utils.data_fetcher_utils import format_coordinate, chunker
 from app.utils.validation import (
@@ -55,6 +56,7 @@ _skip_data_init = os.environ.get("SKIP_DATA_INIT", "0") == "1"
 # Initialize data fetchers
 athena_data_fetchers = {}
 s3_data_fetchers = {}
+duckdb_data_fetchers = {}
 
 if not _skip_data_init:
     # Initialize ConfigManager
@@ -74,6 +76,13 @@ if not _skip_data_init:
                 athena_config=athena_config, model_key=model_key
             )
 
+    # Initialize DuckDB data fetchers
+    for model_key in MODEL_CONFIG.keys():
+        if MODEL_CONFIG[model_key]["source"] == "duckdb":
+            duckdb_data_fetchers[model_key] = DuckDBDataFetcher(
+                model_key=model_key
+            )
+
     # Initialize S3 data fetchers
     s3_data_fetchers["era5-timeseries"] = S3DataFetcher(model_key="era5-timeseries")
 
@@ -88,6 +97,10 @@ if not _skip_data_init:
             data_fetcher_router.register_fetcher(
                 f"s3_{model_key}", s3_data_fetchers[model_key]
             )
+        if model_key in duckdb_data_fetchers:
+                    data_fetcher_router.register_fetcher(
+                        f"duckdb_{model_key}", duckdb_data_fetchers[model_key]
+                    )
 
 
 # API Endpoints
