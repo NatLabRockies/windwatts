@@ -5,13 +5,11 @@ interface PageSectionProps {
   title?: string;
   children: ReactNode;
   alt?: boolean;
-  id?: string;
 }
 
 // Consistent section wrapper for content pages: alternating background bands
-export const PageSection = ({ title, children, alt, id }: PageSectionProps) => (
+export const PageSection = ({ title, children, alt }: PageSectionProps) => (
   <Box
-    id={id}
     component="section"
     sx={{
       bgcolor: alt ? "var(--content-section-alt-bg)" : "background.paper",
