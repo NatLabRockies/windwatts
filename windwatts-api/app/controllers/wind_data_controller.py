@@ -10,6 +10,7 @@ from app.config_manager import ConfigManager
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 from app.data_fetchers.s3_data_fetcher import S3DataFetcher
 from app.data_fetchers.athena_data_fetcher import AthenaDataFetcher
+from app.data_fetchers.duckdb_data_fetcher import DuckDBDataFetcher
 from app.data_fetchers.data_fetcher_router import DataFetcherRouter
 from app.utils.data_fetcher_utils import format_coordinate, chunker
 from app.utils.validation import (
@@ -55,6 +56,7 @@ _skip_data_init = os.environ.get("SKIP_DATA_INIT", "0") == "1"
 # Initialize data fetchers
 athena_data_fetchers = {}
 s3_data_fetchers = {}
+duckdb_data_fetchers = {}
 
 if not _skip_data_init:
     # Initialize ConfigManager
@@ -74,16 +76,13 @@ if not _skip_data_init:
                 athena_config=athena_config, model_key=model_key
             )
 
+    # Initialize DuckDB data fetchers
+    for model_key in MODEL_CONFIG.keys():
+        if MODEL_CONFIG[model_key]["source"] == "duckdb":
+            duckdb_data_fetchers[model_key] = DuckDBDataFetcher(model_key=model_key)
+
     # Initialize S3 data fetchers
-    s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
-        bucket_name="windwatts-era5",
-        prefix="era5_timeseries",
-        grid="era5",
-        s3_key_template="era5",
-    )
-    s3_data_fetchers["wtk-timeseries"] = S3DataFetcher(
-        bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
-    )
+    s3_data_fetchers["era5-timeseries"] = S3DataFetcher(model_key="era5-timeseries")
 
     # Register fetchers with DataFetcherRouter
     # Register with simple names: athena, s3 (not athena_era5, s3_era5)
@@ -95,6 +94,10 @@ if not _skip_data_init:
         if model_key in s3_data_fetchers:
             data_fetcher_router.register_fetcher(
                 f"s3_{model_key}", s3_data_fetchers[model_key]
+            )
+        if model_key in duckdb_data_fetchers:
+            data_fetcher_router.register_fetcher(
+                f"duckdb_{model_key}", duckdb_data_fetchers[model_key]
             )
 
 
@@ -509,6 +512,7 @@ def download_timeseries(
         ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
     ),
     gridIndex: str = Query(..., description="Grid index identifier"),
+    height: Optional[int] = Query(None, description="Height in meters"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
@@ -534,6 +538,7 @@ def download_timeseries(
 
     - **model**: Data model, for example, era5-timeseries or wtk-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
+    - **height**: Hub Height in meters
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
     - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
@@ -551,6 +556,7 @@ def download_timeseries(
             years,
             year_range,
             year_set,
+            height,
         )
 
         return StreamingResponse(
@@ -591,6 +597,7 @@ def download_timeseries_batch(
 
     - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
+      - **height**: Hub Height in meters
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -613,6 +620,7 @@ def download_timeseries_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
+                    payload.height,
                 )
                 file_name = f"wind_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
@@ -740,6 +748,7 @@ def post_energy_timeseries(
             payload.years,
             payload.year_range,
             payload.year_set,
+            payload.height,
         )
 
         return StreamingResponse(
@@ -776,6 +785,7 @@ def download_timeseries_energy_batch(
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **turbine**:  Turbine name (built-in reference only), ignored for custom power curve.
+      - **height**: Hub Height in meters.
       - **custom_power_curve**: Power curve data (required for custom curve)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -800,6 +810,7 @@ def download_timeseries_energy_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
+                    payload.height,
                 )
                 file_name = f"wind_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)

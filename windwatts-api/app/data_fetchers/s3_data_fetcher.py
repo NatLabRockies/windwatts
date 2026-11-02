@@ -5,28 +5,19 @@ from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from botocore.config import Config
 from .abstract_data_fetcher import AbstractDataFetcher
+from app.config.model_config import MODEL_CONFIG
 
 MIN_POOL_WORKERS = 1
 
-s3_key_templates = {
-    "era5": "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
-    "wtk": "{prefix}/year={year}/varset=all/index={index}/{index}_{year}_all.csv.gz",
-}
-
 
 class S3DataFetcher(AbstractDataFetcher):
-    def __init__(self, bucket_name: str, prefix: str, s3_key_template: str, grid: str):
+    def __init__(self, model_key: str):
         """
         Initializes the S3DataFetcher with the given bucket.
         Parameters:
-            bucket_name (str): The s3 bucket name.
-            prefix (str): The s3 prefix the specifies folder inside a bucket.
-            s3_key_template(str): The s3 key template to download files.
-            grid (str): The grid of the data. "era5" or "wtk"
+            model_key(str): Key into config["sources"], e.g. "wtk-timeseries" or "era5-timeseries". Same as MODEL_CONFIG keys.
         """
-        print(
-            f"Initializing S3 Data Fetcher: bucket: {bucket_name} prefix: {prefix} grid: {grid} ..."
-        )
+        print(f"Initializing S3 Data Fetcher for '{model_key}'")
         self.s3_client = boto3.client(
             "s3",
             config=Config(
@@ -34,14 +25,10 @@ class S3DataFetcher(AbstractDataFetcher):
                 tcp_keepalive=True,
             ),
         )
-        self.bucket = bucket_name
-        self.prefix = prefix
-        self.grid = grid
-        if s3_key_template not in s3_key_templates:
-            raise ValueError(
-                f"Unknown s3_key_template '{s3_key_template}', expected one of {list(s3_key_templates)}"
-            )
-        self.s3_key_template = s3_key_templates[s3_key_template]
+        self.bucket = MODEL_CONFIG[model_key]["s3"]["bucket"]
+        self.prefix = MODEL_CONFIG[model_key]["s3"]["prefix"]
+        self.partition_template = MODEL_CONFIG[model_key]["s3"]["partition_template"]
+        self.partition_columns = MODEL_CONFIG[model_key]["s3"]["partition_columns"]
 
     def generate_s3_keys(self, grid_Indices: List[str], years: List[int]) -> List[str]:
         """
@@ -56,7 +43,7 @@ class S3DataFetcher(AbstractDataFetcher):
         for year in years:
             for index in grid_Indices:
                 # uri specific to era5 timeseries, might change for ensemble timeseries as it might not have year.
-                key = self.s3_key_template.format(
+                key = self.partition_template.format(
                     prefix=self.prefix, year=year, index=index
                 )
                 keys.append(key)
@@ -82,7 +69,7 @@ class S3DataFetcher(AbstractDataFetcher):
             return df
         except Exception as e:
             print(f"Warning: Failed to fetch {key}: {e}")
-            return None
+            raise
 
     def fetch_data(
         self,
