@@ -59,7 +59,6 @@ s3_data_fetchers = {}
 if not _skip_data_init:
     # Initialize ConfigManager
     config_manager = ConfigManager(
-        secret_arn_env_var="WINDWATTS_DATA_CONFIG_SECRET_ARN",
         local_config_path="./app/config/windwatts_data_config.json",
     )
     athena_config = AthenaConfig(**config_manager.get_config())

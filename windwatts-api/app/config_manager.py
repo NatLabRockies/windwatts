@@ -1,52 +1,35 @@
 import os
 import json
-import boto3
 
 
 class ConfigManager:
-    def __init__(
-        self,
-        secret_arn_env_var: str,
-        local_config_path: str = None,
-        region_name="us-west-2",
-    ):
+    def __init__(self, local_config_path: str = None):
         """
-        Initialize the ConfigManager with the ARN of the secret.
+        Initialize the ConfigManager.
 
-        :param secret_arn_env_var: The environment variable name that contains the ARN of the secret.
         :param local_config_path: The path to the local configuration file.
         """
-        self.secret_arn = os.getenv(secret_arn_env_var)
         self.local_config_path = local_config_path
-        self.client = boto3.client("secretsmanager", region_name=region_name)
 
     def get_config(self) -> dict:
         """
-        Retrieve the secret from AWS Secrets Manager, environment variables, or the local configuration file.
+        Retrieve the config from environment variables, or the local configuration file.
         :return: The dict with config keys.
         """
-        # Try to retrieve the secret from AWS Secrets Manager
-        if self.secret_arn:
-            try:
-                response = self.client.get_secret_value(SecretId=self.secret_arn)
-                return json.loads(response["SecretString"])
-            except self.client.exceptions.ClientError as e:
-                print(f"Unable to retrieve secret: {e}")
-
         # Try to retrieve config from environment variables
         env_config = self._get_config_from_env()
         if env_config:
             print("Config loaded from environment variables.")
             return env_config
 
-        # Fallback: return the path to the local configuration file
+        # Fallback: load the local configuration file
         if self.local_config_path and os.path.exists(self.local_config_path):
             with open(self.local_config_path, "r") as f:
                 print(f"Loaded config from local path '{self.local_config_path}'")
                 return json.load(f)
 
         raise FileNotFoundError(
-            "Local configuration file not found and unable to retrieve secret from AWS Secrets Manager or environment variables."
+            "Local configuration file not found and required config environment variables are not set."
         )
 
     def _get_config_from_env(self):

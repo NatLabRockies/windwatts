@@ -41,14 +41,13 @@ def pytest_configure(config):
     # Skip real data initialization (spatial lookups, AWS clients)
     os.environ["SKIP_DATA_INIT"] = "1"
 
-    # Still need boto3 mocks for other AWS services (like secrets manager in config_manager)
+    # Mock boto3 clients so no real AWS calls are made
     mock_s3_client = MagicMock()
     mock_athena_client = MagicMock()
 
     _mock_clients = {
         "athena": mock_athena_client,
         "s3": mock_s3_client,
-        "secretsmanager": MagicMock(),
     }
 
     def mock_boto3_client(service_name, *args, **kwargs):

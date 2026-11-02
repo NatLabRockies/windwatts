@@ -14,8 +14,8 @@ os.environ["SOURCES_WTK_ATHENA_TABLE_NAME"] = "wtk_table"
 os.environ["SOURCES_ERA5_BUCKET_NAME"] = "era5-bucket"
 os.environ["SOURCES_ERA5_ATHENA_TABLE_NAME"] = "era5_table"
 
-# Instantiate ConfigManager (no secret ARN, no local file)
-cm = ConfigManager(secret_arn_env_var="DUMMY_SECRET_ARN", local_config_path=None)
+# Instantiate ConfigManager (no local file)
+cm = ConfigManager(local_config_path=None)
 
 # Get config (now returns a dict, not a file path)
 config = cm.get_config()
