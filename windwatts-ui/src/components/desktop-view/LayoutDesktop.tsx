@@ -9,7 +9,6 @@ export function LayoutDesktop() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       <Box sx={{ flexGrow: 0 }}>
-        {/* DO NOT DELETE: previous NREL Color: #027dbc */}
         <AppHeader />
       </Box>
 
