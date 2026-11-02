@@ -2,8 +2,6 @@ services:
   windwatts-api:
     build:
       context: ./windwatts-api
-      args:
-        WINDWATTS_DATA_URL: ${WINDWATTS_DATA_URL}
     container_name: windwatts-api
     environment:
       - APP_HOME=/app
