@@ -1,14 +1,12 @@
 import { Box, Container, Typography } from "@mui/material";
-import { ReactNode } from "react";
 
 interface PageHeroProps {
   title: string;
   subtitle?: string;
-  children?: ReactNode;
 }
 
 // Hero banner used at the top of content pages (About, Research)
-export const PageHero = ({ title, subtitle, children }: PageHeroProps) => (
+export const PageHero = ({ title, subtitle }: PageHeroProps) => (
   <Box
     sx={{
       background: "var(--content-hero-gradient)",
@@ -29,7 +27,6 @@ export const PageHero = ({ title, subtitle, children }: PageHeroProps) => (
           {subtitle}
         </Typography>
       )}
-      {children}
     </Container>
   </Box>
 );
