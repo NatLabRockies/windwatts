@@ -25,23 +25,18 @@ def pytest_configure(config):
     # Use clearly fake values so accidental real AWS calls are impossible
     os.environ["REGION_NAME"] = "us-east-1"
     os.environ["OUTPUT_LOCATION"] = "s3://test-fake-bucket/"
-    os.environ["OUTPUT_BUCKET"] = "test-fake-bucket"
     os.environ["DATABASE"] = "test_fake_database"
     os.environ["ATHENA_WORKGROUP"] = "test_fake_workgroup"
 
     # Source-specific env vars using model keys
     os.environ["SOURCES_ENSEMBLE-QUANTILES_BUCKET_NAME"] = "test-fake-era5"
     os.environ["SOURCES_ENSEMBLE-QUANTILES_ATHENA_TABLE_NAME"] = "test_ensemble"
-    os.environ["SOURCES_ENSEMBLE-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
     os.environ["SOURCES_ERA5-QUANTILES_BUCKET_NAME"] = "test-fake-era5"
     os.environ["SOURCES_ERA5-QUANTILES_ATHENA_TABLE_NAME"] = "test_era5"
-    os.environ["SOURCES_ERA5-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
     os.environ["SOURCES_WTK-TIMESERIES_BUCKET_NAME"] = "test-fake-wtk"
     os.environ["SOURCES_WTK-TIMESERIES_ATHENA_TABLE_NAME"] = "test_wtk_1224"
-    os.environ["SOURCES_WTK-TIMESERIES_ALT_ATHENA_TABLE_NAME"] = ""
     os.environ["SOURCES_WEM-QUANTILES_BUCKET_NAME"] = "test-fake-wem"
     os.environ["SOURCES_WEM-QUANTILES_ATHENA_TABLE_NAME"] = "test_wem"
-    os.environ["SOURCES_WEM-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
 
     # Skip real data initialization (spatial lookups, AWS clients)
     os.environ["SKIP_DATA_INIT"] = "1"
