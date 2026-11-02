@@ -1,4 +1,5 @@
 export { useGeolocation } from "./useGeolocation";
+export { useToast } from "./useToast";
 export { useGoogleMaps } from "./useGoogleMaps";
 export { useLocalStorage } from "./useLocalStorage";
 export { useMapView } from "./useMapView";

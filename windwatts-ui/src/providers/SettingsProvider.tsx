@@ -14,39 +14,22 @@ import {
 } from "./SettingsContext";
 import { UnitsContext } from "./UnitsContext";
 import { DataModel } from "../types";
-import type { CustomPowerCurve } from "../types";
-import { percentToFactor } from "../utils";
+import { percentToFactor, isCustomTurbineId } from "../utils";
+import { useCustomTurbines } from "../hooks/useCustomTurbines";
+import { useToast } from "../hooks/useToast";
 import {
   parseUrlParams,
   buildUrlFromSettings,
   hasLaunchParams,
   URL_PARAM_DEFAULTS,
 } from "../utils/urlParams";
-import { idbGetAll, idbDelete, STORES } from "../services/idb";
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { updateUnit } = useContext(UnitsContext);
+  const { showToast } = useToast();
 
   // Parse URL params once and cache the result
   const urlParamsRef = useRef(parseUrlParams());
-
-  const [customCurves, setCustomCurves] = useState<CustomPowerCurve[]>([]);
-
-  useEffect(() => {
-    idbGetAll<CustomPowerCurve>(STORES.CUSTOM_TURBINES)
-      .then((list) => list.sort((a, b) => a.createdAt - b.createdAt))
-      .then(setCustomCurves)
-      .catch(console.error);
-  }, []);
-
-  const addCustomCurve = useCallback((curve: CustomPowerCurve) => {
-    setCustomCurves((prev) => [...prev, curve]);
-  }, []);
-
-  const removeCustomCurve = useCallback((id: string) => {
-    idbDelete(STORES.CUSTOM_TURBINES, id).catch(console.error);
-    setCustomCurves((prev) => prev.filter((c) => c.id !== id));
-  }, []);
 
   const [settings, setSettings] = useState<StoredSettings>(() => {
     const urlParams = urlParamsRef.current;
@@ -77,6 +60,41 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     };
   });
 
+  const resolveInitialTurbine = useCallback(
+    (requested: string, resolved: string) => {
+      setSettings((current) =>
+        current.turbine === requested
+          ? { ...current, turbine: resolved }
+          : current
+      );
+    },
+    []
+  );
+
+  const {
+    customCurves,
+    addCustomCurve,
+    removeCustomCurve,
+    ready,
+    hasMultipleMatches,
+  } = useCustomTurbines(
+    hasLaunchParams(urlParamsRef.current) &&
+      isCustomTurbineId(urlParamsRef.current.turbine ?? "")
+      ? urlParamsRef.current.turbine
+      : undefined,
+    resolveInitialTurbine
+  );
+
+  useEffect(() => {
+    if (hasMultipleMatches) {
+      showToast({
+        message:
+          "Multiple curves match this shared link. Using the oldest import.",
+        severity: "warning",
+      });
+    }
+  }, [hasMultipleMatches, showToast]);
+
   useEffect(() => {
     const urlParams = urlParamsRef.current;
     if (urlParams.windspeedUnit) {
@@ -85,7 +103,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, [updateUnit]);
 
   useEffect(() => {
-    if (!settings.currentPosition) {
+    if (!settings.currentPosition || !ready) {
       return;
     }
 
@@ -93,6 +111,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       currentPosition: settings.currentPosition,
       hubHeight: settings.hubHeight,
       turbine: settings.turbine,
+      customCurves,
       preferredModel: settings.preferredModel,
       lossAssumptionPercent: Math.round(
         (1 - settings.lossAssumptionFactor) * 100
@@ -112,6 +131,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     settings.preferredModel,
     settings.lossAssumptionFactor,
     settings.windspeedUnit,
+    customCurves,
+    ready,
   ]);
 
   const setCurrentPosition = useCallback(

@@ -25,8 +25,10 @@ export const useWindRoseData = (
 
   const isCustomTurbine = isCustomTurbineId(turbine);
   const customCurve = resolveCustomCurve(turbine, customCurves);
+  const needsCustomCurve = roseType === "power" && isCustomTurbine;
+  const curveReady = !needsCustomCurve || customCurve !== null;
 
-  const shouldFetch = !!(gridIndex && hubHeight && dataModel);
+  const shouldFetch = !!(gridIndex && hubHeight && dataModel && curveReady);
 
   const swrKey = useMemo(() => {
     if (!shouldFetch) return null;

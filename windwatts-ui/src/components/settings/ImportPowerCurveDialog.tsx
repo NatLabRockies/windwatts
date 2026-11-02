@@ -9,13 +9,18 @@ import {
   Box,
   Alert,
 } from "@mui/material";
-import { CheckCircleOutline, UploadFile } from "@mui/icons-material";
+import { UploadFile } from "@mui/icons-material";
 import { useRef, useState, useContext } from "react";
 import { parsePowerCurveCSV, readFileAsText } from "../../services/upload";
 import { idbPut, STORES } from "../../services/idb";
-import { parseOptionalHeight, validateHubHeightRange } from "../../utils";
+import {
+  fingerprintCustomCurve,
+  parseOptionalHeight,
+  validateHubHeightRange,
+} from "../../utils";
 import type { CustomPowerCurve } from "../../types";
 import { SettingsContext } from "../../providers/SettingsContext";
+import { useToast } from "../../hooks/useToast";
 
 interface ImportPowerCurveDialogProps {
   open: boolean;
@@ -29,6 +34,7 @@ export function ImportPowerCurveDialog({
   onSelectNow,
 }: ImportPowerCurveDialogProps) {
   const { addCustomCurve, setTurbine } = useContext(SettingsContext);
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [curveName, setCurveName] = useState("");
@@ -109,11 +115,16 @@ export function ImportPowerCurveDialog({
           ? { minHeight: parsedMin, maxHeight: parsedMax }
           : {}),
       };
+      curve.fingerprint = await fingerprintCustomCurve(curve);
       // 4. save to IndexedDB and update context
       await idbPut(STORES.CUSTOM_TURBINES, curve);
       addCustomCurve(curve);
       // 5. show success view
       setImportedCurve(curve);
+      showToast({
+        message: `“${curve.name}” imported!`,
+        severity: "success",
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to import power curve."
@@ -140,9 +151,8 @@ export function ImportPowerCurveDialog({
                 gap: 1.5,
               }}
             >
-              <CheckCircleOutline color="success" sx={{ fontSize: 48 }} />
               <Typography variant="subtitle1" fontWeight={600}>
-                &ldquo;{importedCurve.name}&rdquo; imported!
+                {importedCurve.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 You can select it from the <strong>turbine selector</strong>
