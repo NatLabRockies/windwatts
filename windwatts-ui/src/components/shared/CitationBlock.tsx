@@ -1,25 +1,29 @@
-import { useState } from "react";
-import { Alert, Box, Button, Snackbar, Stack, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import {
-  SNACKBAR_DURATION_SUCCESS,
-  SNACKBAR_DURATION_ERROR,
-} from "../../constants";
+import { SNACKBAR_DURATION_ERROR } from "../../constants";
+import { useToast } from "../../hooks/useToast";
 
 interface CitationBlockProps {
   citation: string;
 }
 
 export const CitationBlock = ({ citation }: CitationBlockProps) => {
-  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const { showToast } = useToast();
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(citation);
-      setStatus("success");
+      showToast({
+        message: "Citation copied to clipboard!",
+        severity: "success",
+      });
     } catch (error) {
       console.error("Failed to copy citation to clipboard:", error);
-      setStatus("error");
+      showToast({
+        message: "Failed to copy citation. Please try again.",
+        severity: "error",
+        duration: SNACKBAR_DURATION_ERROR,
+      });
     }
   };
 
@@ -43,28 +47,6 @@ export const CitationBlock = ({ citation }: CitationBlockProps) => {
           Copy
         </Button>
       </Stack>
-
-      <Snackbar
-        open={status !== null}
-        autoHideDuration={
-          status === "error"
-            ? SNACKBAR_DURATION_ERROR
-            : SNACKBAR_DURATION_SUCCESS
-        }
-        onClose={() => setStatus(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setStatus(null)}
-          severity={status ?? "success"}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {status === "error"
-            ? "Failed to copy citation. Please select and copy the text."
-            : "Citation copied to clipboard!"}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };
