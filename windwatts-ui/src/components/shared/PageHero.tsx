@@ -1,0 +1,32 @@
+import { Box, Container, Typography } from "@mui/material";
+
+interface PageHeroProps {
+  title: string;
+  subtitle?: string;
+}
+
+// Hero banner used at the top of content pages (About, Research)
+export const PageHero = ({ title, subtitle }: PageHeroProps) => (
+  <Box
+    sx={{
+      background: "var(--content-hero-gradient)",
+      color: "#fff",
+      py: { xs: 6, md: 9 },
+    }}
+  >
+    <Container maxWidth="md">
+      <Typography variant="h3" component="h1" fontWeight={700} gutterBottom>
+        {title}
+      </Typography>
+      {subtitle && (
+        <Typography
+          variant="h6"
+          component="p"
+          sx={{ opacity: 0.9, fontWeight: 400, maxWidth: 720 }}
+        >
+          {subtitle}
+        </Typography>
+      )}
+    </Container>
+  </Box>
+);

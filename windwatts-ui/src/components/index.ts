@@ -1,6 +1,8 @@
 // Main components
 export { Layout } from "./Layout";
 export { MapView } from "./MapView";
+export { AppHeader } from "./AppHeader";
+export { ContentPageLayout } from "./ContentPageLayout";
 
 // Desktop components - all exported from desktop-view
 export { LayoutDesktop, MapViewDesktop } from "./desktop-view";

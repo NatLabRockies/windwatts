@@ -6,4 +6,8 @@ export { LoadingBackdrop } from "./LoadingBackdrop";
 export { DownloadButton } from "./DownloadButton";
 export { DownloadDialog } from "./DownloadDialog";
 export { ModelSourceChip } from "./ModelSourceChip";
+export { PageHero } from "./PageHero";
+export { PageSection } from "./PageSection";
+export { FigureLightbox } from "./FigureLightbox";
+export { CitationBlock } from "./CitationBlock";
 export * from "./CardStates";
