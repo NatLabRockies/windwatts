@@ -114,7 +114,11 @@ export const ResearchPage = () => (
                   />
                 </Stack>
               </Stack>
-              <FigureLightbox src={pub.chartImage} caption={pub.chartCaption} />
+              <FigureLightbox
+                src={pub.chartImage}
+                caption={pub.chartCaption}
+                crop={pub.chartCrop}
+              />
               <Typography
                 variant="body2"
                 color="text.secondary"

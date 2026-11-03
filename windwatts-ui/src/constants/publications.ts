@@ -9,6 +9,7 @@ export interface Publication {
   link?: string;
   chartImage?: string;
   chartCaption?: string;
+  chartCrop?: boolean;
 }
 
 // Images: in public/assets/publications/, named {publication id}-{figure description}.{ext}.
@@ -71,6 +72,7 @@ export const PUBLICATIONS: Publication[] = [
       "/assets/publications/sheridan-short-term-correction-2025-bias-by-training-length.png",
     chartCaption:
       "Average long-term bias magnitude for 66 sites comparing observations with ERA5 and measure-correlate-predict techniques using varying training period lengths.",
+    chartCrop: true,
   },
   {
     id: "sheridan-coastal-datasets-2025",
@@ -92,6 +94,7 @@ export const PUBLICATIONS: Publication[] = [
       "/assets/publications/sheridan-coastal-datasets-2025-bias-relative-error.png",
     chartCaption:
       "Wind speed (a) bias and (b) relative error according to locations with land-dominant and water-dominant wind flow.",
+    chartCrop: true,
   },
   {
     id: "phillips-torque-2024",
@@ -169,6 +172,7 @@ export const PUBLICATIONS: Publication[] = [
       "/assets/publications/sheridan-wind-validation-2022-annual-wind-speed-bias.png",
     chartCaption:
       "Annual average wind speed biases calculated using each model’s nearest neighbor (NN) grid point and via inverse distance weighted interpolation (Int).",
+    chartCrop: true,
   },
   {
     id: "duplyakin-bias-interpolation-2021",
