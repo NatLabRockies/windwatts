@@ -15,9 +15,10 @@ import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 interface FigureLightboxProps {
   src?: string;
   caption?: string;
+  crop?: boolean;
 }
 
-export const FigureLightbox = ({ src, caption }: FigureLightboxProps) => {
+export const FigureLightbox = ({ src, caption, crop }: FigureLightboxProps) => {
   const [open, setOpen] = useState(false);
 
   if (!src) {
@@ -64,7 +65,8 @@ export const FigureLightbox = ({ src, caption }: FigureLightboxProps) => {
             display: "block",
             width: "100%",
             height: { xs: 220, sm: 300 },
-            objectFit: "contain",
+            objectFit: crop ? "cover" : "contain",
+            objectPosition: crop ? "top" : "center",
           }}
         />
         <Stack
