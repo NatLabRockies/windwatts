@@ -5,16 +5,17 @@ from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from botocore.config import Config
 from .abstract_data_fetcher import AbstractDataFetcher
-from app.config.model_config import MODEL_CONFIG
+from app.schemas import S3Config
 
 MIN_POOL_WORKERS = 1
 
 
 class S3DataFetcher(AbstractDataFetcher):
-    def __init__(self, model_key: str):
+    def __init__(self, s3_config: S3Config, model_key: str):
         """
         Initializes the S3DataFetcher with the given bucket.
         Parameters:
+            s3_config(S3Config): Config dict containing s3 bucket info like bucket_name, prefix/folder, partition template and columns.
             model_key(str): Key into config["sources"], e.g. "wtk-timeseries" or "era5-timeseries". Same as MODEL_CONFIG keys.
         """
         print(f"Initializing S3 Data Fetcher for '{model_key}'")
@@ -25,10 +26,10 @@ class S3DataFetcher(AbstractDataFetcher):
                 tcp_keepalive=True,
             ),
         )
-        self.bucket = MODEL_CONFIG[model_key]["s3"]["bucket"]
-        self.prefix = MODEL_CONFIG[model_key]["s3"]["prefix"]
-        self.partition_template = MODEL_CONFIG[model_key]["s3"]["partition_template"]
-        self.partition_columns = MODEL_CONFIG[model_key]["s3"]["partition_columns"]
+        self.bucket = s3_config.bucket
+        self.prefix = s3_config.prefix
+        self.partition_template = s3_config.partition_template
+        self.partition_columns = s3_config.partition_columns
 
     def generate_s3_keys(self, grid_Indices: List[str], years: List[int]) -> List[str]:
         """
