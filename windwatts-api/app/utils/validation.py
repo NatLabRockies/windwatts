@@ -234,12 +234,21 @@ def validate_year_set(year_set: str) -> str:
     """
     Validate year set for timeseries data download
     """
-    if year_set not in ["sample", "full"]:
+    VALID_YEAR_SETS = (
+        "full",
+        "sample",
+    )
+    if year_set not in VALID_YEAR_SETS:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid year_set: {year_set}. Valid year sets: ['sample', 'full']",
+            detail=f"Invalid year_set: {year_set}. Valid year sets: {list(VALID_YEAR_SETS)}",
         )
     return year_set
+
+
+def validate_heights(heights: list[int], model: str) -> list[int]:
+    """Validate an explicit list of windspeed heights (native or interpolatable)."""
+    return [validate_height(model, h, "windspeed") for h in heights]
 
 
 def validate_years(years: list[int], model: str) -> list[int]:
