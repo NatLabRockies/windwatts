@@ -44,6 +44,7 @@ from app.schemas import (
     RoseResponse,
     ProductionRequestPayload,
     AthenaConfig,
+    S3Config,
 )
 
 router = APIRouter()
@@ -75,7 +76,10 @@ if not _skip_data_init:
             )
 
     # Initialize S3 data fetchers
-    s3_data_fetchers["era5-timeseries"] = S3DataFetcher(model_key="era5-timeseries")
+    s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
+        s3_config=S3Config(**MODEL_CONFIG["era5-timeseries"]["s3"]),
+        model_key="era5-timeseries",
+    )
 
     # Register fetchers with DataFetcherRouter
     # Register with simple names: athena, s3 (not athena_era5, s3_era5)
@@ -501,7 +505,7 @@ def download_timeseries(
         ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
     ),
     gridIndex: str = Query(..., description="Grid index identifier"),
-    height: Optional[int] = Query(None, description="Height in meters"),
+    heights: Optional[List[int]] = Query(None, description="List of Heights in meters"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
@@ -527,7 +531,7 @@ def download_timeseries(
 
     - **model**: Data model, for example, era5-timeseries or wtk-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
-    - **height**: Hub Height in meters
+    - **heights**: List of hub heights in meters (optional; defaults to all available heights, interpolated when non-native)
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
     - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
@@ -545,7 +549,7 @@ def download_timeseries(
             years,
             year_range,
             year_set,
-            height,
+            heights,
         )
 
         return StreamingResponse(
@@ -586,7 +590,7 @@ def download_timeseries_batch(
 
     - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
-      - **height**: Hub Height in meters
+      - **heights**: List of hub heights in meters (optional)
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -609,7 +613,7 @@ def download_timeseries_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
-                    payload.height,
+                    payload.heights,
                 )
                 file_name = f"wind_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
@@ -737,7 +741,7 @@ def post_energy_timeseries(
             payload.years,
             payload.year_range,
             payload.year_set,
-            payload.height,
+            payload.heights,
         )
 
         return StreamingResponse(
@@ -774,7 +778,7 @@ def download_timeseries_energy_batch(
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **turbine**:  Turbine name (built-in reference only), ignored for custom power curve.
-      - **height**: Hub Height in meters.
+      - **heights**: List of hub heights in meters (optional).
       - **custom_power_curve**: Power curve data (required for custom curve)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -799,7 +803,7 @@ def download_timeseries_energy_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
-                    payload.height,
+                    payload.heights,
                 )
                 file_name = f"wind_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
