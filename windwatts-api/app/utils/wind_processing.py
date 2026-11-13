@@ -36,9 +36,11 @@ def resolve_heights(target_height: int, available_heights: list[int]) -> dict:
     }
 
 
-def _power_law(v_ref: pd.Series, h_target: int, h_ref: int) -> pd.Series:
-    """Neutral Power Law: V(h) = V_ref * (h / h_ref) ^ (1/7)"""
-    alpha = 1 / 7
+def _power_law(
+    v_ref: pd.Series, h_target: int, h_ref: int, alpha: float = 1 / 7
+) -> pd.Series:
+    """Power Law: V(h) = V_ref * (h / h_ref) ^ alpha
+    alpha default to 1/7 for neutral stability if alpha not provided."""
     return v_ref * (h_target / h_ref) ** alpha
 
 
@@ -58,7 +60,7 @@ def interpolate_windspeed_linear(
     return result
 
 
-def interpolate_windspeed_power_law(
+def interpolate_windspeed_power_law_quantiles(
     df: pd.DataFrame, target_height: int, lower: int, upper: int
 ) -> pd.DataFrame:
     """
@@ -82,8 +84,33 @@ def interpolate_windspeed_power_law(
     return result
 
 
+def interpolate_windspeed_power_law_timeseries(
+    df: pd.DataFrame, target_height: int, lower: int, upper: int
+) -> pd.DataFrame:
+    """
+    Add windspeed_{target_height}m column via local power law interpolation.
+    Solves the shear exponent per row from the two bracketing heights, because
+    paired timeseries rows (same hour, same air column) lie on one real wind
+    profile. The resulting curve passes through BOTH known heights exactly, so
+    no averaging is needed, projecting from either anchor gives the same value.
+
+    Returns new DataFrame (does not mutate input).
+    """
+    result = df.copy()
+    v_lower = result[f"windspeed_{lower}m"]
+    v_upper = result[f"windspeed_{upper}m"]
+
+    alpha = np.log(v_upper / v_lower) / np.log(upper / lower)
+
+    result[f"windspeed_{target_height}m"] = _power_law(
+        v_lower, target_height, lower, alpha
+    ).round(2)
+
+    return result
+
+
 # Default interpolation method
-interpolate_windspeed = interpolate_windspeed_power_law
+interpolate_windspeed = interpolate_windspeed_power_law_quantiles
 
 
 def aggregate(df: pd.DataFrame, height: int, period: str) -> dict:

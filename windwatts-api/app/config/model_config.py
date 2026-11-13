@@ -85,6 +85,12 @@ MODEL_CONFIG = {
             "spatial_resolution": "31 km",
             "temporal_resolution": "1 hour",
         },
+        "s3": {
+            "bucket": "windwatts-era5",
+            "prefix": "era5_quantiles",
+            "partition_template": "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
+            "partition_columns": ["year", "index"],
+        },
         "links": ["https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5"],
         "references": [
             'Phillips, C., L. M. Sheridan, P. Conry, D. K. Fytanidis, D. Duplyakin, S. Zisman, N. Duboc, M. Nelson, R. Kotamarthi, R. Linn, M. Broersma, T. Spijkerboer, and H. Tinnesand. 2022. "Evaluation of Obstacle Modelling Approaches for Resource Assessment and Small Wind Turbine Siting: Case Study in the Northern Netherlands." Wind Energy Science 7: 1153-1169. https://doi.org/10.5194/wes-7-1153-2022'
@@ -108,6 +114,12 @@ MODEL_CONFIG = {
             "spatial_resolution": "2 km",
             "temporal_resolution": "1 hour",
         },
+        "s3": {
+            "bucket": "wtk-led",
+            "prefix": "1224",
+            "partition_template": "{prefix}/year={year}/varset=all/index={index}/{index}_{year}_all.csv.gz",
+            "partition_columns": ["year", "index"],
+        },
         "links": ["https://www.nlr.gov/grid/wind-toolkit"],
         "references": [
             "Draxl, C., B.M. Hodge, A. Clifton, and J. McCaa. 2015. Overview and Meteorological Validation of the Wind Integration National Dataset Toolkit (Technical Report, NREL/TP-5000-61740). Golden, CO: National Laboratory of the Rockies",
@@ -130,6 +142,12 @@ MODEL_CONFIG = {
             "spatial_resolution": "31 km",
             "temporal_resolution": "1 hour",
         },
+        "s3": {
+            "bucket": "windwatts-era5",
+            "prefix": "ensemble",
+            "partition_template": "{prefix}/index={index}/{index}.csv.gz",
+            "partition_columns": ["index"],
+        },
         "links": [],
         "references": [
             "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for High-Accuracy Wind Resource Assessment to Support Distributed Wind Turbine Siting."
@@ -150,6 +168,12 @@ MODEL_CONFIG = {
             "spatial_resolution": "250m",
             "temporal_resolution": "1 hour",
         },
+        "s3": {
+            "bucket": "windwatts-era5",
+            "prefix": "ensemble_101_gwa_na",
+            "partition_template": "{prefix}/tile={tile}/data.parquet",
+            "partition_columns": ["tile"],
+        },
         "links": [],
         "references": [
             "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for High-Accuracy Wind Resource Assessment to Support Distributed Wind Turbine Siting."
@@ -163,7 +187,7 @@ MODEL_CONFIG = {
             "windspeed": [10, 30, 40, 50, 60, 80, 100],
             "winddirection": [10, 100],
         },
-        "interpolation": False,
+        "interpolation": True,
         "grid": "era5",
         "grid_info": {
             "min_lat": 23.402,
@@ -172,6 +196,12 @@ MODEL_CONFIG = {
             "max_long": -44.224,
             "spatial_resolution": "31 km",
             "temporal_resolution": "1 hour",
+        },
+        "s3": {
+            "bucket": "windwatts-era5",
+            "prefix": "era5_timeseries",
+            "partition_template": "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
+            "partition_columns": ["year", "index"],
         },
         "links": ["https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5"],
         "references": [
