@@ -21,15 +21,20 @@ export const PUBLICATIONS: Publication[] = [
     status: "Preprint · In review · 2026",
     title:
       "Methods for high-accuracy wind resource assessment to support distributed wind turbine siting",
-    summary: "[One- to two-sentence summary to be provided by the team.]",
+    summary:
+      "Public wind resource datasets are central to distributed wind planning, yet their site-level accuracy at hub height is only partially quantified. This work develops a unified, observation-based benchmark of the most common models and proposes a machine-learned ensemble approach that combines multiple models to address the shortcomings of individual ones.",
     takeaways: [
-      "[Key takeaway 1 to be provided by the team.]",
-      "[Key takeaway 2 to be provided by the team.]",
-      "[Key takeaway 3 to be provided by the team.]",
+      "Summarizing wind speeds with a statistical quantile representation allows products with different periods of record to be compared without temporal overlap, and evaluates both wind speed distribution errors and site-level mean biases.",
+      "The ensemble method reduces quantile-dependent mean bias to near zero across the distribution and lowers mean absolute bias in long-term mean wind speed by roughly one-third relative to the best-performing individual dataset.",
+      "Machine learning can meaningfully correct and combine existing public datasets, providing more reliable, distributional wind resource information for early-stage assessment and planning.",
     ],
     citation:
       "Kevin Menear, Sameer Shaik, Lindsay Sheridan, Dmitry Duplyakin, and Caleb Phillips. Methods for high-accuracy wind resource assessment to support distributed wind turbine siting. Wind Energy Science Discussions [preprint], in review. 2026. https://doi.org/10.5194/wes-2026-75",
     link: "https://doi.org/10.5194/wes-2026-75",
+    chartImage:
+      "/assets/publications/menear-high-accuracy-2026-wem-workflow.png",
+    chartCaption:
+      "The WindWatts Ensemble Model (WEM) leverages data from multiple models and hundreds of measurement sites to build a consensus wind speed estimate that is better performing than any existing model.",
   },
   {
     id: "sheridan-loss-factors-2026",
