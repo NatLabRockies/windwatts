@@ -7,27 +7,23 @@
   "sources": {
     "wtk-timeseries": {
       "bucket_name": "sample-bucket",
-      "athena_table_name": "sample_table",
-      "alt_athena_table_name": "sample_alt_table",
-      "capabilities": { "avg_types": ["all", "annual", "monthly", "hourly"] }
+      "athena_table_name": "sample_table"
     },
     "era5-quantiles": {
       "bucket_name": "sample-bucket",
-      "athena_table_name": "sample_table",
-      "alt_athena_table_name": "sample_alt_table",
-      "capabilities": { "avg_types": ["all", "annual"] }
+      "athena_table_name": "sample_table"
     },
     "ensemble-quantiles": {
       "bucket_name": "sample-bucket",
-      "athena_table_name": "sample_table",
-      "alt_athena_table_name": "sample_alt_table",
-      "capabilities": { "avg_types": ["all"] }
+      "athena_table_name": "sample_table"
     },
     "wem-quantiles": {
       "bucket_name": "sample-bucket",
-      "athena_table_name": "sample_table",
-      "alt_athena_table_name": "sample_alt_table",
-      "capabilities": { "avg_types": ["all"] }
+      "athena_table_name": "sample_table"
+    },
+    "era5-timeseries": {
+      "bucket_name": "sample-bucket",
+      "athena_table_name": ""
     }
   }
 }
