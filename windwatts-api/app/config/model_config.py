@@ -86,7 +86,6 @@ MODEL_CONFIG = {
             "temporal_resolution": "1 hour",
         },
         "s3": {
-            "bucket": "windwatts-era5",
             "prefix": "era5_quantiles",
             "partition_template": "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
             "partition_columns": ["year", "index"],
@@ -115,7 +114,6 @@ MODEL_CONFIG = {
             "temporal_resolution": "1 hour",
         },
         "s3": {
-            "bucket": "wtk-led",
             "prefix": "1224",
             "partition_template": "{prefix}/year={year}/varset=all/index={index}/{index}_{year}_all.csv.gz",
             "partition_columns": ["year", "index"],
@@ -143,7 +141,6 @@ MODEL_CONFIG = {
             "temporal_resolution": "1 hour",
         },
         "s3": {
-            "bucket": "windwatts-era5",
             "prefix": "ensemble",
             "partition_template": "{prefix}/index={index}/{index}.csv.gz",
             "partition_columns": ["index"],
@@ -169,7 +166,6 @@ MODEL_CONFIG = {
             "temporal_resolution": "1 hour",
         },
         "s3": {
-            "bucket": "windwatts-era5",
             "prefix": "ensemble_101_gwa_na",
             "partition_template": "{prefix}/tile={tile}/data.parquet",
             "partition_columns": ["tile"],
@@ -198,7 +194,6 @@ MODEL_CONFIG = {
             "temporal_resolution": "1 hour",
         },
         "s3": {
-            "bucket": "windwatts-era5",
             "prefix": "era5_timeseries",
             "partition_template": "{prefix}/year={year}/index={index}/{year}_{index}.csv.gz",
             "partition_columns": ["year", "index"],
