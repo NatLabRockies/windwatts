@@ -91,9 +91,8 @@ in **AWS SSM Parameter Store** and injected as environment variables.
 
 `ConfigManager.get_config()` resolves in this order:
 
-1. **AWS Secrets Manager** — if `WINDWATTS_DATA_CONFIG_SECRET_ARN` is set.
-2. **Environment variables** — the production path (SSM → env vars).
-3. **Local JSON** — `app/config/windwatts_data_config.json`, dev-only fallback.
+1. **Environment variables** — the production path (SSM → env vars).
+2. **Local JSON** — `app/config/windwatts_data_config.json`, dev-only fallback.
 
 ### Running the env-var path locally
 
@@ -109,7 +108,6 @@ gitignored (`.env`, `.env.*`), so real bucket names stay out of the repo.
 | --- | --- |
 | top-level `region_name` | `REGION_NAME` |
 | top-level `output_location` | `OUTPUT_LOCATION` |
-| top-level `output_bucket` | `OUTPUT_BUCKET` |
 | top-level `database` | `DATABASE` |
 | top-level `athena_workgroup` | `ATHENA_WORKGROUP` |
 | `sources.<model>.bucket_name` | `SOURCES_<MODEL>_BUCKET_NAME` |
@@ -130,7 +128,6 @@ Example `.env`:
 # Athena top-level
 REGION_NAME=<aws-region>
 OUTPUT_LOCATION=s3://<athena-results-bucket>/
-OUTPUT_BUCKET=<athena-results-bucket>
 DATABASE=<athena-database>
 ATHENA_WORKGROUP=<athena-workgroup>
 
@@ -149,8 +146,9 @@ SOURCES_ERA5_TIMESERIES_BUCKET_NAME=<bucket>
 ```
 
 Notes:
-- Do **not** set `WINDWATTS_DATA_CONFIG_SECRET_ARN` when testing the env path, or
-  the Secrets Manager path takes over.
+- All of `REGION_NAME`, `OUTPUT_LOCATION`, `DATABASE`, `ATHENA_WORKGROUP` plus at
+  least one valid source must be set, or the env path is skipped entirely and the
+  loader falls back to the local JSON.
 - If the env config is incomplete it silently falls back to the local JSON. To be
   sure the env path was used, look for `Config loaded from environment variables.`
   in the startup logs.
@@ -159,15 +157,8 @@ Notes:
 
 ### Running the env-var path in Docker
 
-Inject the file into the `windwatts-api` container by adding an `env_file` entry to
-its service in `docker-compose.yml`:
-
-```yaml
-  windwatts-api:
-    env_file:
-      - ./windwatts-api/.env
-```
-
-Leave `WINDWATTS_DATA_CONFIG_SECRET_ARN` unset so the env path is exercised.
+The `windwatts-api` service in `docker-compose.yml` already injects this file via
+`env_file: ./windwatts-api/.env`, so the vars above are available in the container
+on `docker compose up`.
 
 Enjoy!
