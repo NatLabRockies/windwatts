@@ -50,19 +50,27 @@ VITE_MAP_ID=YOUR_MAP_ID
   "database": "NAME_OF_THE_GLUE_DATABASE",
   "athena_workgroup": "NAME_OF_THE_ATHENA_WORKGROUP",
   "sources": {
-    "wtk": {
+    "wtk-timeseries": {
       "bucket_name": "NAME_OF_THE_WTK_S3_BUCKET",
-      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK",
-      "alt_athena_table_name": ""
+      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK"
     },
-    "era5": {
+    "era5-quantiles": {
       "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
-      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5",
-      "alt_athena_table_name": ""
+      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5"
+    },
+    "era5-timeseries": {
+      "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
+      "athena_table_name": ""
     }
   }
 }
 ```
+
+> Source keys must match the `MODEL_CONFIG` keys in `app/config/model_config.py`
+> (e.g. `wtk-timeseries`, `era5-quantiles`, `ensemble-quantiles`, `wem-quantiles`,
+> `era5-timeseries`). `athena` models need a `bucket_name` and `athena_table_name`;
+> the `s3`-only model (`era5-timeseries`) needs only a `bucket_name`. See the
+> backend README for the environment-variable equivalents used in production.
 
 ### 3. Run the App
 

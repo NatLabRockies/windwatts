@@ -82,4 +82,92 @@ For production deployment, the following items need to be configured by the clou
    - Include the AWS Secrets Manager ARN for database configuration
    - Configure necessary IAM roles for RDS access
 
+## Data Source Configuration (Athena / S3)
+
+The API resolves its wind-data source config (Athena DB/workgroup/tables and S3
+buckets) through `ConfigManager` (`app/config_manager.py`). Bucket names and other
+infra values are **not** committed to this repo — in production they are hand-created
+in **AWS SSM Parameter Store** and injected as environment variables.
+
+`ConfigManager.get_config()` resolves in this order:
+
+1. **AWS Secrets Manager** — if `WINDWATTS_DATA_CONFIG_SECRET_ARN` is set.
+2. **Environment variables** — the production path (SSM → env vars).
+3. **Local JSON** — `app/config/windwatts_data_config.json`, dev-only fallback.
+
+### Running the env-var path locally
+
+To replicate production locally, provide the values as env vars instead of relying
+on the local JSON. Create a `.env` in the api root (`windwatts-api/.env`) — it is
+gitignored (`.env`, `.env.*`), so real bucket names stay out of the repo.
+
+**Which values to put in:** mirror the structure of
+[`app/config/sample_windwatts_data_config.json`](app/config/sample_windwatts_data_config.json)
+(real values come from the team / SSM). Each JSON key maps to an env var:
+
+| JSON | Env var |
+| --- | --- |
+| top-level `region_name` | `REGION_NAME` |
+| top-level `output_location` | `OUTPUT_LOCATION` |
+| top-level `output_bucket` | `OUTPUT_BUCKET` |
+| top-level `database` | `DATABASE` |
+| top-level `athena_workgroup` | `ATHENA_WORKGROUP` |
+| `sources.<model>.bucket_name` | `SOURCES_<MODEL>_BUCKET_NAME` |
+| `sources.<model>.athena_table_name` | `SOURCES_<MODEL>_ATHENA_TABLE_NAME` |
+
+`<MODEL>` is the `MODEL_CONFIG` key uppercased with `-` → `_`
+(e.g. `era5-timeseries` → `SOURCES_ERA5_TIMESERIES_BUCKET_NAME`).
+
+**Required fields depend on the model's `source`** (see `REQUIRED_FIELDS` in
+`app/config_manager.py`):
+
+- `source: "athena"` → needs `..._BUCKET_NAME` **and** `..._ATHENA_TABLE_NAME`
+- `source: "s3"` → needs `..._BUCKET_NAME` only (no Athena table)
+
+Example `.env`:
+
+```.env
+# Athena top-level
+REGION_NAME=<aws-region>
+OUTPUT_LOCATION=s3://<athena-results-bucket>/
+OUTPUT_BUCKET=<athena-results-bucket>
+DATABASE=<athena-database>
+ATHENA_WORKGROUP=<athena-workgroup>
+
+# Per-model sources
+SOURCES_WTK_TIMESERIES_BUCKET_NAME=<bucket>
+SOURCES_WTK_TIMESERIES_ATHENA_TABLE_NAME=<table>
+SOURCES_ERA5_QUANTILES_BUCKET_NAME=<bucket>
+SOURCES_ERA5_QUANTILES_ATHENA_TABLE_NAME=<table>
+SOURCES_ENSEMBLE_QUANTILES_BUCKET_NAME=<bucket>
+SOURCES_ENSEMBLE_QUANTILES_ATHENA_TABLE_NAME=<table>
+SOURCES_WEM_QUANTILES_BUCKET_NAME=<bucket>
+SOURCES_WEM_QUANTILES_ATHENA_TABLE_NAME=<table>
+
+# era5-timeseries is an s3-only model: bucket only, no table
+SOURCES_ERA5_TIMESERIES_BUCKET_NAME=<bucket>
+```
+
+Notes:
+- Do **not** set `WINDWATTS_DATA_CONFIG_SECRET_ARN` when testing the env path, or
+  the Secrets Manager path takes over.
+- If the env config is incomplete it silently falls back to the local JSON. To be
+  sure the env path was used, look for `Config loaded from environment variables.`
+  in the startup logs.
+- A `source: "athena"` model with a bucket but no table raises a clear `ValueError`
+  at startup naming the model and the missing field.
+
+### Running the env-var path in Docker
+
+Inject the file into the `windwatts-api` container by adding an `env_file` entry to
+its service in `docker-compose.yml`:
+
+```yaml
+  windwatts-api:
+    env_file:
+      - ./windwatts-api/.env
+```
+
+Leave `WINDWATTS_DATA_CONFIG_SECRET_ARN` unset so the env path is exercised.
+
 Enjoy!
