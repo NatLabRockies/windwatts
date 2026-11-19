@@ -728,7 +728,6 @@ class AthenaSourceConfig(BaseModel):
 class AthenaConfig(BaseModel):
     region_name: str = Field("us-west-2", description="AWS region")
     output_location: str = Field(..., description="S3 URI for Athena query results")
-    output_bucket: str = Field(..., description="S3 bucket name for query results")
     database: str = Field(..., description="Athena/Glue database name")
     athena_workgroup: str = Field(..., description="Athena workgroup name")
     sources: Dict[str, AthenaSourceConfig] = Field(

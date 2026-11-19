@@ -30,7 +30,7 @@ export const useGeolocation = () => {
           });
         },
         (error) => {
-          console.error("Geolocation error:", error);
+          console.warn("Geolocation unavailable:", error.message);
           setCurrentPosition((current) =>
             current !== null ? current : DEFAULT_MAP_CENTER
           );

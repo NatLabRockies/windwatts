@@ -14,17 +14,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### WindWatts Data Dependency
-
-The `windwatts_data` package is a large dependency stored in S3. It is not in PyPI.
-If you are running locally without Docker, you must download and install it manually:
-
-```bash
-# Example for installing the wheel manually (check Dockerfile for exact URL/version)
-curl -O https://windwatts-era5.s3.us-west-2.amazonaws.com/windwatts_data-1.0.4-py3-none-any.whl
-pip install windwatts_data-1.0.4-py3-none-any.whl
-```
-
 ### Makefile Targets
 
 -   `make setup`: Initializes the project.

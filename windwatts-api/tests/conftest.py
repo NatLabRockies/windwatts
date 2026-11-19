@@ -25,35 +25,29 @@ def pytest_configure(config):
     # Use clearly fake values so accidental real AWS calls are impossible
     os.environ["REGION_NAME"] = "us-east-1"
     os.environ["OUTPUT_LOCATION"] = "s3://test-fake-bucket/"
-    os.environ["OUTPUT_BUCKET"] = "test-fake-bucket"
     os.environ["DATABASE"] = "test_fake_database"
     os.environ["ATHENA_WORKGROUP"] = "test_fake_workgroup"
 
     # Source-specific env vars using model keys
     os.environ["SOURCES_ENSEMBLE-QUANTILES_BUCKET_NAME"] = "test-fake-era5"
     os.environ["SOURCES_ENSEMBLE-QUANTILES_ATHENA_TABLE_NAME"] = "test_ensemble"
-    os.environ["SOURCES_ENSEMBLE-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
     os.environ["SOURCES_ERA5-QUANTILES_BUCKET_NAME"] = "test-fake-era5"
     os.environ["SOURCES_ERA5-QUANTILES_ATHENA_TABLE_NAME"] = "test_era5"
-    os.environ["SOURCES_ERA5-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
     os.environ["SOURCES_WTK-TIMESERIES_BUCKET_NAME"] = "test-fake-wtk"
     os.environ["SOURCES_WTK-TIMESERIES_ATHENA_TABLE_NAME"] = "test_wtk_1224"
-    os.environ["SOURCES_WTK-TIMESERIES_ALT_ATHENA_TABLE_NAME"] = ""
     os.environ["SOURCES_WEM-QUANTILES_BUCKET_NAME"] = "test-fake-wem"
     os.environ["SOURCES_WEM-QUANTILES_ATHENA_TABLE_NAME"] = "test_wem"
-    os.environ["SOURCES_WEM-QUANTILES_ALT_ATHENA_TABLE_NAME"] = ""
 
     # Skip real data initialization (spatial lookups, AWS clients)
     os.environ["SKIP_DATA_INIT"] = "1"
 
-    # Still need boto3 mocks for other AWS services (like secrets manager in config_manager)
+    # Mock boto3 clients so no real AWS calls are made
     mock_s3_client = MagicMock()
     mock_athena_client = MagicMock()
 
     _mock_clients = {
         "athena": mock_athena_client,
         "s3": mock_s3_client,
-        "secretsmanager": MagicMock(),
     }
 
     def mock_boto3_client(service_name, *args, **kwargs):

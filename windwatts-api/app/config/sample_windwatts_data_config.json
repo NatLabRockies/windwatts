@@ -1,7 +1,6 @@
 {
   "region_name": "us-east-1",
   "output_location": "s3://sample-output-location/",
-  "output_bucket": "sample-output-bucket",
   "database": "sample_database",
   "athena_workgroup": "sample_workgroup",
   "sources": {
