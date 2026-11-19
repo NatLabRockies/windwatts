@@ -1,12 +1,12 @@
 import os
 import json
-import boto3
 from app.config.model_config import MODEL_CONFIG
 
 REQUIRED_FIELDS = {
     "athena": ["bucket_name", "athena_table_name"],
     "s3": ["bucket_name"],
 }
+
 
 class ConfigManager:
     def __init__(self, local_config_path: str = None):
@@ -39,7 +39,6 @@ class ConfigManager:
         )
 
     def get_s3_config(self, model_key: str) -> dict:
-        
         resolved = self.get_config()
         structure = MODEL_CONFIG[model_key]["s3"]
         bucket_name = resolved["sources"][model_key]["bucket_name"]
@@ -81,7 +80,9 @@ class ConfigManager:
             required = REQUIRED_FIELDS.get(model["source"], ["bucket_name"])
             missing = [f for f in required if not fields.get(f)]
             if missing:
-                raise ValueError(f"Config for '{source}' (source={model['source']}) is missing: {missing}")
+                raise ValueError(
+                    f"Config for '{source}' (source={model['source']}) is missing: {missing}"
+                )
             sources[source] = {
                 "bucket_name": fields["bucket_name"],
                 "athena_table_name": fields.get("athena_table_name", ""),
