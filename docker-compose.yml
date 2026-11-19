@@ -5,6 +5,8 @@ services:
       args:
         WINDWATTS_DATA_URL: ${WINDWATTS_DATA_URL}
     container_name: windwatts-api
+    env_file:
+      - ./windwatts-api/.env
     environment:
       - APP_HOME=/app
       - WINDWATTS_DATA_CONFIG_SECRET_ARN=${WINDWATTS_DATA_CONFIG_SECRETS_ARN}
