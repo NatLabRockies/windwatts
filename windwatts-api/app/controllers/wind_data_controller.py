@@ -76,8 +76,9 @@ if not _skip_data_init:
             )
 
     # Initialize S3 data fetchers
+    s3_config = S3Config(**config_manager.get_s3_config(model_key="era5-timeseries"))
     s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
-        s3_config=S3Config(**MODEL_CONFIG["era5-timeseries"]["s3"]),
+        s3_config=s3_config,
         model_key="era5-timeseries",
     )
 
