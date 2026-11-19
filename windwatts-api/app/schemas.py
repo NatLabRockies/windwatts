@@ -723,12 +723,6 @@ class AthenaSourceConfig(BaseModel):
     athena_table_name: str = Field(
         ..., description="Primary Athena table (partitioned by index)"
     )
-    alt_athena_table_name: str = Field(
-        "", description="Alternative table for non-index queries"
-    )
-    capabilities: Optional[Dict[str, List[str]]] = Field(
-        None, description="Optional capabilities like supported avg_types"
-    )
 
 
 class AthenaConfig(BaseModel):

@@ -4,15 +4,12 @@ import pandas as pd
 from io import StringIO
 
 from botocore.config import Config
-
 from app.schemas import AthenaConfig, AthenaSourceConfig
 
 
 class AthenaQueryClient:
     def __init__(self, config: AthenaConfig, source: AthenaSourceConfig):
         self.table = source.athena_table_name
-        self.alt_table = source.alt_athena_table_name
-
         self._database = config.database
         self._workgroup = config.athena_workgroup
         self._output_location = config.output_location
