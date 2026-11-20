@@ -41,34 +41,9 @@ VITE_MAP_ID=YOUR_MAP_ID
 
 **Backend (`windwatts-api/app/config/windwatts_data_config.json`)**:
 
-```json
-{
-  "region_name": "us-west-2",
-  "output_location": "S3_BUCKET_URI_FOR_ATHENA_RESULTS",
-  "database": "NAME_OF_THE_GLUE_DATABASE",
-  "athena_workgroup": "NAME_OF_THE_ATHENA_WORKGROUP",
-  "sources": {
-    "wtk-timeseries": {
-      "bucket_name": "NAME_OF_THE_WTK_S3_BUCKET",
-      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_WTK"
-    },
-    "era5-quantiles": {
-      "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
-      "athena_table_name": "NAME_OF_THE_ATHENA_TABLE_FOR_ERA5"
-    },
-    "era5-timeseries": {
-      "bucket_name": "NAME_OF_THE_ERA5_S3_BUCKET",
-      "athena_table_name": ""
-    }
-  }
-}
-```
-
-> Source keys must match the `MODEL_CONFIG` keys in `app/config/model_config.py`
-> (e.g. `wtk-timeseries`, `era5-quantiles`, `ensemble-quantiles`, `wem-quantiles`,
-> `era5-timeseries`). `athena` models need a `bucket_name` and `athena_table_name`;
-> the `s3`-only model (`era5-timeseries`) needs only a `bucket_name`. See the
-> backend README for the environment-variable equivalents used in production.
+Copy `windwatts-api/app/config/sample_windwatts_data_config.json` and fill in your
+Athena and S3 values. See [Deployment -> Configuration](05-deployment.md#configuration) for the
+full structure and field reference.
 
 ### 3. Run the App
 
