@@ -89,19 +89,17 @@ buckets) through `ConfigManager` (`app/config_manager.py`). It resolves values f
 **environment variables** first, falling back to a local JSON file
 (`app/config/windwatts_data_config.json`).
 
-See [`app/config/sample_windwatts_data_config.json`](app/config/sample_windwatts_data_config.json)
-for the structure. 
-
-Each JSON key maps to an environment variable - the top-level
-keys (`REGION_NAME`, `OUTPUT_LOCATION`, `DATABASE`, `ATHENA_WORKGROUP`) and the
-per-model keys `SOURCES_<MODEL>_BUCKET_NAME` and `SOURCES_<MODEL>_ATHENA_TABLE_NAME`,
+See [`.env.sample`](.env.sample) for the environment variables and
+[`app/config/sample_windwatts_data_config.json`](app/config/sample_windwatts_data_config.json)
+for the JSON structure. Each JSON key maps to an environment variable — the
+top-level keys (`REGION_NAME`, `OUTPUT_LOCATION`, `DATABASE`, `ATHENA_WORKGROUP`) and
+the per-model keys `SOURCES_<MODEL>_BUCKET_NAME` and `SOURCES_<MODEL>_ATHENA_TABLE_NAME`,
 where `<MODEL>` is the model key uppercased with `-` replaced by `_`.
 
 ### Local Development
 
-Add these values to `.env` in the api root (the same way as the Database
-Configuration above), or rely on the local JSON file. `docker-compose up` loads
-`.env` automatically.
+These values live in the same `.env` set up under
+[Database Configuration](#database-configuration) above (or in the local JSON file).
 
 ### Production Deployment
 
