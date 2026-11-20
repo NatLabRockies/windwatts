@@ -277,6 +277,7 @@ class TimeseriesBatchRequestPayload(BaseModel):
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
+    heights: Optional[List[int]] = Field(None, description="List of heights in meters.")
     years: Optional[List[int]] = Field(
         None, description="Specific years to include. Example: [2015, 2019, 2022]"
     )
@@ -331,6 +332,7 @@ class PowerCurveData(BaseModel):
 
 class TimeseriesEnergyRequestPayload(BaseModel):
     gridIndex: str = Field(..., description="Grid index identifier")
+    heights: Optional[List[int]] = Field(None, description="List of heights in meters.")
     turbine: Optional[str] = Field(
         None,
         min_length=1,
@@ -399,6 +401,7 @@ class TimeseriesEnergyBatchRequestPayload(BaseModel):
         min_length=1,
         description="List of grid locations to download timeseries data for",
     )
+    heights: Optional[List[int]] = Field(None, description="List of heights in meters.")
     turbine: Optional[str] = Field(
         None,
         min_length=1,
@@ -729,4 +732,19 @@ class AthenaConfig(BaseModel):
     athena_workgroup: str = Field(..., description="Athena workgroup name")
     sources: Dict[str, AthenaSourceConfig] = Field(
         ..., description="Map of model_key to source config"
+    )
+
+
+class S3Config(BaseModel):
+    bucket: str = Field(..., description="S3 bucket where the dataset lives")
+    prefix: str = Field(
+        ..., description="Top-level key prefix for the dataset in the bucket"
+    )
+    partition_template: str = Field(
+        ...,
+        description="Key template with '{prefix}' and partition placeholders, e.g. '{prefix}/index={index}/data.parquet'",
+    )
+    partition_columns: List[str] = Field(
+        default_factory=list,
+        description="Partition keys encoded in the path, e.g. ['index'], ['year', 'index'], or ['tile']",
     )

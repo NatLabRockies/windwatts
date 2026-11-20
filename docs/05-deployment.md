@@ -49,17 +49,19 @@ Configure AWS Athena settings and data sources:
       "bucket_name": "your-era5-bucket",
       "athena_table_name": "era5_table"
     },
-    "ensemble-quantiles": {
-      "bucket_name": "your-ensemble-bucket",
-      "athena_table_name": "ensemble_table"
-    },
-    "wem-quantiles": {
-      "bucket_name": "your-wem-bucket",
-      "athena_table_name": "wem_table"
+    "era5-timeseries": {
+      "bucket_name": "your-era5-bucket",
+      "athena_table_name": ""
     }
   }
 }
 ```
+
+> Source keys must match the `MODEL_CONFIG` keys in `app/config/model_config.py`.
+> `athena` models require `bucket_name` + `athena_table_name`; the `s3`-only model
+> (`era5-timeseries`) requires only `bucket_name`. In production these values are
+> provided as environment variables (SSM) instead of this JSON — see the backend
+> README's "Data Source Configuration" section for the env-var mapping.
 
 ### Deploy
 

@@ -82,4 +82,28 @@ For production deployment, the following items need to be configured by the clou
    - Include the AWS Secrets Manager ARN for database configuration
    - Configure necessary IAM roles for RDS access
 
+## Data Source Configuration
+
+The API loads its wind-data source config (Athena database/workgroup/tables and S3
+buckets) through `ConfigManager` (`app/config_manager.py`). It resolves values from
+**environment variables** first, falling back to a local JSON file
+(`app/config/windwatts_data_config.json`).
+
+See [`.env.sample`](.env.sample) for the environment variables and
+[`app/config/sample_windwatts_data_config.json`](app/config/sample_windwatts_data_config.json)
+for the JSON structure. Each JSON key maps to an environment variable — the
+top-level keys (`REGION_NAME`, `OUTPUT_LOCATION`, `DATABASE`, `ATHENA_WORKGROUP`) and
+the per-model keys `SOURCES_<MODEL>_BUCKET_NAME` and `SOURCES_<MODEL>_ATHENA_TABLE_NAME`,
+where `<MODEL>` is the model key uppercased with `-` replaced by `_`.
+
+### Local Development
+
+These values live in the same `.env` set up under
+[Database Configuration](#database-configuration) above (or in the local JSON file).
+
+### Production Deployment
+
+Provide the same values as environment variables through the deployment's secret
+store.
+
 Enjoy!
