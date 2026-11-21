@@ -12,7 +12,6 @@ from textwrap import dedent
 app = FastAPI(
     title="WindWatts API",
     version="2.0.0",
-    root_path="/api",
     description=dedent(
         """
         Welcome to NLR's WindWatts API.
@@ -71,4 +70,4 @@ def serve_openapi_json():
     return app.openapi()
 
 
-handler = Mangum(app)
+handler = Mangum(app, api_gateway_base_path="/api")

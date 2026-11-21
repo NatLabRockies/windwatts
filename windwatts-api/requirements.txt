@@ -11,3 +11,4 @@ python-dotenv
 pydantic-settings
 alembic
 geopandas
+duckdb==2.0.0
