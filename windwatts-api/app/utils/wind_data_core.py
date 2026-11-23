@@ -17,8 +17,9 @@ from app.schemas import PowerCurveData
 from app.types.spatial import NoLandCellError
 from app.utils.wind_processing import (
     compute_sectors,
-    resolve_heights,
-    interpolate_windspeed_power_law_timeseries,
+    resolve_timeseries_columns,
+    apply_timeseries_interpolation,
+    aggregate_timeseries_monthly
 )
 
 from app.utils.validation import (
@@ -205,79 +206,6 @@ def get_production_core(
 
         return response_dict
 
-
-def _resolve_timeseries_columns(model: str, heights: Optional[List[int]] = None):
-    """Resolve the column subset and height_info for a timeseries request.
-
-    Columns are the non-partition temporal columns plus the windspeed column(s)
-    for ``height`` (one if native, two bracketing heights if interpolation is
-    needed). Returns ``(None, None)`` when ``height`` is None (read all columns).
-    """
-    if not heights:
-        return None, None
-    schema = MODEL_CONFIG[model]["schema"]
-    temporal_cols = TEMPORAL_SCHEMAS[schema]["column_config"]["temporal_columns"]
-    partition_cols = MODEL_CONFIG[model]["s3"]["partition_columns"]
-
-    available_ws_heights = MODEL_CONFIG[model]["heights"]["windspeed"]
-    # add temporal col like "time" to the list of columns but not "year" if it's only as parition not a column but still a temporal field.
-    cols = [col for col in temporal_cols if col not in partition_cols]
-    heights_info = {}
-    for height in heights:
-        info = resolve_heights(height, available_ws_heights)
-        heights_info[height] = info
-        for col in info["columns"]:
-            if col not in cols:
-                cols.append(col)
-    return cols, heights_info
-
-
-def _windspeed_at_height(df: pd.DataFrame, height: int, height_info: dict) -> pd.Series:
-    if height_info["exact"]:
-        return df[f"windspeed_{height}m"]
-    interp = interpolate_windspeed_power_law_timeseries(
-        df, height, height_info["lower"], height_info["upper"]
-    )
-    return interp[f"windspeed_{height}m"]
-
-
-def _apply_timeseries_interpolation(
-    df: pd.DataFrame, heights: List[int], heights_info: dict
-) -> pd.DataFrame:
-    result_df = df.copy()
-    target_cols = {f"windspeed_{height}m" for height in heights}
-    bracket_cols = set()
-    for height in heights:
-        info = heights_info[height]
-        result_df[f"windspeed_{height}m"] = _windspeed_at_height(df, height, info)
-        if not info["exact"]:
-            bracket_cols.update(info["columns"])
-    drop = [c for c in bracket_cols - target_cols if c in result_df.columns]
-    return result_df.drop(columns=drop)
-
-
-def _aggregate_timeseries_monthly(df, time, windspeed_cols):
-    """Aggregate hourly timeseries to a per-month (yyyy-mm) mean.
-
-    Groups rows by calendar ``year_month`` and averages each windspeed column.
-
-    Args:
-        df (pd.DataFrame): Hourly timeseries to aggregate.
-        time (pd.Series): Parsed datetime series aligned to ``df`` rows.
-        windspeed_cols (list[str]): Windspeed columns to average.
-
-    Returns:
-        pd.DataFrame: One row per ``year_month`` with mean windspeed columns.
-    """
-    df["year"] = time.dt.year.astype(int)
-    df["month"] = time.dt.month.astype(int)
-    df["year_month"] = (
-        df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
-    )
-    agg_dict = {col: "mean" for col in windspeed_cols}
-    return df.groupby("year_month").agg(agg_dict).reset_index()
-
-
 def get_timeseries_core(
     model: str,
     gridIndices: List[str],
@@ -288,7 +216,7 @@ def get_timeseries_core(
     year_range: Optional[str] = None,
     year_set: Optional[str] = None,
     heights: Optional[List[int]] = None,
-    extra_cols: Optional[List[str]] = None,
+    include_winddirection: bool = False,
     return_dataframe: bool = False,
 ):
     """
@@ -303,6 +231,9 @@ def get_timeseries_core(
         years (List[int]): List of years to retrieve, default to sample years.
         year_range (str): Range of years for download. Format: YYYY-YYYY.
         year_set (str): Full or Sample dataset to download.
+        heights (List[int]): Windspeed heights to include; empty/None reads all native columns.
+        include_winddirection (bool): Also include the winddirection column for each
+            requested height (native heights only). Used by windrose; off by default.
         return_dataframe: If True, return DataFrame instead of CSV string
 
     Returns:
@@ -332,13 +263,9 @@ def get_timeseries_core(
 
     params = {"gridIndices": gridIndices, "years": resolved_years}
 
-    resolved_cols, heights_info = _resolve_timeseries_columns(model, resolved_heights)
-
-    # callers (e.g. windrose) may need extra columns like winddirection
-    if resolved_cols is not None and extra_cols:
-        for col in extra_cols:
-            if col not in resolved_cols:
-                resolved_cols.append(col)
+    resolved_cols, heights_info = resolve_timeseries_columns(
+        model, resolved_heights, include_winddirection
+    )
 
     if resolved_cols is not None:
         params["cols"] = resolved_cols
@@ -354,12 +281,12 @@ def get_timeseries_core(
     time = pd.to_datetime(df["time"], errors="coerce", utc=False)
     df["time"] = time
 
-    df = _apply_timeseries_interpolation(df, resolved_heights, heights_info)
+    df = apply_timeseries_interpolation(df, resolved_heights, heights_info)
 
     windspeed_cols = [col for col in df.columns if col.startswith("windspeed")]
 
     if period == "monthly":
-        df = _aggregate_timeseries_monthly(df, time, windspeed_cols)
+        df = aggregate_timeseries_monthly(df, time, windspeed_cols)
 
     df[windspeed_cols] = df[windspeed_cols].round(2)
 
@@ -492,7 +419,7 @@ def get_windrose_core(
         year_range=year_range,
         year_set=year_set,
         heights=[height],
-        extra_cols=[wd_col],
+        include_winddirection=True,
         return_dataframe=True,
     )
 
