@@ -2,11 +2,6 @@ import os
 import json
 from app.config.model_config import MODEL_CONFIG
 
-REQUIRED_FIELDS = {
-    "athena": ["bucket_name", "athena_table_name"],
-    "s3": ["bucket_name"],
-}
-
 
 class ConfigManager:
     def __init__(self, local_config_path: str = None):
@@ -74,15 +69,6 @@ class ConfigManager:
                         break
         # Package the sources with required fields into `sources`
         for source, fields in source_fields.items():
-            model = MODEL_CONFIG.get(source)
-            if not model:
-                continue
-            required = REQUIRED_FIELDS.get(model["source"], ["bucket_name"])
-            missing = [f for f in required if not fields.get(f)]
-            if missing:
-                raise ValueError(
-                    f"Config for '{source}' (source={model['source']}) is missing: {missing}"
-                )
             sources[source] = {
                 "bucket_name": fields["bucket_name"],
                 "athena_table_name": fields.get("athena_table_name", ""),
