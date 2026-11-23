@@ -730,7 +730,16 @@ def post_energy_timeseries(
     Download energy timeseries data as CSV for a specific grid point using reference or custom power curve.
 
     - **model**: Data model, for example, era5-timeseries
-    - **payload**: Request body containing grid index, turbine info, and optional custom curve data
+    - **payload**: Request body containing:
+      - **gridIndex**: Grid index identifier (use grid-points endpoint)
+      - **turbine**: Turbine name (built-in reference only), ignored for custom power curve.
+      - **heights**: List of hub heights in meters (optional).
+      - **custom_power_curve**: Power curve data (required for custom curve)
+      - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
+      - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+      - **year_set**: Full or Sample dataset to download (optional)
+      - **source**: Data source (optional, defaults to s3)
+      - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     """
     try:
         csv_content = get_timeseries_energy_core(
@@ -891,7 +900,20 @@ def post_windrose(
     model: str = Path(..., description="Data model: era5-timeseries"),
 ):
     """
-    Compute a wind rose from hourly timeseries data.
+    Compute a wind rose (wind speed or power) from hourly timeseries data.
+
+    - **model**: Data model, for example, era5-timeseries
+    - **payload**: Request body containing:
+      - **gridIndex**: Grid index identifier (use grid-points endpoint)
+      - **height**: Height in meters
+      - **rose_type**: Type of rose to compute: 'windspeed' (default) or 'power'
+      - **bin**: Number of equal-width bins. Valid range: [1, 10] (default 5)
+      - **sectors**: Directional sectors: 4, 8 or 16 (default 16)
+      - **calm_threshold**: Value at or below which a row is calm (default 0)
+      - **year_set**: Dataset size: full or sample (default sample)
+      - **year_range**: Range of years. Format: YYYY-YYYY (optional)
+      - **turbine**: Reference turbine name (see /turbines endpoint); used when rose_type='power'
+      - **custom_power_curve**: Custom power curve data; takes precedence over 'turbine' when rose_type='power'
     """
     try:
         result = get_windrose_core(
