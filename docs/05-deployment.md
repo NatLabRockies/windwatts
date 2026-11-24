@@ -41,17 +41,9 @@ Configure AWS Athena settings and data sources:
   "database": "your-glue-database",
   "athena_workgroup": "your-athena-workgroup",
   "sources": {
-    "wtk-timeseries": {
-      "bucket_name": "your-wtk-bucket",
-      "athena_table_name": "wtk_table"
-    },
-    "era5-quantiles": {
-      "bucket_name": "your-era5-bucket",
-      "athena_table_name": "era5_table"
-    },
-    "era5-timeseries": {
-      "bucket_name": "your-era5-bucket",
-      "athena_table_name": ""
+    "your-model-id": {
+      "bucket_name": "your-model-bucket",
+      "athena_table_name": "your_model_athena_table"
     }
   }
 }
