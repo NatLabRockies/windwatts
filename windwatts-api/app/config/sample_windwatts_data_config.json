@@ -19,6 +19,10 @@
     "wem-quantiles": {
       "bucket_name": "sample-bucket",
       "athena_table_name": "sample_table"
+    },
+    "era5-timeseries": {
+      "bucket_name": "sample-bucket",
+      "athena_table_name": ""
     }
   }
 }

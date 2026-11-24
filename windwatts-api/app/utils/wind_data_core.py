@@ -15,7 +15,12 @@ import numpy as np
 import bisect
 from app.schemas import PowerCurveData
 from app.types.spatial import NoLandCellError
-from app.utils.wind_processing import compute_sectors
+from app.utils.wind_processing import (
+    compute_sectors,
+    resolve_timeseries_columns,
+    apply_timeseries_interpolation,
+    aggregate_timeseries_monthly,
+)
 
 from app.utils.validation import (
     validate_lat,
@@ -33,6 +38,7 @@ from app.utils.validation import (
     validate_calm_threshold,
     validate_bin,
     validate_model_for_timeseries,
+    validate_heights,
 )
 from app.power_curve.global_power_curve_manager import power_curve_manager
 
@@ -210,6 +216,8 @@ def get_timeseries_core(
     years: Optional[List[int]] = None,
     year_range: Optional[str] = None,
     year_set: Optional[str] = None,
+    heights: Optional[List[int]] = None,
+    include_winddirection: bool = False,
     return_dataframe: bool = False,
 ):
     """
@@ -224,6 +232,9 @@ def get_timeseries_core(
         years (List[int]): List of years to retrieve, default to sample years.
         year_range (str): Range of years for download. Format: YYYY-YYYY.
         year_set (str): Full or Sample dataset to download.
+        heights (List[int]): Windspeed heights to include; empty/None reads all native columns.
+        include_winddirection (bool): Also include the winddirection column for each
+            requested height (native heights only). Used by windrose; off by default.
         return_dataframe: If True, return DataFrame instead of CSV string
 
     Returns:
@@ -245,7 +256,20 @@ def get_timeseries_core(
     else:
         resolved_years = MODEL_CONFIG[model]["years"].get("sample", [])
 
+    if heights:
+        resolved_heights = validate_heights(heights, model)
+    else:
+        # No height filter -> read all native columns, no interpolation.
+        resolved_heights = []
+
     params = {"gridIndices": gridIndices, "years": resolved_years}
+
+    resolved_cols, heights_info = resolve_timeseries_columns(
+        model, resolved_heights, include_winddirection
+    )
+
+    if resolved_cols is not None:
+        params["cols"] = resolved_cols
 
     key = f"{source}_{model}"
     df = data_fetcher_router.fetch_data(params, key=key)
@@ -255,20 +279,15 @@ def get_timeseries_core(
             status_code=404, detail="No data found for the specified parameters"
         )
 
-    windspeed_cols = [col for col in df.columns if col.startswith("windspeed")]
     time = pd.to_datetime(df["time"], errors="coerce", utc=False)
     df["time"] = time
 
+    df = apply_timeseries_interpolation(df, resolved_heights, heights_info)
+
+    windspeed_cols = [col for col in df.columns if col.startswith("windspeed")]
+
     if period == "monthly":
-        df["year"] = time.dt.year.astype(int)
-        df["month"] = time.dt.month.astype(int)
-        df["year_month"] = (
-            df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
-        )
-
-        agg_dict = {col: "mean" for col in windspeed_cols}
-
-        df = df.groupby("year_month").agg(agg_dict).reset_index()
+        df = aggregate_timeseries_monthly(df, time, windspeed_cols)
 
     df[windspeed_cols] = df[windspeed_cols].round(2)
 
@@ -292,10 +311,16 @@ def get_timeseries_energy_core(
     years: Optional[List[int]] = None,
     year_range: Optional[str] = None,
     year_set: Optional[str] = None,
+    heights: Optional[List[int]] = None,
     return_dataframe: bool = False,
 ):
     turbine = validate_powercurve(turbine, custom_power_curve)
-    heights = MODEL_CONFIG[model].get("heights").get("windspeed")
+
+    if heights:
+        resolved_heights = validate_heights(heights, model)
+    else:
+        # Energy needs windspeed at every native height by default.
+        resolved_heights = MODEL_CONFIG[model]["heights"]["windspeed"]
 
     df = get_timeseries_core(
         model,
@@ -306,21 +331,22 @@ def get_timeseries_energy_core(
         years,
         year_range,
         year_set,
+        resolved_heights,
         return_dataframe=True,
     )
     df_with_energy, _ = power_curve_manager.compute_energy_production_df(
-        df, heights, turbine, model, relevant_columns_only=False
+        df, resolved_heights, turbine, model, relevant_columns_only=False
     )
 
     if period == "hourly":
         # to maintain col orders
         cols = ["time"]
-        for h in heights:
+        for h in resolved_heights:
             ws_col = f"windspeed_{h}m"
             cols.append(ws_col)
             energy_col = f"energy_{h}m_kwh"
             cols.append(energy_col)
-        result_df = df_with_energy[cols]
+        result_df = df_with_energy[cols].copy()
 
     if period == "monthly":
         df_with_energy["year_month"] = (
@@ -329,7 +355,7 @@ def get_timeseries_energy_core(
             + df_with_energy["month"].astype(str).str.zfill(2)
         )
         agg_dict = {}
-        for h in heights:
+        for h in resolved_heights:
             ws_col = f"windspeed_{h}m"
             energy_col = f"energy_{h}m_kwh"
             agg_dict[ws_col] = "mean"
@@ -393,6 +419,8 @@ def get_windrose_core(
         years=None,
         year_range=year_range,
         year_set=year_set,
+        heights=[height],
+        include_winddirection=True,
         return_dataframe=True,
     )
 

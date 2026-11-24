@@ -26,6 +26,7 @@ perfbench_results.csv
 .vscode/
 .env
 .env.*
+!.env.sample
 windwatts-ui/appfleet-config
 windwatts-api/appfleet-config
 windwatts-ui/release.sh

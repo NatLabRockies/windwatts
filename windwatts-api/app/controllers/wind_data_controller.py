@@ -44,6 +44,7 @@ from app.schemas import (
     RoseResponse,
     ProductionRequestPayload,
     AthenaConfig,
+    S3Config,
 )
 
 router = APIRouter()
@@ -61,7 +62,11 @@ if not _skip_data_init:
     config_manager = ConfigManager(
         local_config_path="./app/config/windwatts_data_config.json",
     )
-    athena_config = AthenaConfig(**config_manager.get_config())
+    try:
+        athena_config = AthenaConfig(**config_manager.get_config())
+        s3_config = S3Config(**config_manager.get_s3_config("era5-timeseries"))
+    except Exception as e:
+        raise RuntimeError(f"Invalid data source configuration: {e}") from e
 
     # Initialize spatial
     init_spatial()
@@ -75,13 +80,8 @@ if not _skip_data_init:
 
     # Initialize S3 data fetchers
     s3_data_fetchers["era5-timeseries"] = S3DataFetcher(
-        bucket_name="windwatts-era5",
-        prefix="era5_timeseries",
-        grid="era5",
-        s3_key_template="era5",
-    )
-    s3_data_fetchers["wtk-timeseries"] = S3DataFetcher(
-        bucket_name="wtk-led", prefix="1224", grid="wtk", s3_key_template="wtk"
+        s3_config=s3_config,
+        model_key="era5-timeseries",
     )
 
     # Register fetchers with DataFetcherRouter
@@ -508,6 +508,7 @@ def download_timeseries(
         ..., description="Data model, for example, era5-timeseries or wtk-timeseries"
     ),
     gridIndex: str = Query(..., description="Grid index identifier"),
+    heights: Optional[List[int]] = Query(None, description="List of Heights in meters"),
     year_range: Optional[str] = Query(
         None, description="Range of years for download. Format: YYYY-YYYY"
     ),
@@ -533,6 +534,7 @@ def download_timeseries(
 
     - **model**: Data model, for example, era5-timeseries or wtk-timeseries
     - **gridIndex**: Grid index from grid-points endpoint
+    - **heights**: List of hub heights in meters (optional; defaults to all available heights, interpolated when non-native)
     - **year_range**: Range of years for download. Format: YYYY-YYYY.
     - **year_set**: Full or Sample dataset to download (optional)
     - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
@@ -550,6 +552,7 @@ def download_timeseries(
             years,
             year_range,
             year_set,
+            heights,
         )
 
         return StreamingResponse(
@@ -590,6 +593,7 @@ def download_timeseries_batch(
 
     - **model**: Data model (era5-timeseries or wtk-timeseries)
     - **payload**: Request body containing:
+      - **heights**: List of hub heights in meters (optional)
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -612,6 +616,7 @@ def download_timeseries_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
+                    payload.heights,
                 )
                 file_name = f"wind_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
@@ -725,7 +730,16 @@ def post_energy_timeseries(
     Download energy timeseries data as CSV for a specific grid point using reference or custom power curve.
 
     - **model**: Data model, for example, era5-timeseries
-    - **payload**: Request body containing grid index, turbine info, and optional custom curve data
+    - **payload**: Request body containing:
+      - **gridIndex**: Grid index identifier (use grid-points endpoint)
+      - **turbine**: Turbine name (built-in reference only), ignored for custom power curve.
+      - **heights**: List of hub heights in meters (optional).
+      - **custom_power_curve**: Power curve data (required for custom curve)
+      - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
+      - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
+      - **year_set**: Full or Sample dataset to download (optional)
+      - **source**: Data source (optional, defaults to s3)
+      - **period**: Time aggregation (hourly for raw data, monthly for yyyy-mm grouped averages)
     """
     try:
         csv_content = get_timeseries_energy_core(
@@ -739,6 +753,7 @@ def post_energy_timeseries(
             payload.years,
             payload.year_range,
             payload.year_set,
+            payload.heights,
         )
 
         return StreamingResponse(
@@ -775,6 +790,7 @@ def download_timeseries_energy_batch(
     - **payload**: Request body containing:
       - **locations**: List of grid locations with indices (use grid-points endpoint)
       - **turbine**:  Turbine name (built-in reference only), ignored for custom power curve.
+      - **heights**: List of hub heights in meters (optional).
       - **custom_power_curve**: Power curve data (required for custom curve)
       - **years**: Specific years to include (optional). Example: [2015, 2019, 2022]
       - **year_range**: Range of years for download. Format: YYYY-YYYY. (optional)
@@ -799,6 +815,7 @@ def download_timeseries_energy_batch(
                     payload.years,
                     payload.year_range,
                     payload.year_set,
+                    payload.heights,
                 )
                 file_name = f"wind_energy_data_{format_coordinate(loc.latitude)}_{format_coordinate(loc.longitude)}.csv"
                 zf.writestr(file_name, csv_content)
@@ -883,7 +900,20 @@ def post_windrose(
     model: str = Path(..., description="Data model: era5-timeseries"),
 ):
     """
-    Compute a wind rose from hourly timeseries data.
+    Compute a wind rose (wind speed or power) from hourly timeseries data.
+
+    - **model**: Data model, for example, era5-timeseries
+    - **payload**: Request body containing:
+      - **gridIndex**: Grid index identifier (use grid-points endpoint)
+      - **height**: Height in meters
+      - **rose_type**: Type of rose to compute: 'windspeed' (default) or 'power'
+      - **bin**: Number of equal-width bins. Valid range: [1, 10] (default 5)
+      - **sectors**: Directional sectors: 4, 8 or 16 (default 16)
+      - **calm_threshold**: Value at or below which a row is calm (default 0)
+      - **year_set**: Dataset size: full or sample (default sample)
+      - **year_range**: Range of years. Format: YYYY-YYYY (optional)
+      - **turbine**: Reference turbine name (see /turbines endpoint); used when rose_type='power'
+      - **custom_power_curve**: Custom power curve data; takes precedence over 'turbine' when rose_type='power'
     """
     try:
         result = get_windrose_core(

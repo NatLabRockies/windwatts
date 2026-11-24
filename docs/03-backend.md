@@ -27,19 +27,19 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### Database
+### Data Sources & Database
 
-**Local Development**:
-Add to `.env` in `windwatts-api/`:
+The backend reads from two places:
 
-```plaintext
-DATABASE_URL=postgresql://windwatts:windwatts@postgres:5432/windwatts_db
-POSTGRES_USER=windwatts
-POSTGRES_PASSWORD=windwatts
-POSTGRES_DB=windwatts_db
-```
+- **PostgreSQL** (application data) via `DATABASE_URL`. Provisioned by Docker
+  Compose with sensible defaults — see [Quickstart](02-quickstart.md); override in
+  the **root** `.env` if needed.
+- **AWS Athena / S3** (wind data) via `ConfigManager` — from environment variables
+  (copy `windwatts-api/.env.sample` → `.env`), falling back to
+  `app/config/windwatts_data_config.json`. For the full field and env-var
+  reference, see [Deployment → Configuration](05-deployment.md#configuration).
 
-Use Docker Compose (from root) to start the database.
+Start Postgres and the rest of the stack with `docker compose up` from the repo root.
 
 ## Testing
 
@@ -50,7 +50,7 @@ pytest
 
 ## API Documentation
 
-When the app is running, visit `/docs` (e.g., `http://localhost:8080/docs`) to see the auto-generated Swagger UI.
+When the app is running, visit `/docs` (e.g., `http://localhost:8080/api/docs`) to see the auto-generated Swagger UI.
 
 ### API Endpoints
 

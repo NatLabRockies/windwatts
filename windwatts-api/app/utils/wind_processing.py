@@ -2,6 +2,8 @@ import bisect
 import numpy as np
 import pandas as pd
 from scipy.interpolate import CubicSpline
+from typing import List, Optional
+from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 
 
 def resolve_heights(target_height: int, available_heights: list[int]) -> dict:
@@ -36,9 +38,11 @@ def resolve_heights(target_height: int, available_heights: list[int]) -> dict:
     }
 
 
-def _power_law(v_ref: pd.Series, h_target: int, h_ref: int) -> pd.Series:
-    """Neutral Power Law: V(h) = V_ref * (h / h_ref) ^ (1/7)"""
-    alpha = 1 / 7
+def _power_law(
+    v_ref: pd.Series, h_target: int, h_ref: int, alpha: float = 1 / 7
+) -> pd.Series:
+    """Power Law: V(h) = V_ref * (h / h_ref) ^ alpha
+    alpha default to 1/7 for neutral stability if alpha not provided."""
     return v_ref * (h_target / h_ref) ** alpha
 
 
@@ -58,7 +62,7 @@ def interpolate_windspeed_linear(
     return result
 
 
-def interpolate_windspeed_power_law(
+def interpolate_windspeed_power_law_quantiles(
     df: pd.DataFrame, target_height: int, lower: int, upper: int
 ) -> pd.DataFrame:
     """
@@ -82,8 +86,42 @@ def interpolate_windspeed_power_law(
     return result
 
 
+def interpolate_windspeed_power_law_timeseries(
+    df: pd.DataFrame, target_height: int, lower: int, upper: int
+) -> pd.DataFrame:
+    """
+    Add windspeed_{target_height}m column via local power law interpolation.
+    Solves the shear exponent per row from the two bracketing heights, because
+    paired timeseries rows (same hour, same air column) lie on one real wind
+    profile. The resulting curve passes through BOTH known heights exactly, so
+    no averaging is needed, projecting from either anchor gives the same value.
+
+    Calm-row handling: the power law is undefined when an anchor is zero (its
+    log/ratio terms blow up to NaN). Such rows would otherwise emit blank CSV
+    values and drop out of monthly means, biasing the series upward. So the power
+    law is applied only to rows where BOTH anchors are positive; rows with a zero
+    anchor fall back to linear interpolation between the two heights, which keeps
+    a genuine calm hour (both anchors zero) as 0 instead of NaN.
+
+    Returns new DataFrame (does not mutate input).
+    """
+    result = df.copy()
+    v_lower = result[f"windspeed_{lower}m"]
+    v_upper = result[f"windspeed_{upper}m"]
+    positive = (v_lower > 0) & (v_upper > 0)
+
+    alpha = np.log(v_upper.where(positive) / v_lower.where(positive)) / np.log(
+        upper / lower
+    )
+    power = _power_law(v_lower, target_height, lower, alpha)
+    linear = v_lower + (v_upper - v_lower) * (target_height - lower) / (upper - lower)
+    result[f"windspeed_{target_height}m"] = np.where(positive, power, linear).round(2)
+
+    return result
+
+
 # Default interpolation method
-interpolate_windspeed = interpolate_windspeed_power_law
+interpolate_windspeed = interpolate_windspeed_power_law_quantiles
 
 
 def aggregate(df: pd.DataFrame, height: int, period: str) -> dict:
@@ -217,3 +255,85 @@ def compute_sectors(n: int):
         for c in centers
     ]
     return centers, sector_width_deg, edges
+
+
+def resolve_timeseries_columns(
+    model: str, heights: Optional[List[int]] = None, include_winddirection=False
+):
+    """Resolve the column subset and height_info for a timeseries request.
+
+    Columns are the non-partition temporal columns plus the windspeed column(s)
+    for each height (one if native, two bracketing heights if interpolation is
+    needed). When ``include_winddirection`` is set, the winddirection column for
+    each requested height is added too (native heights only). Returns
+    ``(None, None)`` when ``heights`` is empty (read all columns).
+    """
+    if not heights:
+        return None, None
+    schema = MODEL_CONFIG[model]["schema"]
+    temporal_cols = TEMPORAL_SCHEMAS[schema]["column_config"]["temporal_columns"]
+    partition_cols = MODEL_CONFIG[model]["s3"]["partition_columns"]
+
+    available_ws_heights = MODEL_CONFIG[model]["heights"]["windspeed"]
+    available_wd_heights = MODEL_CONFIG[model]["heights"]["winddirection"]
+
+    # add temporal col like "time" to the list of columns but not "year" if it's only as parition not a column but still a temporal field.
+    cols = [col for col in temporal_cols if col not in partition_cols]
+    heights_info = {}
+    for height in heights:
+        info = resolve_heights(height, available_ws_heights)
+        heights_info[height] = info
+        for col in info["columns"]:
+            if col not in cols:
+                cols.append(col)
+        if include_winddirection and height in available_wd_heights:
+            wd_col = f"winddirection_{height}m"
+            if wd_col not in cols:
+                cols.append(wd_col)
+    return cols, heights_info
+
+
+def windspeed_at_height(df: pd.DataFrame, height: int, height_info: dict) -> pd.Series:
+    if height_info["exact"]:
+        return df[f"windspeed_{height}m"]
+    interp = interpolate_windspeed_power_law_timeseries(
+        df, height, height_info["lower"], height_info["upper"]
+    )
+    return interp[f"windspeed_{height}m"]
+
+
+def apply_timeseries_interpolation(
+    df: pd.DataFrame, heights: List[int], heights_info: dict
+) -> pd.DataFrame:
+    result_df = df.copy()
+    target_cols = {f"windspeed_{height}m" for height in heights}
+    bracket_cols = set()
+    for height in heights:
+        info = heights_info[height]
+        result_df[f"windspeed_{height}m"] = windspeed_at_height(df, height, info)
+        if not info["exact"]:
+            bracket_cols.update(info["columns"])
+    drop = [c for c in bracket_cols - target_cols if c in result_df.columns]
+    return result_df.drop(columns=drop)
+
+
+def aggregate_timeseries_monthly(df, time, windspeed_cols):
+    """Aggregate hourly timeseries to a per-month (yyyy-mm) mean.
+
+    Groups rows by calendar ``year_month`` and averages each windspeed column.
+
+    Args:
+        df (pd.DataFrame): Hourly timeseries to aggregate.
+        time (pd.Series): Parsed datetime series aligned to ``df`` rows.
+        windspeed_cols (list[str]): Windspeed columns to average.
+
+    Returns:
+        pd.DataFrame: One row per ``year_month`` with mean windspeed columns.
+    """
+    df["year"] = time.dt.year.astype(int)
+    df["month"] = time.dt.month.astype(int)
+    df["year_month"] = (
+        df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
+    )
+    agg_dict = {col: "mean" for col in windspeed_cols}
+    return df.groupby("year_month").agg(agg_dict).reset_index()
