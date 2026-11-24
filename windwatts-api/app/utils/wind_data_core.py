@@ -19,7 +19,7 @@ from app.utils.wind_processing import (
     compute_sectors,
     resolve_timeseries_columns,
     apply_timeseries_interpolation,
-    aggregate_timeseries_monthly
+    aggregate_timeseries_monthly,
 )
 
 from app.utils.validation import (
@@ -205,6 +205,7 @@ def get_production_core(
             )
 
         return response_dict
+
 
 def get_timeseries_core(
     model: str,

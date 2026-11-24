@@ -5,6 +5,7 @@ from scipy.interpolate import CubicSpline
 from typing import List, Optional
 from app.config.model_config import MODEL_CONFIG, TEMPORAL_SCHEMAS
 
+
 def resolve_heights(target_height: int, available_heights: list[int]) -> dict:
     """
     Determine what columns to fetch for a given target height.
@@ -95,17 +96,26 @@ def interpolate_windspeed_power_law_timeseries(
     profile. The resulting curve passes through BOTH known heights exactly, so
     no averaging is needed, projecting from either anchor gives the same value.
 
+    Calm-row handling: the power law is undefined when an anchor is zero (its
+    log/ratio terms blow up to NaN). Such rows would otherwise emit blank CSV
+    values and drop out of monthly means, biasing the series upward. So the power
+    law is applied only to rows where BOTH anchors are positive; rows with a zero
+    anchor fall back to linear interpolation between the two heights, which keeps
+    a genuine calm hour (both anchors zero) as 0 instead of NaN.
+
     Returns new DataFrame (does not mutate input).
     """
     result = df.copy()
     v_lower = result[f"windspeed_{lower}m"]
     v_upper = result[f"windspeed_{upper}m"]
+    positive = (v_lower > 0) & (v_upper > 0)
 
-    alpha = np.log(v_upper / v_lower) / np.log(upper / lower)
-
-    result[f"windspeed_{target_height}m"] = _power_law(
-        v_lower, target_height, lower, alpha
-    ).round(2)
+    alpha = np.log(v_upper.where(positive) / v_lower.where(positive)) / np.log(
+        upper / lower
+    )
+    power = _power_law(v_lower, target_height, lower, alpha)
+    linear = v_lower + (v_upper - v_lower) * (target_height - lower) / (upper - lower)
+    result[f"windspeed_{target_height}m"] = np.where(positive, power, linear).round(2)
 
     return result
 
@@ -246,7 +256,10 @@ def compute_sectors(n: int):
     ]
     return centers, sector_width_deg, edges
 
-def resolve_timeseries_columns(model: str, heights: Optional[List[int]] = None, include_winddirection=False):
+
+def resolve_timeseries_columns(
+    model: str, heights: Optional[List[int]] = None, include_winddirection=False
+):
     """Resolve the column subset and height_info for a timeseries request.
 
     Columns are the non-partition temporal columns plus the windspeed column(s)
