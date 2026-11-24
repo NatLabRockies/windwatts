@@ -4,7 +4,8 @@ services:
       context: ./windwatts-api
     container_name: windwatts-api
     env_file:
-      - ./windwatts-api/.env
+      - path: ./windwatts-api/.env
+        required: false
     environment:
       - APP_HOME=/app
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
