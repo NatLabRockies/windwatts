@@ -23,7 +23,7 @@ git checkout develop # Ensure you are on the 'develop' branch (the main developm
 ### 2. Configure Environment
 
 **Root directory (`.env`)**:
-Create a `.env` file in the root:
+Create a `.env` file in the root or copy `.env.sample` to `.env`:
 
 ```plaintext
 AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY_ID"
